@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LeadHandler.ai
 
-## Getting Started
+Lead routing and inbox for real estate brokerages. Turn new leads into appointments faster.
 
-First, run the development server:
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). Use `npm` if pnpm is not installed.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment variables
 
-## Learn More
+Copy `.env.example` to `.env.local` and fill in values as needed:
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `NEXT_PUBLIC_APP_URL` | Public app URL (e.g. http://localhost:3000) | Yes |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key | For billing |
+| `AIRTABLE_API_KEY` | Airtable API key | For leads/agents sync |
+| `AIRTABLE_BASE_ID` | Airtable base ID | For leads/agents sync |
+| `STRIPE_SECRET_KEY` | Stripe secret key | For checkout |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret | For webhooks |
+| `TWILIO_ACCOUNT_SID` | Twilio account SID | For SMS |
+| `TWILIO_AUTH_TOKEN` | Twilio auth token | For SMS |
+| `TWILIO_FROM_NUMBER` | Twilio phone number | For SMS |
+| `MAKE_WEBHOOK_URL` | Make.com webhook URL | For automations |
+| `DEMO_MODE_DEFAULT` | Default demo mode (true/false) | No, defaults true |
+| `SESSION_SECRET` | Secret for signing session cookies (min 16 chars) | Yes |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Demo mode
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+When demo mode is **on** (default), the app uses in-memory seed data. No API keys are required. Toggle demo mode in the top bar (Owner only). When demo mode is **off** and env vars are missing, pages show empty states with a "Connect in Settings" prompt.
 
-## Deploy on Vercel
+- **On**: Fast, no network. Realistic leads, agents, messages.
+- **Off**: Uses API routes. If Airtable/Twilio/Stripe are not configured, you get empty states.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Connecting real integrations
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Airtable
+
+1. Create an Airtable base with tables for Leads and Agents.
+2. Create an API token at [airtable.com/account](https://airtable.com/account).
+3. Add `AIRTABLE_API_KEY` and `AIRTABLE_BASE_ID` to `.env.local`.
+4. Implement the sync logic in `src/lib/airtable.ts` (currently stubbed).
+
+### Twilio
+
+1. Sign up at [twilio.com](https://twilio.com).
+2. Get a phone number for SMS.
+3. Add `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` to `.env.local`.
+4. Configure webhook URL for inbound SMS: `POST /api/webhooks/twilio`.
+
+### Stripe
+
+1. Create products and prices in [Stripe Dashboard](https://dashboard.stripe.com).
+2. Add `STRIPE_SECRET_KEY` and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
+3. Implement checkout/portal in `src/lib/stripe.ts`.
+4. Configure webhook: `POST /api/webhooks/stripe` with `STRIPE_WEBHOOK_SECRET`.
+
+### Make
+
+1. Create a webhook scenario in [Make](https://make.com).
+2. Add `MAKE_WEBHOOK_URL` to `.env.local`.
+3. The `/api/make/trigger` route forwards payloads to that URL.
+
+## Replacing mock auth
+
+The app uses cookie-based session auth (JWT signed with `SESSION_SECRET`). To switch to a provider:
+
+1. **Clerk**: Install `@clerk/nextjs`, add `ClerkProvider`, and replace `middleware.ts` with Clerk's auth middleware. Remove `/api/auth/session` and use Clerk's session helpers.
+2. **Auth.js**: Install `next-auth`, configure providers, and replace the session cookie logic in `middleware.ts` and `src/lib/auth.ts`.
+3. **Supabase**: Install `@supabase/ssr`, use Supabase auth in middleware and replace `getSession()` in layouts.
+
+## Build and deploy
+
+```bash
+pnpm build
+pnpm start
+```
+
+### Vercel
+
+1. Connect the repo to Vercel.
+2. Add environment variables in the Vercel project settings.
+3. Deploy. The `SESSION_SECRET` must be set; use a strong random value in production.
+
+## Project structure
+
+```
+src/
+  app/
+    (marketing)/     # Public pages: /, /pricing, /security, /contact
+    login/           # Role picker, sets session
+    app/             # Protected app: /app/dashboard, /app/leads, etc.
+    api/             # Route handlers
+  components/
+    ui/              # shadcn components
+    app/             # App-specific: Sidebar, Topbar, DataTable, etc.
+  lib/
+    env.mjs          # Safe env parsing
+    config.ts        # Integration flags (hasAirtable, etc.)
+    types.ts         # Shared types
+    demo/            # Seed data and helpers
+    auth.ts          # Session helpers
+```
