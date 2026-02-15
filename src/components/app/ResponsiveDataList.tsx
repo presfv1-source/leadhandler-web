@@ -44,7 +44,7 @@ export function ResponsiveDataList<TData>({
   const hasRows = rows.length > 0;
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn("min-w-0 space-y-4", className)}>
       {/* Desktop: table (hidden on small screens to avoid horizontal scroll) */}
       <div className={cn("hidden rounded-lg border overflow-hidden", `${RESPONSIVE_LIST_BREAKPOINT}:block`)}>
         <Table>

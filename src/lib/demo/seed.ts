@@ -70,7 +70,32 @@ const LEAD_STATUSES = [
   "lost",
 ] as const;
 
-const SOURCES = ["website", "zillow", "referral", "open-house", "facebook", "google"];
+/** Houston-area lead sources (channels). */
+const SOURCES = [
+  "Zillow",
+  "Realtor.com",
+  "HAR",
+  "Website",
+  "Referral",
+  "Open house",
+] as const;
+
+/** Houston neighborhoods/areas for property interest (used in messages/context). */
+export const HOUSTON_NEIGHBORHOODS = [
+  "The Heights",
+  "Montrose",
+  "Memorial",
+  "Sugar Land",
+  "The Woodlands",
+  "Katy",
+  "Galleria area",
+  "Midtown",
+  "River Oaks",
+  "Rice Village",
+] as const;
+
+/** Texas area codes (Houston region). */
+const TEXAS_AREA_CODES = [713, 281, 832, 346];
 
 const AGENT_NAMES = [
   "Marcus Johnson",
@@ -107,7 +132,7 @@ export function randomEmail(name: string, seedKey: string): string {
 }
 
 export function randomPhone(seedKey: string): string {
-  const area = 200 + Math.floor(seededRandom(seedKey + "a") * 800);
+  const area = pick(TEXAS_AREA_CODES, seedKey + "area");
   const mid = Math.floor(seededRandom(seedKey + "b") * 1000);
   const last = Math.floor(seededRandom(seedKey + "c") * 10000);
   return `+1${area}${String(mid).padStart(3, "0")}${String(last).padStart(4, "0")}`;
@@ -118,9 +143,38 @@ export function randomLeadStatus(seedKey: string): (typeof LEAD_STATUSES)[number
 }
 
 export function randomSource(seedKey: string): string {
-  return pick(SOURCES, seedKey);
+  return pick([...SOURCES], seedKey);
+}
+
+export function randomHoustonNeighborhood(seedKey: string): string {
+  return pick([...HOUSTON_NEIGHBORHOODS], seedKey);
 }
 
 export function getAgentNames(): string[] {
   return [...AGENT_NAMES];
+}
+
+/**
+ * Returns a date string (YYYY-MM-DD) in the last N days, with weighted chance for "today".
+ * seedKey makes it deterministic. About 15% today, rest spread over last 30 days.
+ */
+export function randomRecentDate(seedKey: string, options?: { daysBack?: number; todayWeight?: number }): string {
+  const daysBack = options?.daysBack ?? 30;
+  const todayWeight = options?.todayWeight ?? 0.15;
+  const r = seededRandom(seedKey);
+  const isToday = r < todayWeight;
+  if (isToday) {
+    return new Date().toISOString().slice(0, 10);
+  }
+  const dayOffset = Math.floor(seededRandom(seedKey + "d") * daysBack);
+  const d = new Date();
+  d.setDate(d.getDate() - dayOffset);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Returns a time string HH:MM for demo (business hours bias). */
+export function randomTimeOfDay(seedKey: string): string {
+  const hour = 8 + Math.floor(seededRandom(seedKey + "h") * 10);
+  const min = Math.floor(seededRandom(seedKey + "m") * 60);
+  return `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   METRIC_CARD,
@@ -9,6 +10,7 @@ import {
   METRIC_TREND_NEGATIVE,
 } from "@/lib/ui";
 import { LucideIcon } from "lucide-react";
+import { cardEnterTransition, cardEnterVariants } from "./CardEnter";
 
 interface MetricCardProps {
   title: string;
@@ -16,6 +18,8 @@ interface MetricCardProps {
   icon?: LucideIcon;
   trend?: { value: string; positive: boolean };
   className?: string;
+  /** Optional stagger delay (seconds) when used in a grid */
+  staggerDelay?: number;
 }
 
 export function MetricCard({
@@ -24,12 +28,20 @@ export function MetricCard({
   icon: Icon,
   trend,
   className,
+  staggerDelay = 0,
 }: MetricCardProps) {
   return (
-    <div className={cn(METRIC_CARD, "flex flex-col", className)}>
+    <motion.div
+      initial={false}
+      animate={cardEnterVariants.animate}
+      transition={{ ...cardEnterTransition, delay: staggerDelay }}
+      className={cn(METRIC_CARD, "flex flex-col min-w-0", className)}
+    >
       <div className="flex flex-row items-center justify-between gap-2">
         <span className={METRIC_LABEL}>{title}</span>
-        {Icon && <Icon className="size-4 shrink-0 text-muted-foreground" />}
+        {Icon && (
+          <Icon className="size-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+        )}
       </div>
       <div className={METRIC_VALUE}>{value}</div>
       {trend && (
@@ -41,6 +53,6 @@ export function MetricCard({
           {trend.value}
         </p>
       )}
-    </div>
+    </motion.div>
   );
 }

@@ -76,3 +76,22 @@ export interface DashboardStats {
   closedThisMonth: number;
   activeLeads: number;
 }
+
+/** Single item in the demo activity feed (recent actions). */
+export type ActivityType =
+  | "lead_created"
+  | "message_sent"
+  | "message_received"
+  | "status_changed"
+  | "lead_assigned";
+
+export interface ActivityItem {
+  id: string;
+  type: ActivityType;
+  title: string;
+  description?: string;
+  leadId?: string;
+  leadName?: string;
+  agentName?: string;
+  createdAt: string;
+}

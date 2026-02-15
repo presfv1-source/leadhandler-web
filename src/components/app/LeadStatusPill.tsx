@@ -20,13 +20,17 @@ const statusStyles: Record<LeadStatus, string> = {
   lost: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
 };
 
+const DEFAULT_STYLE = "bg-muted text-muted-foreground";
+
 export function LeadStatusPill({ status, className }: { status: LeadStatus; className?: string }) {
+  const label = statusLabels[status] ?? status;
+  const style = statusStyles[status] ?? DEFAULT_STYLE;
   return (
     <Badge
       variant="secondary"
-      className={cn("font-medium", statusStyles[status], className)}
+      className={cn("font-medium", style, className)}
     >
-      {statusLabels[status]}
+      {label}
     </Badge>
   );
 }

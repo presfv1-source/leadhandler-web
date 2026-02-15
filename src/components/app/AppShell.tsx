@@ -35,8 +35,8 @@ export function AppShell({ children, session, demoEnabled }: AppShellProps) {
             )}
           </div>
         )}
-        <main className="flex-1 overflow-auto overflow-x-hidden">
-          <div className={cn(CONTAINER, PAGE_PADDING, PAGE_SECTION_GAP, "py-4 sm:py-6")}>
+        <main className="flex-1 min-w-0 overflow-auto overflow-x-hidden">
+          <div className={cn(CONTAINER, PAGE_PADDING, PAGE_SECTION_GAP, "min-w-0 py-4 sm:py-6")}>
             {children}
           </div>
         </main>

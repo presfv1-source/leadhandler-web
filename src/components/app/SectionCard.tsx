@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   SECTION_CARD,
@@ -7,6 +8,7 @@ import {
   SECTION_CARD_BODY,
   TYPO,
 } from "@/lib/ui";
+import { cardEnterTransition, cardEnterVariants } from "./CardEnter";
 
 interface SectionCardProps {
   title?: string;
@@ -24,7 +26,12 @@ export function SectionCard({
   bodyClassName,
 }: SectionCardProps) {
   return (
-    <section className={cn(SECTION_CARD, className)}>
+    <motion.section
+      initial={false}
+      animate={cardEnterVariants.animate}
+      transition={cardEnterTransition}
+      className={cn(SECTION_CARD, "min-w-0 overflow-hidden", className)}
+    >
       {(title != null || headerRight != null) && (
         <div className={SECTION_CARD_HEADER}>
           {title != null && <h2 className={TYPO.h3}>{title}</h2>}
@@ -32,6 +39,6 @@ export function SectionCard({
         </div>
       )}
       <div className={cn(SECTION_CARD_BODY, bodyClassName)}>{children}</div>
-    </section>
+    </motion.section>
   );
 }

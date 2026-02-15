@@ -1,0 +1,8 @@
+{
+  "hooks": {
+    "onFileChange": {
+      "patterns": ["src/**/*.{ts,tsx}"],
+      "commands": ["npm run lint"]
+    }
+  }
+}

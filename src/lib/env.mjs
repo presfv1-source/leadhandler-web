@@ -3,6 +3,9 @@ import { z } from "zod";
 const serverSchema = z.object({
   AIRTABLE_API_KEY: z.string().default(""),
   AIRTABLE_BASE_ID: z.string().default(""),
+  AIRTABLE_TABLE_LEADS: z.string().default("Leads"),
+  AIRTABLE_TABLE_AGENTS: z.string().default("Agents"),
+  AIRTABLE_TABLE_MESSAGES: z.string().default("Messages"),
   STRIPE_SECRET_KEY: z.string().default(""),
   STRIPE_WEBHOOK_SECRET: z.string().default(""),
   TWILIO_ACCOUNT_SID: z.string().default(""),
@@ -28,6 +31,9 @@ function parseEnv() {
   const server = serverSchema.safeParse({
     AIRTABLE_API_KEY: process.env.AIRTABLE_API_KEY,
     AIRTABLE_BASE_ID: process.env.AIRTABLE_BASE_ID,
+    AIRTABLE_TABLE_LEADS: process.env.AIRTABLE_TABLE_LEADS,
+    AIRTABLE_TABLE_AGENTS: process.env.AIRTABLE_TABLE_AGENTS,
+    AIRTABLE_TABLE_MESSAGES: process.env.AIRTABLE_TABLE_MESSAGES,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
     TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,

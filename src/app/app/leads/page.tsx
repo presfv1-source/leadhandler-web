@@ -52,7 +52,7 @@ async function LeadsContent() {
         <EmptyState
           icon={Users}
           title="No leads yet"
-          description="Leads appear here when you connect your lead sources. Turn on Demo Mode to try with sample data, or connect your sources in Settings."
+          description="Leads appear here when you connect your lead sources. Turn on Demo Mode to try with example data, or connect your sources in Settings."
           action={{ label: "Go to Settings", href: "/app/settings" }}
         />
       </div>

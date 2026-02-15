@@ -1,0 +1,19 @@
+{
+  "modes": {
+    "default": {
+      "description": "General development"
+    },
+    "demo": {
+      "description": "Focus on demo mode and seed data",
+      "rules": ["./rules/demo-mode.md"]
+    },
+    "api": {
+      "description": "Focus on API routes and integrations",
+      "rules": ["./rules/api-safety.md"]
+    },
+    "ui": {
+      "description": "Focus on UI, styling, and components",
+      "rules": ["./rules/core-style.md"]
+    }
+  }
+}

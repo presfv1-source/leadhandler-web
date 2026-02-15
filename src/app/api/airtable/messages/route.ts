@@ -12,7 +12,10 @@ export async function GET(request: NextRequest) {
       const messages = getDemoMessages(leadId);
       return NextResponse.json({ success: true, data: messages });
     }
-    return NextResponse.json({ success: true, data: [] });
+    const { searchParams } = new URL(request.url);
+    const leadId = searchParams.get("leadId") ?? undefined;
+    const messages = await import("@/lib/airtable").then((m) => m.getMessages(leadId));
+    return NextResponse.json({ success: true, data: messages });
   } catch (err) {
     console.error("[airtable/messages GET]", err);
     return NextResponse.json(

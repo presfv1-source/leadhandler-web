@@ -1,9 +1,14 @@
+"use client";
+
 import Link from "next/link";
-import { Building2 } from "lucide-react";
+import { Building2, Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { CONTAINER, PAGE_PADDING } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
+  { href: "/", label: "Home" },
   { href: "/pricing", label: "Pricing" },
   { href: "/security", label: "Security" },
   { href: "/contact", label: "Contact" },
@@ -25,7 +30,9 @@ export function MarketingHeader({ className }: { className?: string }) {
           <Building2 className="size-5 sm:size-6" aria-hidden />
           LeadHandler.ai
         </Link>
-        <nav className="flex flex-wrap items-center justify-end gap-3 sm:gap-6" aria-label="Main">
+
+        {/* Desktop nav */}
+        <nav className="hidden md:flex flex-wrap items-center justify-end gap-6" aria-label="Main">
           {navLinks.map(({ href, label }) => (
             <Link
               key={href}
@@ -35,13 +42,40 @@ export function MarketingHeader({ className }: { className?: string }) {
               {label}
             </Link>
           ))}
-          <Link
-            href="/login"
-            className="inline-flex shrink-0 items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            Get started
-          </Link>
+          <Button asChild size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0">
+            <Link href="/login">Login</Link>
+          </Button>
         </nav>
+
+        {/* Mobile: hamburger + sheet */}
+        <div className="flex md:hidden items-center gap-2">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Open menu">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-72 max-w-[calc(100vw-2rem)] pt-12">
+              <nav className="flex flex-col gap-1" aria-label="Main">
+                {navLinks.map(({ href, label }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {label}
+                  </Link>
+                ))}
+                <Link
+                  href="/login"
+                  className="mt-4 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-3 text-sm font-medium text-white hover:bg-indigo-700"
+                >
+                  Login
+                </Link>
+              </nav>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </header>
   );

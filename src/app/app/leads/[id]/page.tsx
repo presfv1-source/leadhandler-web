@@ -20,7 +20,9 @@ async function LeadDetailContent({ id }: { id: string }) {
   const lead = leads.find((l) => l.id === id);
   if (!lead) notFound();
 
-  const messages = demoEnabled ? getDemoMessages(id) : [];
+  const messages = demoEnabled
+    ? getDemoMessages(id)
+    : await import("@/lib/airtable").then((m) => m.getMessages(id));
   const insights = demoEnabled ? getDemoInsights(id) : [];
 
   const timelineItems = [

@@ -1,0 +1,61 @@
+---
+description: LeadHandler strategic context — Phase 0, architecture, priorities. Full doc in docs/LEADHANDLER_MASTER_CONTEXT.md
+alwaysApply: true
+---
+
+# LeadHandler Strategic Context
+
+**Full context:** Read `docs/LEADHANDLER_MASTER_CONTEXT.md` for deep operational context (mission, ICP, architecture, Phase 0 checklist, risk zones, founder priorities).
+
+## Phase 0 — Non-Negotiables
+
+- **No major new features**; no architectural rewrites; no premature scaling.
+- **No vanity UI** that doesn't improve clarity; no experimental complexity.
+- **Actively resist feature creep.** Bias toward boring reliability before scaling.
+
+## Architecture (Do Not Assume Migration)
+
+- **Make.com** = primary automation brain (lead intake, AI, routing, conversations). Fragile but current.
+- **Airtable** = system of record (brokerages, agents, leads, messages). Relational integrity must stay clean.
+- **Twilio** = SMS transport; **Stripe** = billing. Both are hard dependencies.
+- **Frontend** = auth, dashboard, onboarding, settings — not the primary logic engine.
+
+## Near-Term Priorities (Order)
+
+1. Twilio campaign stability  
+2. End-to-end onboarding proof  
+3. Stripe production wiring  
+4. Demo polish  
+5. Mobile responsiveness  
+6. Dashboard accuracy  
+7. Error elimination  
+8. Data integrity validation  
+
+## UI & Users
+
+- **Tone:** Premium SaaS, clean, strong contrast, vibrant accents. Not pastel, not cheap template, not clutter.
+- **Users:** Broker-owners are mostly **not technical**. UI must feel obvious, simple, fast, trustworthy.
+- **Mobile:** Usable on iPhone, small Android, tablet. Avoid overflow tables, cut-off cards, tiny tap targets, broken sidebars.
+- **Roles:** Owner has full access; Agent has limited view. Owner features must never disappear due to role bugs.
+
+## Demo Mode
+
+- Must feel realistic, valuable, believable; clearly labeled demo but not fake.
+- No obvious placeholders, empty dashboards, or inconsistent names; no leak into real data.
+
+## When Uncertain
+
+> Choose the path that increases **reliability**, **clarity**, and **sales credibility**.
+
+## Risk Zones (Be Cautious)
+
+- **Twilio:** A2P, webhooks, number assignment, delivery drift.
+- **Airtable:** Relational drift, orphans, scaling limits.
+- **Make.com:** Scenario brittleness, silent failures, race conditions.
+- **Stripe:** Webhook duplication, subscription state drift.
+- **Frontend:** Role bugs, mobile regressions, auth edge cases, stale cache.
+
+## Development Bias
+
+Prefer: reliability, clarity, incremental improvement, fast load, obvious UX.  
+Avoid: clever-but-fragile code, over-abstracted patterns, heavy new deps, premature microservices.

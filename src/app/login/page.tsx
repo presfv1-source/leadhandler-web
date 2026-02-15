@@ -1,136 +1,103 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Building2, User, ArrowRight } from "lucide-react";
+import { Building2, User } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { CONTAINER_NARROW, TYPO } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 
-function LoginForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") ?? "/app/dashboard";
-  const [role, setRole] = useState<"owner" | "agent">("owner");
-  const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+type Role = "owner" | "agent";
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+export default function LoginPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState<Role | null>(null);
+
+  async function handleContinue(role: Role) {
+    setLoading(role);
     try {
       const res = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role, name: name || undefined }),
+        body: JSON.stringify({ role }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setError(data.error?.message ?? "Login failed");
+        toast.error(data.error?.message ?? "Something went wrong");
+        setLoading(null);
         return;
       }
-      router.push(redirect);
+      toast.success("Welcome!");
+      router.push("/app/dashboard");
       router.refresh();
-    } catch (err) {
-      setError("Something went wrong");
-    } finally {
-      setLoading(false);
+    } catch {
+      toast.error("Something went wrong");
+      setLoading(null);
     }
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 px-4 py-12">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-muted/20 px-4 py-12">
       <div className={cn(CONTAINER_NARROW, "w-full")}>
         <div className="text-center mb-8">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xl font-bold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
+            className="inline-flex items-center gap-2 text-xl font-bold text-indigo-600 dark:text-indigo-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 rounded-md"
           >
             <Building2 className="size-6" aria-hidden />
             LeadHandler.ai
           </Link>
         </div>
-        <div className="rounded-xl border border-border bg-card shadow-sm p-6 sm:p-8">
-          <h1 className={cn(TYPO.h1, "text-2xl")}>Continue to app</h1>
-          <p className={cn(TYPO.muted, "mt-1 mb-6")}>Select your role to enter demo mode.</p>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Role</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setRole("owner")}
-                  className={cn(
-                    "flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                    role === "owner"
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground hover:border-muted-foreground/50 hover:bg-muted/50"
-                  )}
-                >
-                  <Building2 className="size-4" aria-hidden />
-                  Owner
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole("agent")}
-                  className={cn(
-                    "flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                    role === "agent"
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground hover:border-muted-foreground/50 hover:bg-muted/50"
-                  )}
-                >
-                  <User className="size-4" aria-hidden />
-                  Agent
-                </button>
-              </div>
-            </div>
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
-                Name (optional)
-              </label>
-              <Input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={role === "owner" ? "Demo Owner" : "Demo Agent"}
-                className="w-full"
-              />
-            </div>
-            {error && (
-              <p className="text-sm text-destructive" role="alert">
-                {error}
-              </p>
-            )}
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "Signing in…" : "Continue"}
-              <ArrowRight className="ml-2 size-4" aria-hidden />
+
+        <Card className="border-indigo-200/50 dark:border-indigo-500/20 shadow-lg shadow-indigo-500/5">
+          <CardHeader className="text-center pb-2">
+            <CardTitle className={cn(TYPO.h1, "text-2xl")}>
+              Continue to app
+            </CardTitle>
+            <CardDescription className={cn(TYPO.muted, "mt-1")}>
+              Select your role to enter demo mode.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3 pt-2">
+            <Button
+              type="button"
+              onClick={() => handleContinue("owner")}
+              disabled={loading !== null}
+              className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white focus-visible:ring-indigo-500"
+            >
+              <Building2 className="size-4" aria-hidden />
+              {loading === "owner" ? "Signing in…" : "Continue as Owner"}
             </Button>
-          </form>
-          <p className={cn(TYPO.muted, "mt-6 text-center text-sm")}>
-            Demo mode. No real credentials required.
-          </p>
-        </div>
+            <Button
+              type="button"
+              onClick={() => handleContinue("agent")}
+              disabled={loading !== null}
+              className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white focus-visible:ring-indigo-500"
+            >
+              <User className="size-4" aria-hidden />
+              {loading === "agent" ? "Signing in…" : "Continue as Agent"}
+            </Button>
+          </CardContent>
+        </Card>
+
         <p className={cn(TYPO.muted, "mt-6 text-center text-sm")}>
-          <Link href="/" className="text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
+          <Link
+            href="/"
+            className="text-indigo-600 dark:text-indigo-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
+          >
             Back to home
           </Link>
         </p>
       </div>
     </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Skeleton className="h-96 w-full max-w-md" /></div>}>
-      <LoginForm />
-    </Suspense>
   );
 }

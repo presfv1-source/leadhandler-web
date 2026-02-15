@@ -50,6 +50,14 @@ export default function MarketingHomePage() {
                 <p className="text-sm text-muted-foreground mt-1">Happy teams</p>
               </div>
           </div>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
+            <Button asChild size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white text-base">
+              <Link href="/login">Start Free 14-day Trial</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="text-base border-indigo-600/50 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 dark:hover:bg-indigo-950/30">
+              <Link href="/pricing">See Pricing</Link>
+            </Button>
+          </div>
         </section>
 
         <section className={cn(CONTAINER, PAGE_PADDING, "py-24 bg-muted/30 max-w-5xl mx-auto")}>

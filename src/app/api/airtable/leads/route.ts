@@ -60,6 +60,18 @@ export async function POST(request: NextRequest) {
       const lead = addLead(leadData);
       return NextResponse.json({ success: true, data: { created: true, lead } });
     }
+    if (!hasAirtable) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "NOT_CONFIGURED",
+            message: "Airtable not connected. Add AIRTABLE_API_KEY and AIRTABLE_BASE_ID.",
+          },
+        },
+        { status: 503 }
+      );
+    }
     const lead = await import("@/lib/airtable").then((m) => m.createLead(leadData));
     return NextResponse.json({ success: true, data: { created: true, lead } });
   } catch (err) {
