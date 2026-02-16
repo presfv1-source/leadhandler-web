@@ -13,13 +13,13 @@ interface EarlyBirdBannerProps {
 }
 
 export function EarlyBirdBanner({ className }: EarlyBirdBannerProps) {
-  const [dismissed, setDismissed] = useState(true);
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     try {
-      setDismissed(localStorage.getItem(STORAGE_KEY) === "true");
+      if (localStorage.getItem(STORAGE_KEY) === "true") setDismissed(true);
     } catch {
-      setDismissed(false);
+      // keep default
     }
   }, []);
 

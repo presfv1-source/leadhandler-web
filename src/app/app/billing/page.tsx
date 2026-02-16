@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Zap, Building2, Check } from "lucide-react";
 import { toast } from "sonner";
 
-/** Matches marketing: Essentials $99, Pro $249, Enterprise $499. priceId = Stripe Price ID (env placeholder). */
+/** Matches marketing: Essentials $99, Pro $249. Enterprise = contact for custom. */
 const plans = [
   {
     id: "essentials",
@@ -15,7 +16,7 @@ const plans = [
     price: 99,
     icon: Zap,
     priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ESSENTIALS ?? "",
-    features: ["Up to 15 agents", "1,000 leads/mo", "Email support", "Seamless lead sync"],
+    features: ["Up to 15 agents", "AI qualification", "Lead routing", "SMS inbox", "Seamless lead sync"],
   },
   {
     id: "pro",
@@ -24,14 +25,15 @@ const plans = [
     icon: Building2,
     popular: true,
     priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO ?? "",
-    features: ["40+ agents", "Unlimited leads", "Priority chat support", "Advanced routing & analytics"],
+    features: ["Up to 40+ agents", "Everything in Essentials", "Advanced routing & analytics", "Priority support"],
   },
   {
     id: "enterprise",
     name: "Enterprise",
-    price: 499,
+    price: null,
     icon: CreditCard,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ENTERPRISE ?? "",
+    priceId: "",
+    custom: true,
     features: ["Custom limits", "Dedicated support", "API access", "SLA"],
   },
 ];
@@ -102,6 +104,7 @@ export default function BillingPage() {
         {plans.map((plan) => {
           const Icon = plan.icon;
           const isCurrent = plan.id === CURRENT_PLAN_ID;
+          const isCustom = plan.price == null;
           return (
             <Card key={plan.id} className={plan.popular ? "border-primary shadow-sm" : ""}>
               <CardHeader>
@@ -111,8 +114,14 @@ export default function BillingPage() {
                 </div>
                 <CardTitle>{plan.name}</CardTitle>
                 <p className="text-3xl font-bold">
-                  ${plan.price}
-                  <span className="text-base font-normal text-muted-foreground">/mo</span>
+                  {plan.price != null ? (
+                    <>
+                      ${plan.price}
+                      <span className="text-base font-normal text-muted-foreground">/mo</span>
+                    </>
+                  ) : (
+                    <span className="text-base font-normal text-muted-foreground">Custom</span>
+                  )}
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -124,14 +133,20 @@ export default function BillingPage() {
                     </li>
                   ))}
                 </ul>
-                <Button
-                  className="w-full min-h-[44px]"
-                  variant={plan.popular && !isCurrent ? "default" : "outline"}
-                  onClick={() => handleUpgrade(plan.id, plan.priceId)}
-                  disabled={loading || isCurrent}
-                >
-                  {isCurrent ? "Current plan" : "Upgrade"}
-                </Button>
+                {isCustom ? (
+                  <Button className="w-full min-h-[44px]" variant="outline" asChild>
+                    <Link href="/contact">Contact for Custom</Link>
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full min-h-[44px]"
+                    variant={plan.popular && !isCurrent ? "default" : "outline"}
+                    onClick={() => handleUpgrade(plan.id, plan.priceId)}
+                    disabled={loading || isCurrent}
+                  >
+                    {isCurrent ? "Current plan" : "Upgrade"}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           );

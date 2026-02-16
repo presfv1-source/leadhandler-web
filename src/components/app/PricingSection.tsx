@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight, X } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -14,10 +15,13 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
+const BETA_BANNER_STORAGE = "leadhandler-pricing-beta-banner-dismissed";
+
 const BETA_PLANS = [
   {
     name: "Essentials",
-    price: "$99",
+    price: 99,
+    priceAnnual: 990,
     period: "/mo",
     description: "AI qual, round-robin, inbox, basic dashboard.",
     features: ["Up to 15 agents", "AI lead qualification", "Round-robin routing", "SMS inbox", "Basic dashboard"],
@@ -27,8 +31,9 @@ const BETA_PLANS = [
   },
   {
     name: "Pro",
-    badge: "Best value",
-    price: "$249",
+    badge: "Popular",
+    price: 249,
+    priceAnnual: 2490,
     period: "/mo",
     description: "Everything in Essentials, plus advanced routing & escalation, detailed analytics, priority support. Up to 40+ agents.",
     footnote: "Spots limited before standard $349/$749.",
@@ -41,8 +46,8 @@ const BETA_PLANS = [
 
 const STANDARD_PLANS = [
   {
-    name: "Starter",
-    price: "$349",
+    name: "Essentials",
+    price: 349,
     period: "/mo",
     description: "For established teams.",
     features: ["Up to 15 agents", "AI qualification", "Lead routing", "SMS inbox", "Seamless lead sync"],
@@ -51,22 +56,22 @@ const STANDARD_PLANS = [
     primary: false,
   },
   {
-    name: "Growth",
+    name: "Pro",
     badge: "Popular",
-    price: "$749",
+    price: 749,
     period: "/mo",
     description: "For scaling brokerages.",
-    features: ["Unlimited agents", "Everything in Starter", "Performance visibility", "Priority support"],
+    features: ["Up to 40+ agents", "Everything in Essentials", "Performance visibility", "Priority support"],
     cta: "Get started",
     href: "/signup",
     primary: true,
   },
   {
     name: "Enterprise",
-    price: "Custom",
-    period: "",
+    price: null,
+    period: "Custom",
     description: "Dedicated support and custom options.",
-    features: ["Unlimited agents", "Everything in Growth", "Dedicated support", "Custom options"],
+    features: ["Custom limits", "Dedicated support", "API access", "SLA"],
     cta: "Contact sales",
     href: "/contact",
     primary: false,
@@ -85,36 +90,106 @@ const COMPARISON_ROWS = [
 ];
 
 export function PricingSection() {
+  const [betaBannerDismissed, setBetaBannerDismissed] = useState(false);
+  const [annual, setAnnual] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(BETA_BANNER_STORAGE) === "1") setBetaBannerDismissed(true);
+    } catch {
+      // keep default
+    }
+  }, []);
+
+  function dismissBetaBanner() {
+    try {
+      localStorage.setItem(BETA_BANNER_STORAGE, "1");
+      setBetaBannerDismissed(true);
+    } catch {
+      setBetaBannerDismissed(true);
+    }
+  }
+
   return (
     <Tabs defaultValue="beta" className="w-full">
+      {/* Dismissible beta banner */}
+      {!betaBannerDismissed && (
+        <div
+          role="banner"
+          className="relative flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 pr-12 mb-8"
+        >
+          <p className="text-sm text-foreground">
+            <strong>Limited Beta Launch:</strong> Lock in $99/mo Essentials or $249/mo Pro—spots limited before $349/$749. 14-day trial, no card required.
+          </p>
+          <button
+            type="button"
+            onClick={dismissBetaBanner}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded hover:bg-muted text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Dismiss banner"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       <TabsList className="mb-8 grid w-full max-w-md mx-auto grid-cols-2">
         <TabsTrigger value="beta">Beta Pricing</TabsTrigger>
-        <TabsTrigger value="standard">Standard Pricing</TabsTrigger>
+        <TabsTrigger value="standard">Standard</TabsTrigger>
       </TabsList>
 
       <TabsContent value="beta" className="mt-0 space-y-8">
+        {/* Annual toggle */}
+        <div className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setAnnual(false)}
+            className={cn(
+              "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+              !annual ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Monthly
+          </button>
+          <button
+            type="button"
+            onClick={() => setAnnual(true)}
+            className={cn(
+              "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+              annual ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Annual
+          </button>
+          {annual && (
+            <span className="text-xs text-muted-foreground ml-1">(2 months free)</span>
+          )}
+        </div>
+
         <div className="grid gap-6 md:grid-cols-2">
-          {BETA_PLANS.map((plan) => (
-            <Card
-              key={plan.name}
-              className={cn(
-                "flex flex-col",
-                plan.primary && "border-2 border-primary shadow-md"
-              )}
-            >
-              <CardHeader>
-                {plan.badge && (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary w-fit">
-                    {plan.badge}
-                  </span>
+          {BETA_PLANS.map((plan) => {
+            const price = annual ? plan.priceAnnual : plan.price;
+            const period = annual ? "/yr" : plan.period;
+            return (
+              <Card
+                key={plan.name}
+                className={cn(
+                  "flex flex-col",
+                  plan.primary && "border-2 border-primary shadow-md"
                 )}
+              >
+                <CardHeader>
+                  {plan.badge && (
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary w-fit">
+                      {plan.badge}
+                    </span>
+                  )}
                 <CardTitle className={cn(plan.badge ? "mt-2" : "mt-0")}>
                   {plan.name}
                 </CardTitle>
                 <p className="text-2xl sm:text-3xl font-bold text-foreground">
-                  {plan.price}
+                  ${price}
                   <span className="text-base font-normal text-muted-foreground">
-                    {plan.period}
+                    {period}
                   </span>
                 </p>
                 <p className="text-sm text-muted-foreground">{plan.description}</p>
@@ -145,7 +220,8 @@ export function PricingSection() {
                 </Link>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
 
         <Card>
@@ -211,9 +287,9 @@ export function PricingSection() {
                   {plan.name}
                 </CardTitle>
                 <p className="text-2xl sm:text-3xl font-bold text-foreground">
-                  {plan.price}
+                  {plan.price != null ? `$${plan.price}` : "Custom"}
                   <span className="text-base font-normal text-muted-foreground">
-                    {plan.period}
+                    {plan.period ? ` ${plan.period}` : ""}
                   </span>
                 </p>
                 <p className="text-sm text-muted-foreground">{plan.description}</p>

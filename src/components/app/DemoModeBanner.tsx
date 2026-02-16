@@ -52,12 +52,12 @@ export function DemoModeBanner({ demoEnabled, isOwner }: DemoModeBannerProps) {
               href="/app/settings"
               className="font-medium text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
             >
-              Connect your lead sources in Settings
+              Connect in Settings
             </Link>{" "}
             to go live.
           </>
         ) : (
-          "Connect your lead sources in Settings to go live."
+          "Connect in Settings to go live."
         )}
       </span>
       <button
