@@ -51,14 +51,14 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xl font-bold text-indigo-600 dark:text-indigo-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 rounded-md"
+            className="inline-flex items-center gap-2 text-xl font-bold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
           >
             <Building2 className="size-6" aria-hidden />
             LeadHandler.ai
           </Link>
         </div>
 
-        <Card className="border-indigo-200/50 dark:border-indigo-500/20 shadow-lg shadow-indigo-500/5">
+        <Card className="border-primary/20 shadow-lg shadow-primary/5">
           <CardHeader className="text-center pb-2">
             <CardTitle className={cn(TYPO.h1, "text-2xl")}>
               Continue to app
@@ -72,7 +72,7 @@ export default function LoginPage() {
               type="button"
               onClick={() => handleContinue("owner")}
               disabled={loading !== null}
-              className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white focus-visible:ring-indigo-500"
+              className="w-full h-11"
             >
               <Building2 className="size-4" aria-hidden />
               {loading === "owner" ? "Signing in…" : "Continue as Owner"}
@@ -81,7 +81,7 @@ export default function LoginPage() {
               type="button"
               onClick={() => handleContinue("agent")}
               disabled={loading !== null}
-              className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white focus-visible:ring-indigo-500"
+              className="w-full h-11"
             >
               <User className="size-4" aria-hidden />
               {loading === "agent" ? "Signing in…" : "Continue as Agent"}
@@ -92,7 +92,7 @@ export default function LoginPage() {
         <p className={cn(TYPO.muted, "mt-6 text-center text-sm")}>
           <Link
             href="/"
-            className="text-indigo-600 dark:text-indigo-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
+            className="text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
           >
             Back to home
           </Link>

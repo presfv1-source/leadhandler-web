@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LeadHandler.ai — Lead routing and inbox for brokerages",
-  description: "Turn new leads into appointments faster. Route leads to the right agent and keep every conversation in one place.",
+  title: "LeadHandler.ai — SMS lead response and routing for brokerages",
+  description: "Turn new leads into conversations faster. AI-assisted SMS response and routing for real estate teams.",
 };
 
 export default function RootLayout({

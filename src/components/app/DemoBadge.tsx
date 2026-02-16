@@ -28,11 +28,13 @@ export function DemoBadge({
       )}
     >
       <FlaskConical className="h-4 w-4 text-amber-600" />
-      <Badge variant="outline" className="border-amber-300 text-amber-800 dark:text-amber-200">
-        Demo Mode
+      <Badge variant="outline" className="border-amber-300 text-amber-800 dark:text-amber-200 text-xs">
+        Demo
       </Badge>
       {ownerOnly && onToggle && (
-        <Switch checked={enabled} onCheckedChange={onToggle} />
+        <span className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center -m-2">
+          <Switch checked={enabled} onCheckedChange={onToggle} />
+        </span>
       )}
     </div>
   );

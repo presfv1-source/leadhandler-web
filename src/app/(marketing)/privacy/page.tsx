@@ -1,0 +1,44 @@
+import Link from "next/link";
+import { MarketingHeader } from "@/components/app/MarketingHeader";
+import { MarketingFooter } from "@/components/app/MarketingFooter";
+import { CONTAINER_NARROW, PAGE_PADDING, TYPO } from "@/lib/ui";
+import { cn } from "@/lib/utils";
+
+export default function PrivacyPage() {
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <MarketingHeader />
+
+      <main className={cn(CONTAINER_NARROW, PAGE_PADDING, "flex-1 py-12 md:py-16")}>
+        <h1 className={cn(TYPO.h1, "text-3xl md:text-4xl")}>Privacy</h1>
+        <p className={cn(TYPO.muted, "mt-2")}>
+          How we collect, use, and protect your information.
+        </p>
+
+        <section className="mt-8 space-y-6 text-sm text-foreground">
+          <p>
+            LeadHandler.ai (&quot;we&quot;) processes data you provide when using our service, including brokerage and agent information, lead and contact data, and messages. We use this to deliver SMS lead response and routing, dashboard visibility, and billing.
+          </p>
+          <p>
+            We do not sell your data to third parties for marketing. We rely on trusted vendors (e.g. Twilio, Stripe, Airtable) for messaging, payments, and data storage; their privacy policies apply to their processing.
+          </p>
+          <p>
+            You can request access to or deletion of your data by contacting us. For security and data handling details, see our <Link href="/security" className="font-medium text-primary hover:underline">Security & data</Link> page.
+          </p>
+          <p>
+            We may update this page from time to time. Last updated: 2026.
+          </p>
+        </section>
+
+        <p className={cn(TYPO.muted, "mt-10 text-center text-sm")}>
+          <Link href="/contact" className="font-medium text-primary hover:underline">
+            Contact us
+          </Link>
+          {" "}with privacy questions.
+        </p>
+      </main>
+
+      <MarketingFooter />
+    </div>
+  );
+}

@@ -49,8 +49,8 @@ export function MobileNav({ role, open, onOpenChange }: MobileNavProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden">
-          <Menu className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="md:hidden h-11 w-11 min-h-[44px] min-w-[44px]">
+          <Menu className="h-5 w-5" aria-hidden />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-72 max-w-[calc(100vw-2rem)] pt-12 overflow-y-auto">
@@ -64,7 +64,7 @@ export function MobileNav({ role, open, onOpenChange }: MobileNavProps) {
                 href={item.href}
                 onClick={() => onOpenChange?.(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  "flex items-center gap-3 rounded-lg px-4 py-3 min-h-[44px] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                   isActive
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"

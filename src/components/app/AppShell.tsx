@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { DemoModeBanner } from "./DemoModeBanner";
 import { CONTAINER, PAGE_PADDING, PAGE_SECTION_GAP } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 import type { Role } from "@/lib/types";
@@ -25,16 +25,7 @@ export function AppShell({ children, session, demoEnabled }: AppShellProps) {
           demoEnabled={demoEnabled}
           isOwner={isOwner}
         />
-        {demoEnabled && (
-          <div className="border-b bg-amber-50 px-4 py-2 text-center text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-200 shrink-0">
-            Backend not connected — running in Demo Mode.{" "}
-            {isOwner && (
-              <Link href="/app/settings" className="font-medium underline hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
-                Connect in Settings
-              </Link>
-            )}
-          </div>
-        )}
+        <DemoModeBanner demoEnabled={demoEnabled} isOwner={isOwner} />
         <main className="flex-1 min-w-0 overflow-auto overflow-x-hidden">
           <div className={cn(CONTAINER, PAGE_PADDING, PAGE_SECTION_GAP, "min-w-0 py-4 sm:py-6")}>
             {children}

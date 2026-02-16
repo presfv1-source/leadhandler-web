@@ -31,7 +31,7 @@ const plans = [
     price: 199,
     seats: 50,
     icon: CreditCard,
-    features: ["Unlimited agents", "Unlimited leads", "Dedicated support", "Custom integrations"],
+    features: ["Unlimited agents", "Unlimited leads", "Priority support", "Custom options"],
   },
 ];
 

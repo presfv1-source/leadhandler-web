@@ -68,39 +68,45 @@ async function SettingsContent() {
                 <div>
                   <p className="font-medium">Airtable</p>
                   <p className="text-sm text-muted-foreground">Leads and agents</p>
+                  {!env.hasAirtable && (
+                    <p className="text-xs text-muted-foreground mt-1">Set AIRTABLE_BASE_ID and AIRTABLE_API_KEY in env (or Vercel). Redeploy after adding vars.</p>
+                  )}
                 </div>
               </div>
               {env.hasAirtable ? (
-                <Badge variant="default" className="gap-1">
+                <Badge className="gap-1 bg-emerald-600 hover:bg-emerald-600 text-white border-0">
                   <Check className="h-3 w-3" />
                   Connected
                 </Badge>
               ) : (
                 <Badge variant="secondary" className="gap-1">
                   <X className="h-3 w-3" />
-                  Not connected
+                  Not configured
                 </Badge>
               )}
             </div>
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                  <span className="text-indigo-600 font-bold text-sm">S</span>
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary font-bold text-sm">S</span>
                 </div>
                 <div>
                   <p className="font-medium">Stripe</p>
                   <p className="text-sm text-muted-foreground">Payments</p>
+                  {!env.hasStripe && (
+                    <p className="text-xs text-muted-foreground mt-1">Set STRIPE_SECRET_KEY and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in .env.</p>
+                  )}
                 </div>
               </div>
               {env.hasStripe ? (
-                <Badge variant="default" className="gap-1">
+                <Badge className="gap-1 bg-emerald-600 hover:bg-emerald-600 text-white border-0">
                   <Check className="h-3 w-3" />
                   Connected
                 </Badge>
               ) : (
                 <Badge variant="secondary" className="gap-1">
                   <X className="h-3 w-3" />
-                  Not connected
+                  Not configured
                 </Badge>
               )}
             </div>
@@ -112,17 +118,20 @@ async function SettingsContent() {
                 <div>
                   <p className="font-medium">Twilio</p>
                   <p className="text-sm text-muted-foreground">SMS</p>
+                  {!env.hasTwilio && (
+                    <p className="text-xs text-muted-foreground mt-1">Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_FROM_NUMBER in .env.</p>
+                  )}
                 </div>
               </div>
               {env.hasTwilio ? (
-                <Badge variant="default" className="gap-1">
+                <Badge className="gap-1 bg-emerald-600 hover:bg-emerald-600 text-white border-0">
                   <Check className="h-3 w-3" />
                   Connected
                 </Badge>
               ) : (
                 <Badge variant="secondary" className="gap-1">
                   <X className="h-3 w-3" />
-                  Not connected
+                  Not configured
                 </Badge>
               )}
             </div>
@@ -134,17 +143,20 @@ async function SettingsContent() {
                 <div>
                   <p className="font-medium">Automations</p>
                   <p className="text-sm text-muted-foreground">Trigger workflows from lead events</p>
+                  {!env.hasMake && (
+                    <p className="text-xs text-muted-foreground mt-1">Set MAKE_WEBHOOK_URL in .env.</p>
+                  )}
                 </div>
               </div>
               {env.hasMake ? (
-                <Badge variant="default" className="gap-1">
+                <Badge className="gap-1 bg-emerald-600 hover:bg-emerald-600 text-white border-0">
                   <Check className="h-3 w-3" />
                   Connected
                 </Badge>
               ) : (
                 <Badge variant="secondary" className="gap-1">
                   <X className="h-3 w-3" />
-                  Not connected
+                  Not configured
                 </Badge>
               )}
             </div>

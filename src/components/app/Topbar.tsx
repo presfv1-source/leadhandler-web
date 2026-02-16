@@ -53,12 +53,14 @@ export function Topbar({
     router.refresh();
   }
 
-  const initials = session?.name
-    ?.split(" ")
+  const displayName =
+    !demoEnabled ? (session?.role === "owner" ? "Owner" : "Agent") : (session?.name ?? "User");
+  const initials = displayName
+    .split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase()
-    .slice(0, 2) ?? "U";
+    .slice(0, 2) || "U";
 
   return (
     <header
@@ -89,7 +91,7 @@ export function Topbar({
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+          <Button variant="ghost" className="relative h-11 w-11 min-h-[44px] min-w-[44px] rounded-full md:h-9 md:w-9 md:min-h-0 md:min-w-0">
             <Avatar className="h-8 w-8">
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
@@ -98,21 +100,22 @@ export function Topbar({
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>
             <div className="flex flex-col">
-              <span>{session?.name ?? "User"}</span>
+              <span>{displayName}</span>
               <span className="text-xs font-normal text-muted-foreground">
                 {session?.role === "owner" ? "Owner" : "Agent"}
+                {demoEnabled && <span className="ml-0.5">(Demo)</span>}
               </span>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <a href="/app/account">
+          <DropdownMenuItem asChild className="max-md:min-h-[44px]">
+            <a href="/app/account" className="flex items-center">
               <User className="mr-2 h-4 w-4" />
               Account
             </a>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogout}>
+          <DropdownMenuItem onClick={handleLogout} className="max-md:min-h-[44px]">
             <LogOut className="mr-2 h-4 w-4" />
             Log out
           </DropdownMenuItem>

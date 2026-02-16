@@ -18,31 +18,31 @@ const plans: Array<{
 }> = [
   {
     name: "Starter",
-    price: "$49",
+    price: "$99",
     period: "/mo",
-    description: "For small teams getting started.",
-    features: ["Up to 3 agents", "Lead routing", "Shared inbox"],
-    cta: "Start demo",
-    href: "/login",
+    description: "For small real estate teams getting started.",
+    features: ["Up to 3 agents", "Lead routing", "SMS inbox"],
+    cta: "Start free trial",
+    href: "/signup",
     primary: false,
   },
   {
     name: "Growth",
     badge: "Popular",
-    price: "$99",
+    price: "$249",
     period: "/mo",
-    description: "For growing brokerages.",
-    features: ["Up to 15 agents", "Everything in Starter", "Performance reports"],
-    cta: "Start demo",
-    href: "/login",
+    description: "For growing teams that need more coverage.",
+    features: ["Up to 15 agents", "Everything in Starter", "Performance visibility"],
+    cta: "Start free trial",
+    href: "/signup",
     primary: true,
   },
   {
     name: "Enterprise",
     price: "Custom",
     period: "",
-    description: "For large teams and custom needs.",
-    features: ["Unlimited agents", "Everything in Growth", "Dedicated support"],
+    description: "For larger brokerages and custom or flexible needs.",
+    features: ["Unlimited agents", "Everything in Growth", "Priority support"],
     cta: "Contact sales",
     href: "/contact",
     primary: false,
@@ -58,6 +58,7 @@ export default function PricingPage() {
         <div className="text-center">
           <h1 className={cn(TYPO.h1, "text-3xl md:text-4xl")}>Pricing</h1>
           <p className={cn(TYPO.muted, "mt-2")}>Choose the plan that fits your brokerage.</p>
+          <p className={cn(TYPO.muted, "mt-1 text-sm")}>SMS-first lead response for real estate teams.</p>
         </div>
 
         <div className="mt-10 md:mt-12 grid gap-6 md:grid-cols-3">
@@ -131,10 +132,10 @@ export default function PricingPage() {
 
         <div className="mt-12 md:mt-16 text-center">
           <Link
-            href="/login"
+            href="/signup"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
           >
-            Start demo
+            Start free trial
             <ArrowRight className="size-4" aria-hidden />
           </Link>
         </div>

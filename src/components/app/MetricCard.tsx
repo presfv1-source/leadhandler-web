@@ -40,7 +40,7 @@ export function MetricCard({
       <div className="flex flex-row items-center justify-between gap-2">
         <span className={METRIC_LABEL}>{title}</span>
         {Icon && (
-          <Icon className="size-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+          <Icon className="size-4 shrink-0 text-primary" />
         )}
       </div>
       <div className={METRIC_VALUE}>{value}</div>

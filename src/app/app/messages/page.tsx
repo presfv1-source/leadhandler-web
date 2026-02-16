@@ -102,9 +102,9 @@ export default function MessagesPage() {
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-8rem)] gap-4">
-        <Skeleton className="w-64 shrink-0" />
-        <Skeleton className="flex-1" />
+      <div className="flex flex-col md:flex-row h-[calc(100vh-8rem)] gap-4 min-w-0">
+        <Skeleton className="w-full md:w-64 shrink-0 h-48 md:h-full" />
+        <Skeleton className="flex-1 min-h-64 md:min-h-0" />
       </div>
     );
   }
@@ -115,8 +115,8 @@ export default function MessagesPage() {
         <h1 className="text-2xl font-bold">Messages</h1>
         <p className="text-muted-foreground text-sm">Conversations with leads</p>
       </div>
-      <div className="flex flex-1 gap-4 min-h-0">
-        <Card className="w-64 shrink-0 overflow-hidden flex flex-col">
+      <div className="flex flex-col md:flex-row flex-1 gap-4 min-h-0 min-w-0">
+        <Card className="w-full md:w-64 shrink-0 overflow-hidden flex flex-col">
           <CardHeader className="py-4">
             <h2 className="font-medium text-sm">Conversations</h2>
           </CardHeader>
@@ -126,7 +126,7 @@ export default function MessagesPage() {
                 <button
                   key={lead.id}
                   onClick={() => setSelectedLeadId(lead.id)}
-                  className={`w-full text-left px-4 py-3 text-sm hover:bg-muted/50 transition-colors ${
+                  className={`w-full text-left px-4 py-3 min-h-[44px] text-sm hover:bg-muted/50 transition-colors ${
                     selectedLeadId === lead.id ? "bg-muted" : ""
                   }`}
                 >
@@ -182,7 +182,7 @@ export default function MessagesPage() {
                     rows={2}
                     className="resize-none flex-1"
                   />
-                  <Button type="submit" disabled={sending || !body.trim()} size="icon">
+                  <Button type="submit" disabled={sending || !body.trim()} size="icon" className="shrink-0 min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0">
                     <Send className="h-4 w-4" />
                   </Button>
                 </form>

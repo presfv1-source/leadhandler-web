@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 import { z } from "zod";
 import { env } from "@/lib/env.mjs";
+import { hasAirtable } from "@/lib/config";
 import type { Role } from "@/lib/types";
 
 const COOKIE_NAME = "lh_session";
@@ -40,13 +41,15 @@ export async function GET(request: NextRequest) {
   if (!session) {
     return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "No session" } }, { status: 401 });
   }
+  const demoEnabled = await getDemoEnabled(request);
   return NextResponse.json({
     success: true,
-    data: { name: session.name, role: session.role, userId: session.userId },
+    data: { name: session.name, role: session.role, userId: session.userId, demoEnabled },
   });
 }
 
 export async function getDemoEnabled(request: NextRequest): Promise<boolean> {
+  if (hasAirtable) return false;
   const cookie = request.cookies.get(DEMO_COOKIE_NAME)?.value;
   if (cookie === "true") return true;
   if (cookie === "false") return false;

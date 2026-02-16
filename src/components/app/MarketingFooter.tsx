@@ -6,6 +6,8 @@ const links = [
   { href: "/", label: "LeadHandler.ai", primary: true },
   { href: "/pricing", label: "Pricing", primary: false },
   { href: "/security", label: "Security", primary: false },
+  { href: "/privacy", label: "Privacy", primary: false },
+  { href: "/terms", label: "Terms", primary: false },
   { href: "/contact", label: "Contact", primary: false },
 ] as const;
 
@@ -17,7 +19,7 @@ export function MarketingFooter({ className }: { className?: string }) {
         className
       )}
     >
-      <div className={cn(CONTAINER, PAGE_PADDING, "text-center")}>
+      <div className={cn(CONTAINER, PAGE_PADDING, "text-center space-y-3")}>
         <p className={cn(TYPO.mutedSmall, "flex flex-wrap items-center justify-center gap-x-2 gap-y-1")}>
           {links.map(({ href, label, primary }, i) => (
             <span key={href}>
@@ -30,6 +32,9 @@ export function MarketingFooter({ className }: { className?: string }) {
               </Link>
             </span>
           ))}
+        </p>
+        <p className={cn(TYPO.mutedSmall, "text-muted-foreground")}>
+          © 2026 LeadHandler.ai · Houston, TX
         </p>
       </div>
     </footer>

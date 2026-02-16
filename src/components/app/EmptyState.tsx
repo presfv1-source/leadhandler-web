@@ -26,7 +26,7 @@ export function EmptyState({
   return (
     <div className={cn(EMPTY_STATE, className)} role="status" aria-label={title}>
       <Icon
-        className={cn(EMPTY_STATE_ICON, "shrink-0 text-indigo-600/80 dark:text-indigo-400/80")}
+        className={cn(EMPTY_STATE_ICON, "shrink-0 text-primary/80")}
         aria-hidden
       />
       <h3 className={EMPTY_STATE_TITLE}>{title}</h3>

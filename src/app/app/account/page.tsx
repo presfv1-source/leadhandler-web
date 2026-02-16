@@ -10,7 +10,7 @@ import { User, LogOut, Building2 } from "lucide-react";
 
 export default function AccountPage() {
   const router = useRouter();
-  const [session, setSession] = useState<{ name?: string; role: string } | null>(null);
+  const [session, setSession] = useState<{ name?: string; role: string; demoEnabled?: boolean } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,12 +50,16 @@ export default function AccountPage() {
     );
   }
 
-  const initials = session?.name
-    ?.split(" ")
+  const displayName =
+    session?.demoEnabled === false
+      ? (session?.role === "owner" ? "Owner" : "Agent")
+      : (session?.name ?? "User");
+  const initials = displayName
+    .split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase()
-    .slice(0, 2) ?? "U";
+    .slice(0, 2) || "U";
 
   return (
     <div className="space-y-8">
@@ -73,7 +77,7 @@ export default function AccountPage() {
               <AvatarFallback className="text-lg">{initials}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium text-lg">{session?.name ?? "User"}</p>
+              <p className="font-medium text-lg">{displayName}</p>
               <p className="text-sm text-muted-foreground">{session?.role === "owner" ? "Owner" : "Agent"}</p>
             </div>
           </div>

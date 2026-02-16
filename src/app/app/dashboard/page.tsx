@@ -13,13 +13,11 @@ import { PageHeader } from "@/components/app/PageHeader";
 import { StatCard } from "@/components/app/StatCard";
 import { SectionCard } from "@/components/app/SectionCard";
 import { LeadStatusPill } from "@/components/app/LeadStatusPill";
-import { ResponsiveDataList } from "@/components/app/ResponsiveDataList";
+import { DashboardAgentLeaderboard } from "@/components/app/DashboardAgentLeaderboard";
 import { EmptyState } from "@/components/app/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
 import { LeadActivityChart } from "@/components/app/LeadActivityChart";
 import { ActivityFeed } from "@/components/app/ActivityFeed";
-import { type ColumnDef } from "@tanstack/react-table";
 import type { ActivityItem, Agent, Lead, DashboardStats } from "@/lib/types";
 import { BarChart3 } from "lucide-react";
 import Link from "next/link";
@@ -159,30 +157,6 @@ async function DashboardContent() {
     );
   }
 
-  const agentColumns: ColumnDef<Agent>[] = [
-    { accessorKey: "name", header: "Agent" },
-    {
-      accessorKey: "metrics.leadsAssigned",
-      header: "Leads",
-      cell: ({ row }) => row.original.metrics?.leadsAssigned ?? 0,
-    },
-    {
-      accessorKey: "metrics.qualifiedCount",
-      header: "Qualified",
-      cell: ({ row }) => row.original.metrics?.qualifiedCount ?? 0,
-    },
-    {
-      accessorKey: "metrics.appointmentsSet",
-      header: "Appointments",
-      cell: ({ row }) => row.original.metrics?.appointmentsSet ?? 0,
-    },
-    {
-      accessorKey: "metrics.closedCount",
-      header: "Closed",
-      cell: ({ row }) => row.original.metrics?.closedCount ?? 0,
-    },
-  ];
-
   const isOwner = session?.role === "owner";
 
   return (
@@ -192,7 +166,7 @@ async function DashboardContent() {
         subtitle={`Welcome back, ${session?.name ?? "User"}`}
       />
 
-      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {[
           { title: "Leads today", value: stats.leadsToday, iconName: "leads" as const },
           { title: "Qualified rate", value: `${stats.qualifiedRate}%`, iconName: "qualified" as const },
@@ -255,22 +229,7 @@ async function DashboardContent() {
 
         {isOwner ? (
           <SectionCard title="Agent leaderboard">
-            <ResponsiveDataList
-              columns={agentColumns}
-              data={agents}
-              mobileCard={(row) => (
-                <Card className="min-w-0">
-                  <CardContent className="min-w-0 p-4">
-                    <p className="font-medium truncate">{row.original.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Leads: {row.original.metrics?.leadsAssigned} | Closed:{" "}
-                      {row.original.metrics?.closedCount}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-              emptyMessage="No agents yet."
-            />
+            <DashboardAgentLeaderboard agents={agents} />
           </SectionCard>
         ) : (
           <SectionCard title="My recent leads">

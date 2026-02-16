@@ -42,8 +42,14 @@ export function MarketingHeader({ className }: { className?: string }) {
               {label}
             </Link>
           ))}
-          <Button asChild size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0">
-            <Link href="/login">Login</Link>
+          <Link
+            href="/login"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
+          >
+            Log in
+          </Link>
+          <Button asChild size="sm" className="shrink-0">
+            <Link href="/signup">Start free trial</Link>
           </Button>
         </nav>
 
@@ -68,9 +74,15 @@ export function MarketingHeader({ className }: { className?: string }) {
                 ))}
                 <Link
                   href="/login"
-                  className="mt-4 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-3 text-sm font-medium text-white hover:bg-indigo-700"
+                  className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  Login
+                  Log in
+                </Link>
+                <Link
+                  href="/signup"
+                  className="mt-4 inline-flex items-center justify-center rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Start free trial
                 </Link>
               </nav>
             </SheetContent>

@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { env } from "./env.mjs";
+import { hasAirtable } from "./config";
 import type { Role } from "./types";
 
 export interface Session {
@@ -26,6 +27,7 @@ export async function getSession(): Promise<Session | null> {
 }
 
 export async function getDemoEnabled(): Promise<boolean> {
+  if (hasAirtable) return false;
   const cookieStore = await cookies();
   const cookie = cookieStore.get("lh_demo")?.value;
   if (cookie === "true") return true;

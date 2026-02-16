@@ -144,14 +144,17 @@ function buildMessagesForLead(leadId: string): Message[] {
     "What's the HOA situation?",
   ];
   const count = 4 + Math.floor(seededRandom(leadId) * 6);
+  const now = Date.now();
   for (let i = 0; i < count; i++) {
     const dir: "in" | "out" = i % 2 === 0 ? "in" : "out";
     const body = dir === "in" ? pick(inBodies, leadId + i) : pick(bodies, leadId + i);
+    const r = seededRandom(leadId + "msgT" + i);
+    const offsetMs = 2 * 60 * 1000 + r * (36 * 60 * 60 * 1000);
     msgs.push({
       id: `${base}${i}`,
       direction: dir,
       body,
-      createdAt: new Date(Date.now() - (count - i) * 3600000).toISOString(),
+      createdAt: new Date(now - offsetMs).toISOString(),
       leadId,
     });
   }

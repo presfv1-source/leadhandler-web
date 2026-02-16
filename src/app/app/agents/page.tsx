@@ -90,7 +90,7 @@ async function AgentsContent() {
         columns={columns}
         data={agents}
         mobileCard={(row) => (
-          <div className="rounded-lg border p-4 flex items-center gap-4">
+          <div className="rounded-lg border p-4 flex items-center gap-4 min-h-[44px] min-w-0">
             <Avatar>
               <AvatarImage src={row.original.avatarUrl} />
               <AvatarFallback>
