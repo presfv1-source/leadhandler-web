@@ -45,12 +45,14 @@ export default function MessagesPage() {
         } else if (data.success === false && data.error?.code === "AUTHENTICATION_REQUIRED") {
           setLeads([]);
           setLoadError(true);
+          toast.error("Check Airtable connection in Settings.");
         }
         setLoading(false);
       })
       .catch(() => {
         setLoading(false);
         setLoadError(true);
+        toast.error("Failed to load conversations. Check your connection or try again.");
       });
   }, []);
 
@@ -64,7 +66,14 @@ export default function MessagesPage() {
           setMessages(data.data as Message[]);
         } else {
           setMessages([]);
+          if (data.success === false && data.error?.code === "AUTHENTICATION_REQUIRED") {
+            toast.error("Check Airtable connection in Settings.");
+          }
         }
+      })
+      .catch(() => {
+        setMessages([]);
+        toast.error("Failed to load messages.");
       });
   }, [selectedLeadId]);
 

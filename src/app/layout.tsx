@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SessionProvider } from "@/components/app/SessionProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -11,7 +12,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "LeadHandler.ai — SMS lead response and routing for brokerages",
-  description: "Turn new leads into conversations faster. AI-assisted SMS response and routing for real estate teams.",
+  description: "Turn new leads into conversations faster. AI-powered SMS response and routing for real estate teams.",
 };
 
 export default function RootLayout({
@@ -22,10 +23,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased`}>
-        <TooltipProvider>
-          {children}
-          <Toaster position="top-center" richColors />
-        </TooltipProvider>
+        <SessionProvider>
+          <TooltipProvider>
+            {children}
+            <Toaster position="top-center" richColors />
+          </TooltipProvider>
+        </SessionProvider>
       </body>
     </html>
   );

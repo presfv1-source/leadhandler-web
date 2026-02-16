@@ -16,7 +16,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Mail, Phone, MapPin, User } from "lucide-react";
 
 async function LeadDetailContent({ id }: { id: string }) {
-  const [session, demoEnabled] = await Promise.all([getSession(), getDemoEnabled()]);
+  const session = await getSession();
+  const demoEnabled = await getDemoEnabled(session);
   const leads = demoEnabled ? getDemoLeads() : await import("@/lib/airtable").then((m) => m.getLeads());
   const lead = leads.find((l) => l.id === id);
   if (!lead) notFound();

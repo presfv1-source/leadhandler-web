@@ -49,7 +49,7 @@ export function HeroSection() {
             Turn new leads into conversations faster
           </h1>
           <p className="text-xl text-muted-foreground mb-10">
-            AI-assisted SMS lead response and routing for real estate teams.
+            AI-powered SMS lead response and routing for real estate teams.
             Respond first, qualify with confidence, route to the right agent.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

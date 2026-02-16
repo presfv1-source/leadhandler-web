@@ -128,9 +128,18 @@ async function getLeadsUncached(): Promise<Lead[]> {
   return leads;
 }
 
-export const getLeads = hasAirtable
+const getLeadsCachedAll = hasAirtable
   ? unstable_cache(getLeadsUncached, ["airtable-leads"], { revalidate: 60, tags: ["leads"] })
   : getLeadsUncached;
+
+/** Get all leads, or only leads assigned to the given agent (Airtable Agent record id). */
+export async function getLeads(assignedToAgentId?: string): Promise<Lead[]> {
+  const all = await getLeadsCachedAll();
+  if (assignedToAgentId) {
+    return all.filter((l) => l.assignedTo === assignedToAgentId);
+  }
+  return all;
+}
 
 export async function createLead(
   lead: Omit<Lead, "id" | "createdAt" | "updatedAt">
@@ -206,6 +215,97 @@ export const getAgents = hasAirtable
   ? unstable_cache(getAgentsUncached, ["airtable-agents"], { revalidate: 60, tags: ["agents"] })
   : getAgentsUncached;
 
+// ---- Users (optional: Email, Role owner/broker/agent, Agent link) ----
+export type AirtableUser = { role: "owner" | "broker" | "agent"; agentId?: string };
+
+type UserFields = {
+  Email?: string;
+  Role?: string;
+  Agent?: string[];
+};
+
+const VALID_ROLES = ["owner", "broker", "agent"] as const;
+type ValidRole = (typeof VALID_ROLES)[number];
+
+function parseRole(raw: string): ValidRole {
+  const r = (raw ?? "").toString().toLowerCase();
+  if (VALID_ROLES.includes(r as ValidRole)) return r as ValidRole;
+  return "broker";
+}
+
+/** Look up user by email in optional Users table. Returns null if table not configured or user not found. */
+export async function getAirtableUserByEmail(email: string): Promise<AirtableUser | null> {
+  const table = env.server.AIRTABLE_TABLE_USERS?.trim();
+  if (!table || !hasAirtable) return null;
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) return null;
+  const escaped = trimmed.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  const formula = `LOWER({Email}) = "${escaped}"`;
+  try {
+    const records = await listAllRecords<UserFields>(table, formula);
+    const first = records[0];
+    if (!first?.fields) return null;
+    const role = parseRole((first.fields.Role ?? "").toString());
+    const agentLink = Array.isArray(first.fields.Agent) ? first.fields.Agent[0] : undefined;
+    return { role, agentId: agentLink ?? undefined };
+  } catch {
+    return null;
+  }
+}
+
+/** Create a user in the optional Users table (e.g. for OAuth first sign-in). Returns created AirtableUser or null if table not configured / request failed. */
+export async function createAirtableUser(
+  email: string,
+  role: ValidRole
+): Promise<AirtableUser | null> {
+  const table = env.server.AIRTABLE_TABLE_USERS?.trim();
+  if (!table || !hasAirtable) return null;
+  const trimmed = email.trim();
+  if (!trimmed) return null;
+  const url = tableUrl(table);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({
+        fields: {
+          Email: trimmed,
+          Role: role,
+        },
+      }),
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      if (res.status === 401) throw new AirtableAuthError(`Airtable Users create: 401 ${err}`);
+      console.error("[airtable] createAirtableUser failed:", res.status, err);
+      return null;
+    }
+    const created = (await res.json()) as AirtableRecord<UserFields>;
+    const roleParsed = parseRole((created.fields?.Role ?? "").toString());
+    return { role: roleParsed, agentId: undefined };
+  } catch (e) {
+    if (e instanceof AirtableAuthError) throw e;
+    return null;
+  }
+}
+
+/** Resolve Airtable Agent record id by email (from Agents table). Used when Users table has no Agent link. */
+export async function getAgentIdByEmail(email: string): Promise<string | null> {
+  if (!hasAirtable) return null;
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) return null;
+  const table = env.server.AIRTABLE_TABLE_AGENTS;
+  const escaped = trimmed.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  const formula = `LOWER({Email}) = "${escaped}"`;
+  try {
+    const records = await listAllRecords<AgentFields>(table, formula);
+    return records[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // ---- Messages ----
 // Expected fields: Body, Direction ("in" | "out" or "In" | "Out"), Lead (link to Leads).
 // createdTime on record or field "Created".
@@ -250,10 +350,10 @@ export async function getMessages(leadId?: string): Promise<Message[]> {
 // ---- Activity (derived from leads + messages) ----
 
 /** Build ActivityItem[] from leads and messages for dashboard. No ActivityLog table required. */
-export async function getRecentActivities(limit = 20): Promise<ActivityItem[]> {
+export async function getRecentActivities(limit = 20, assignedToAgentId?: string): Promise<ActivityItem[]> {
   if (!hasAirtable) return [];
   const [leads, messages, agents] = await Promise.all([
-    getLeads(),
+    getLeads(assignedToAgentId),
     getMessages(),
     getAgents(),
   ]);

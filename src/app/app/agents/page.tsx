@@ -1,12 +1,13 @@
 import { Suspense } from "react";
-import { getDemoEnabled } from "@/lib/auth";
+import { getSession, getDemoEnabled } from "@/lib/auth";
 import { getDemoAgentsAsAppType } from "@/lib/demoData";
 import { AirtableAuthError } from "@/lib/airtable";
 import { AgentsTable } from "@/components/app/AgentsTable";
 import { Skeleton } from "@/components/ui/skeleton";
 
 async function AgentsContent() {
-  const demoEnabled = await getDemoEnabled();
+  const session = await getSession();
+  const demoEnabled = await getDemoEnabled(session);
   let agents = Array.from<import("@/lib/types").Agent>([]);
   let airtableError = false;
 

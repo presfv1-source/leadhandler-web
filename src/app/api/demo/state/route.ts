@@ -2,12 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { cookies } from "next/headers";
 import { env } from "@/lib/env.mjs";
+import { getSessionToken } from "@/app/api/auth/session/route";
 
 const DEMO_COOKIE = "lh_demo";
 
 const postSchema = z.object({ enabled: z.boolean() });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const session = await getSessionToken(request);
+  if (session?.role === "agent") {
+    return NextResponse.json({ success: true, data: { enabled: false } });
+  }
   const cookieStore = await cookies();
   const val = cookieStore.get(DEMO_COOKIE)?.value;
   const enabled = val === "true" ? true : val === "false" ? false : null;
@@ -26,13 +31,15 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+  const session = await getSessionToken(request);
+  const effective = session?.role === "agent" ? false : parsed.data.enabled;
   const cookieStore = await cookies();
-  cookieStore.set(DEMO_COOKIE, parsed.data.enabled ? "true" : "false", {
+  cookieStore.set(DEMO_COOKIE, effective ? "true" : "false", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 365,
     path: "/",
   });
-  return NextResponse.json({ success: true, data: { enabled: parsed.data.enabled } });
+  return NextResponse.json({ success: true, data: { enabled: effective } });
 }

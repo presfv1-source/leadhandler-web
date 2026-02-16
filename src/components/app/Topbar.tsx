@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { Search, LogOut, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -39,12 +40,13 @@ export function Topbar({
 
   async function handleLogout() {
     await fetch("/api/auth/session", { method: "DELETE" });
-    router.push("/login");
+    await signOut({ callbackUrl: "/login" });
     router.refresh();
   }
 
-  const displayName =
-    !demoEnabled ? (session?.role === "owner" ? "Broker" : "Agent") : (session?.name ?? "User");
+  const roleLabel =
+    session?.role === "owner" ? "Owner" : session?.role === "broker" ? "Broker" : "Agent";
+  const displayName = !demoEnabled ? roleLabel : (session?.name ?? "User");
   const initials = displayName
     .split(" ")
     .map((n) => n[0])
@@ -99,7 +101,7 @@ export function Topbar({
             <div className="flex flex-col">
               <span>{displayName}</span>
               <span className="text-xs font-normal text-muted-foreground">
-                {session?.role === "owner" ? "Broker" : "Agent"}
+                {roleLabel}
                 {demoEnabled && <span className="ml-0.5">(Demo)</span>}
               </span>
             </div>

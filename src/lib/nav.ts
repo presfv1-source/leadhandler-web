@@ -29,40 +29,40 @@ export const navGroups: NavGroup[] = [
   {
     label: "Overview",
     items: [
-      { href: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["owner", "agent"], tooltip: "View dashboard" },
+      { href: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["owner", "broker", "agent"], tooltip: "View dashboard" },
     ],
   },
   {
     label: "Leads & Inbox",
     items: [
-      { href: "/app/leads", label: "Leads", icon: Users, roles: ["owner", "agent"], tooltip: "View leads" },
-      { href: "/app/messages", label: "Messages", icon: MessageSquare, roles: ["owner", "agent"], tooltip: "Inbox" },
+      { href: "/app/leads", label: "Leads", icon: Users, roles: ["owner", "broker", "agent"], tooltip: "View leads" },
+      { href: "/app/messages", label: "Messages", icon: MessageSquare, roles: ["owner", "broker", "agent"], tooltip: "Inbox" },
     ],
   },
   {
     label: "Routing",
     items: [
-      { href: "/app/agents", label: "Agents", icon: UserCog, roles: ["owner"], tooltip: "Manage agents" },
-      { href: "/app/routing", label: "Routing", icon: Route, roles: ["owner"], tooltip: "Routing setup" },
+      { href: "/app/agents", label: "Agents", icon: UserCog, roles: ["owner", "broker"], tooltip: "Manage agents" },
+      { href: "/app/routing", label: "Routing", icon: Route, roles: ["owner", "broker"], tooltip: "Routing setup" },
     ],
   },
   {
     label: "Analytics",
     items: [
-      { href: "/app/analytics", label: "Analytics", icon: BarChart3, roles: ["owner"], tooltip: "Analytics" },
+      { href: "/app/analytics", label: "Analytics", icon: BarChart3, roles: ["owner", "broker"], tooltip: "Analytics" },
     ],
   },
   {
     label: "Settings",
     items: [
-      { href: "/app/billing", label: "Billing", icon: CreditCard, roles: ["owner"], tooltip: "Billing" },
-      { href: "/app/settings", label: "Settings", icon: Settings, roles: ["owner"], tooltip: "Settings" },
+      { href: "/app/billing", label: "Billing", icon: CreditCard, roles: ["owner", "broker"], tooltip: "Billing" },
+      { href: "/app/settings", label: "Settings", icon: Settings, roles: ["owner", "broker"], tooltip: "Settings" },
     ],
   },
   {
     label: "Me",
     items: [
-      { href: "/app/account", label: "Account", icon: User, roles: ["owner", "agent"], tooltip: "Account" },
+      { href: "/app/account", label: "Account", icon: User, roles: ["owner", "broker", "agent"], tooltip: "Account" },
     ],
   },
 ];

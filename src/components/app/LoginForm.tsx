@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { Building2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,8 @@ const DEV_EMAIL =
     ? process.env.NEXT_PUBLIC_DEV_LOGIN_EMAIL.trim()
     : "presfv1@gmail.com";
 
+const CALLBACK_URL = "/app/dashboard";
+
 export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState(DEV_EMAIL);
@@ -35,24 +38,28 @@ export function LoginForm() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
+      const res = await signIn("credentials", {
+        email: email.trim(),
+        password,
+        callbackUrl: CALLBACK_URL,
+        redirect: false,
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        toast.error(data.error?.message ?? "Invalid email or password");
+      if (res?.error || !res?.ok) {
+        toast.error("Invalid email or password");
         setLoading(false);
         return;
       }
       toast.success("Welcome back!");
-      router.push("/app/dashboard");
+      router.push(CALLBACK_URL);
       router.refresh();
     } catch {
       toast.error("Something went wrong. Please try again.");
       setLoading(false);
     }
+  }
+
+  async function handleOAuth(provider: "google" | "apple") {
+    await signIn(provider, { callbackUrl: CALLBACK_URL });
   }
 
   return (
@@ -154,6 +161,32 @@ export function LoginForm() {
                 "Sign In"
               )}
             </Button>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11"
+                onClick={() => handleOAuth("google")}
+              >
+                Google
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11"
+                onClick={() => handleOAuth("apple")}
+              >
+                Apple
+              </Button>
+            </div>
           </motion.form>
         </CardContent>
       </Card>

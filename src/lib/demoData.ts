@@ -114,6 +114,7 @@ export function getDemoAgentsAsAppType(): Agent[] {
     email: a.email,
     phone: a.phone ?? "+17135550000",
     active: true,
+    closeRate: a.closeRate,
     createdAt: "2026-02-01T00:00:00.000Z",
     metrics: {
       leadsAssigned: Math.floor(demoLeads.length / demoAgents.length) + (i < demoLeads.length % demoAgents.length ? 1 : 0),

@@ -11,7 +11,8 @@ import { Users } from "lucide-react";
 import type { Lead } from "@/lib/types";
 
 async function LeadsContent() {
-  const [session, demoEnabled] = await Promise.all([getSession(), getDemoEnabled()]);
+  const session = await getSession();
+  const demoEnabled = await getDemoEnabled(session);
   let leads: Lead[] = [];
   let airtableError = false;
 
@@ -20,7 +21,8 @@ async function LeadsContent() {
   } else {
     try {
       const airtable = await import("@/lib/airtable");
-      leads = await airtable.getLeads();
+      const agentId = session?.role === "agent" ? session?.agentId : undefined;
+      leads = await airtable.getLeads(agentId);
     } catch (err) {
       if (err instanceof AirtableAuthError) {
         airtableError = true;

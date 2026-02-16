@@ -6,7 +6,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const dynamic = "force-dynamic";
 
 async function AppLayoutInner({ children }: { children: React.ReactNode }) {
-  const [session, demoEnabled] = await Promise.all([getSession(), getDemoEnabled()]);
+  const session = await getSession();
+  const demoEnabled = await getDemoEnabled(session);
   return (
     <AppShell session={session} demoEnabled={demoEnabled}>
       {children}

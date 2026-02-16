@@ -17,6 +17,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { LeadStatusPill } from "@/components/app/LeadStatusPill";
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import Link from "next/link";
@@ -25,6 +32,13 @@ import { RESPONSIVE_LIST_BREAKPOINT } from "@/lib/ui";
 import type { Lead } from "@/lib/types";
 
 const PAGE_SIZE = 10;
+
+const SOURCE_OPTIONS = ["All", "Zillow", "Realtor.com", "Website", "Other"] as const;
+type SourceFilterValue = (typeof SOURCE_OPTIONS)[number];
+
+function normalizeSource(s: string | undefined): string {
+  return (s ?? "").trim().toLowerCase();
+}
 
 const columns: ColumnDef<Lead>[] = [
   {
@@ -100,9 +114,15 @@ export function LeadsDataList({ leads }: LeadsDataListProps) {
   const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false }]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>("All");
+
+  const filteredBySource =
+    sourceFilter === "All"
+      ? leads
+      : leads.filter((l) => normalizeSource(l.source) === normalizeSource(sourceFilter));
 
   const table = useReactTable({
-    data: leads,
+    data: filteredBySource,
     columns,
     state: { sorting, globalFilter },
     onSortingChange: setSorting,
@@ -123,15 +143,29 @@ export function LeadsDataList({ leads }: LeadsDataListProps) {
 
   return (
     <div className="min-w-0 space-y-4">
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-        <Input
-          placeholder="Search by name or email..."
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          className="pl-9 h-9"
-        />
+      {/* Source filter + Search */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={sourceFilter} onValueChange={(v) => setSourceFilter(v as SourceFilterValue)}>
+          <SelectTrigger className="w-[140px] h-9" size="default">
+            <SelectValue placeholder="Source" />
+          </SelectTrigger>
+          <SelectContent>
+            {SOURCE_OPTIONS.map((opt) => (
+              <SelectItem key={opt} value={opt}>
+                {opt}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Search by name or email..."
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            className="pl-9 h-9"
+          />
+        </div>
       </div>
 
       {/* Desktop: table with overflow */}

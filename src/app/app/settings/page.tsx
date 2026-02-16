@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getDemoEnabled } from "@/lib/auth";
+import { getSession, getDemoEnabled } from "@/lib/auth";
 import { getDemoBrokerage } from "@/lib/demo/data";
 import { getEnvSummary } from "@/lib/config";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,11 +11,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, Check, X, Link2 } from "lucide-react";
 
 async function SettingsContent() {
-  const [demoEnabled, brokerage, env] = await Promise.all([
-    getDemoEnabled(),
+  const [session, brokerage, env] = await Promise.all([
+    getSession(),
     Promise.resolve(getDemoBrokerage()),
     Promise.resolve(getEnvSummary()),
   ]);
+  const demoEnabled = await getDemoEnabled(session);
 
   return (
     <div className="space-y-8">
@@ -56,6 +57,9 @@ async function SettingsContent() {
           <CardTitle>Integrations</CardTitle>
           <p className="text-sm text-muted-foreground">
             Connect your tools. Each integration unlocks specific features. How to connect: add keys to .env (see README) or follow the instructions below.
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Lead sources (e.g. Zillow, Realtor.com, Website) come from integrations and webhook tags before SMS. Configure in Airtable automations.
           </p>
         </CardHeader>
         <CardContent>

@@ -2,12 +2,13 @@ import Link from "next/link";
 import { BarChart3, LayoutDashboard, UserPlus, Clock, TrendingUp, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getDemoEnabled } from "@/lib/auth";
+import { getSession, getDemoEnabled } from "@/lib/auth";
 import { demoAnalytics, getDemoLeadsByDay } from "@/lib/demoData";
 import { AnalyticsChart } from "@/components/app/AnalyticsChart";
 
 export default async function AnalyticsPage() {
-  const demoEnabled = await getDemoEnabled();
+  const session = await getSession();
+  const demoEnabled = await getDemoEnabled(session);
 
   if (!demoEnabled) {
     return (

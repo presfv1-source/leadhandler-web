@@ -6,6 +6,8 @@ const serverSchema = z.object({
   AIRTABLE_TABLE_LEADS: z.string().default("Leads"),
   AIRTABLE_TABLE_AGENTS: z.string().default("Agents"),
   AIRTABLE_TABLE_MESSAGES: z.string().default("Messages"),
+  /** Optional: Users table with Email, Role (broker/agent), Agent (link to Agents) */
+  AIRTABLE_TABLE_USERS: z.string().default(""),
   STRIPE_SECRET_KEY: z.string().default(""),
   STRIPE_WEBHOOK_SECRET: z.string().default(""),
   TWILIO_ACCOUNT_SID: z.string().default(""),
@@ -19,6 +21,16 @@ const serverSchema = z.object({
   SESSION_SECRET: z.string().min(16).default("super-secret-for-demo-only-change-in-prod"),
   /** Broker email allowed for dev/direct login (no real auth yet) */
   DEV_ADMIN_EMAIL: z.string().default(""),
+  /** NextAuth (v5): secret for JWT/session; set in production */
+  NEXTAUTH_SECRET: z.string().default(""),
+  /** NextAuth: app URL (e.g. http://localhost:3000) */
+  NEXTAUTH_URL: z.string().default("http://localhost:3000"),
+  /** Google OAuth */
+  GOOGLE_CLIENT_ID: z.string().default(""),
+  GOOGLE_CLIENT_SECRET: z.string().default(""),
+  /** Apple Sign-In (Service ID; client secret via APPLE_SECRET) */
+  APPLE_ID: z.string().default(""),
+  APPLE_SECRET: z.string().default(""),
 });
 
 const clientSchema = z.object({
@@ -38,6 +50,7 @@ function parseEnv() {
     AIRTABLE_TABLE_LEADS: process.env.AIRTABLE_TABLE_LEADS,
     AIRTABLE_TABLE_AGENTS: process.env.AIRTABLE_TABLE_AGENTS,
     AIRTABLE_TABLE_MESSAGES: process.env.AIRTABLE_TABLE_MESSAGES,
+    AIRTABLE_TABLE_USERS: process.env.AIRTABLE_TABLE_USERS ?? "",
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
     TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
@@ -47,6 +60,12 @@ function parseEnv() {
     DEMO_MODE_DEFAULT: process.env.DEMO_MODE_DEFAULT ?? "true",
     SESSION_SECRET: process.env.SESSION_SECRET,
     DEV_ADMIN_EMAIL: process.env.DEV_ADMIN_EMAIL,
+    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    APPLE_ID: process.env.APPLE_ID,
+    APPLE_SECRET: process.env.APPLE_SECRET,
   });
 
   const client = clientSchema.safeParse({

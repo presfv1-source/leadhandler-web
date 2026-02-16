@@ -40,9 +40,10 @@ const DEFAULT_STATS: DashboardStats = {
 };
 
 async function DashboardContent() {
-  const [session, demoEnabled] = await Promise.all([getSession(), getDemoEnabled()]);
+  const session = await getSession();
+  const demoEnabled = await getDemoEnabled(session);
   const role = session?.role ?? "agent";
-  const agentId = role === "agent" ? session?.userId : undefined;
+  const agentId = role === "agent" ? session?.agentId : undefined;
 
   let stats: DashboardStats = DEFAULT_STATS;
   let leads: Lead[] = [];
@@ -70,10 +71,10 @@ async function DashboardContent() {
     try {
       const airtable = await import("@/lib/airtable");
       const [realLeads, realAgents, realMessages, realActivity] = await Promise.all([
-        airtable.getLeads(),
+        airtable.getLeads(agentId),
         airtable.getAgents(),
         airtable.getMessages(),
-        airtable.getRecentActivities(20),
+        airtable.getRecentActivities(20, agentId),
       ]);
       stats = computeDashboardStatsFromLeads(realLeads ?? [], role, agentId);
       leads = realLeads ?? [];

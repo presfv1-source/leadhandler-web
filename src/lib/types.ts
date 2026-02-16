@@ -1,4 +1,4 @@
-export type Role = "owner" | "agent";
+export type Role = "owner" | "broker" | "agent";
 
 export type LeadStatus =
   | "new"
@@ -25,6 +25,8 @@ export interface Agent {
   active: boolean;
   avatarUrl?: string;
   brokerageId?: string;
+  /** Optional close rate (0–100) for performance-based routing. */
+  closeRate?: number;
   metrics?: {
     leadsAssigned: number;
     qualifiedCount: number;

@@ -6,6 +6,7 @@ import type {
   Lead,
   Message,
   Insight,
+  Role,
 } from "@/lib/types";
 import {
   getAgentNames,
@@ -272,7 +273,7 @@ const thisMonthPrefix = new Date().toISOString().slice(0, 7); // YYYY-MM
 /** Compute dashboard KPIs from a list of leads. Used by demo and by real-data dashboard. */
 export function computeDashboardStatsFromLeads(
   leads: Lead[],
-  role: "owner" | "agent",
+  role: Role,
   agentId?: string
 ): DashboardStats {
   const today = new Date().toISOString().slice(0, 10);
@@ -296,7 +297,7 @@ export function computeDashboardStatsFromLeads(
   };
 }
 
-export function getDashboardStats(role: "owner" | "agent", agentId?: string): DashboardStats {
+export function getDashboardStats(role: Role, agentId?: string): DashboardStats {
   return computeDashboardStatsFromLeads(buildLeads(), role, agentId);
 }
 
