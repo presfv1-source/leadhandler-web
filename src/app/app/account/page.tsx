@@ -6,29 +6,55 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, LogOut, Building2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { User, LogOut, Building2, Database } from "lucide-react";
+import { toast } from "sonner";
+import { DemoAirtableModal } from "@/components/app/DemoAirtableModal";
 
 export default function AccountPage() {
   const router = useRouter();
   const [session, setSession] = useState<{ name?: string; role: string; demoEnabled?: boolean } | null>(null);
+  const [demoEnabled, setDemoEnabled] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [demoModalOpen, setDemoModalOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/auth/session")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success && data.data) {
-          setSession(data.data);
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    Promise.all([
+      fetch("/api/auth/session").then((r) => r.json()),
+      fetch("/api/demo/state").then((r) => r.json()),
+    ]).then(([sessionRes, demoRes]) => {
+      if (sessionRes.success && sessionRes.data) setSession(sessionRes.data);
+      if (demoRes.success && demoRes.data?.enabled != null) setDemoEnabled(demoRes.data.enabled);
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
   async function handleLogout() {
     await fetch("/api/auth/session", { method: "DELETE" });
+    toast.success("You have been logged out");
     router.push("/login");
     router.refresh();
+  }
+
+  async function handleDemoToggle(checked: boolean) {
+    try {
+      const res = await fetch("/api/demo/state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: checked }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDemoEnabled(checked);
+        toast.success(checked ? "Demo mode on" : "Demo mode off");
+        router.refresh();
+      } else {
+        toast.error("Could not update demo mode");
+      }
+    } catch {
+      toast.error("Could not update demo mode");
+    }
   }
 
   async function handleRoleSwitch(role: "owner" | "agent") {
@@ -52,7 +78,7 @@ export default function AccountPage() {
 
   const displayName =
     session?.demoEnabled === false
-      ? (session?.role === "owner" ? "Owner" : "Agent")
+      ? (session?.role === "owner" ? "Broker" : "Agent")
       : (session?.name ?? "User");
   const initials = displayName
     .split(" ")
@@ -78,7 +104,7 @@ export default function AccountPage() {
             </Avatar>
             <div>
               <p className="font-medium text-lg">{displayName}</p>
-              <p className="text-sm text-muted-foreground">{session?.role === "owner" ? "Owner" : "Agent"}</p>
+              <p className="text-sm text-muted-foreground">{session?.role === "owner" ? "Broker" : "Agent"}</p>
             </div>
           </div>
           <div>
@@ -93,7 +119,7 @@ export default function AccountPage() {
                 onClick={() => handleRoleSwitch("owner")}
               >
                 <Building2 className="h-4 w-4 mr-2" />
-                Owner
+                Broker
               </Button>
               <Button
                 variant={session?.role === "agent" ? "default" : "outline"}
@@ -105,12 +131,28 @@ export default function AccountPage() {
               </Button>
             </div>
           </div>
-          <Button variant="destructive" onClick={handleLogout}>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="demo-toggle">Toggle Demo Mode</Label>
+              <p className="text-xs text-muted-foreground">Use demo data when lead sync is not connected.</p>
+            </div>
+            <Switch
+              id="demo-toggle"
+              checked={demoEnabled ?? false}
+              onCheckedChange={handleDemoToggle}
+            />
+          </div>
+          <Button variant="outline" onClick={() => setDemoModalOpen(true)} className="w-full justify-center gap-2 min-h-[44px]">
+            <Database className="h-4 w-4" />
+            Access Demo lead sync info
+          </Button>
+          <Button variant="destructive" onClick={handleLogout} className="min-h-[44px]">
             <LogOut className="h-4 w-4 mr-2" />
             Log out
           </Button>
         </CardContent>
       </Card>
+      <DemoAirtableModal open={demoModalOpen} onOpenChange={setDemoModalOpen} />
     </div>
   );
 }

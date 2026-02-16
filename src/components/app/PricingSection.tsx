@@ -19,8 +19,8 @@ const BETA_PLANS = [
     name: "Essentials",
     price: "$99",
     period: "/mo",
-    description: "Core features for small teams. Lock beta pricing.",
-    features: ["Up to 15 agents", "AI lead qualification", "Lead routing", "SMS inbox", "Seamless lead sync"],
+    description: "AI qual, round-robin, inbox, basic dashboard.",
+    features: ["Up to 15 agents", "AI lead qualification", "Round-robin routing", "SMS inbox", "Basic dashboard"],
     cta: "Claim Beta Spot",
     href: "/signup",
     primary: false,
@@ -30,8 +30,9 @@ const BETA_PLANS = [
     badge: "Best value",
     price: "$249",
     period: "/mo",
-    description: "Advanced features, higher limits. Lock beta pricing.",
-    features: ["Unlimited agents", "Everything in Essentials", "Performance visibility", "Priority support"],
+    description: "Everything in Essentials, plus advanced routing & escalation, detailed analytics, priority support. Up to 40+ agents.",
+    footnote: "Spots limited before standard $349/$749.",
+    features: ["Up to 40+ agents", "Everything in Essentials", "Advanced routing & escalation", "Detailed analytics", "Priority support"],
     cta: "Claim Beta Spot",
     href: "/signup",
     primary: true,
@@ -73,12 +74,13 @@ const STANDARD_PLANS = [
 ];
 
 const COMPARISON_ROWS = [
-  { feature: "Agents", essentials: "Up to 15", pro: "Unlimited" },
+  { feature: "Agents", essentials: "Up to 15", pro: "Up to 40+" },
   { feature: "AI lead qualification", essentials: "✓", pro: "✓" },
-  { feature: "Lead routing", essentials: "✓", pro: "✓" },
+  { feature: "Round-robin routing", essentials: "✓", pro: "✓" },
   { feature: "SMS inbox", essentials: "✓", pro: "✓" },
-  { feature: "Seamless lead sync", essentials: "✓", pro: "✓" },
-  { feature: "Performance visibility", essentials: "—", pro: "✓" },
+  { feature: "Basic dashboard", essentials: "✓", pro: "✓" },
+  { feature: "Advanced analytics", essentials: "—", pro: "✓" },
+  { feature: "Escalation", essentials: "—", pro: "✓" },
   { feature: "Priority support", essentials: "—", pro: "✓" },
 ];
 
@@ -116,6 +118,9 @@ export function PricingSection() {
                   </span>
                 </p>
                 <p className="text-sm text-muted-foreground">{plan.description}</p>
+                {"footnote" in plan && plan.footnote && (
+                  <p className="text-xs text-muted-foreground mt-1">{plan.footnote}</p>
+                )}
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
                 <ul className="space-y-3 text-sm text-foreground">

@@ -8,6 +8,7 @@ import {
   CreditCard,
   Route,
   User,
+  BarChart3,
 } from "lucide-react";
 import type { Role } from "@/lib/types";
 
@@ -39,10 +40,21 @@ export const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Routing & Settings",
+    label: "Routing",
     items: [
       { href: "/app/agents", label: "Agents", icon: UserCog, roles: ["owner"], tooltip: "Manage agents" },
       { href: "/app/routing", label: "Routing", icon: Route, roles: ["owner"], tooltip: "Routing setup" },
+    ],
+  },
+  {
+    label: "Analytics",
+    items: [
+      { href: "/app/analytics", label: "Analytics", icon: BarChart3, roles: ["owner"], tooltip: "Analytics" },
+    ],
+  },
+  {
+    label: "Settings",
+    items: [
       { href: "/app/billing", label: "Billing", icon: CreditCard, roles: ["owner"], tooltip: "Billing" },
       { href: "/app/settings", label: "Settings", icon: Settings, roles: ["owner"], tooltip: "Settings" },
     ],

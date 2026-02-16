@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { hasAirtable } from "@/lib/config";
-import { getDemoLeads, addLead } from "@/lib/demo/data";
+import { getDemoLeadsAsAppType } from "@/lib/demoData";
 import { getDemoEnabled } from "@/app/api/auth/session/route";
+import { AirtableAuthError } from "@/lib/airtable";
 
 const postSchema = z.object({
   name: z.string().min(1),
@@ -16,17 +17,30 @@ const postSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const demo = await getDemoEnabled(request);
-    if (!hasAirtable || demo) {
-      const leads = getDemoLeads();
+    if (demo) {
+      const leads = getDemoLeadsAsAppType();
       return NextResponse.json({ success: true, data: leads });
+    }
+    if (!hasAirtable) {
+      return NextResponse.json({ success: true, data: [] });
     }
     const leads = await import("@/lib/airtable").then((m) => m.getLeads());
     return NextResponse.json({ success: true, data: leads });
   } catch (err) {
+    if (err instanceof AirtableAuthError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: { code: "AUTHENTICATION_REQUIRED", message: "Check Airtable connection in Settings." },
+          data: [],
+        },
+        { status: 200 }
+      );
+    }
     console.error("[airtable/leads GET]", err);
     return NextResponse.json(
-      { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch leads" } },
-      { status: 500 }
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch leads" }, data: [] },
+      { status: 200 }
     );
   }
 }
@@ -57,8 +71,8 @@ export async function POST(request: NextRequest) {
       assignedTo: body.assignedTo,
     };
     if (demo) {
-      const lead = addLead(leadData);
-      return NextResponse.json({ success: true, data: { created: true, lead } });
+      const leads = getDemoLeadsAsAppType();
+      return NextResponse.json({ success: true, data: { created: true, lead: leads[0] } });
     }
     if (!hasAirtable) {
       return NextResponse.json(

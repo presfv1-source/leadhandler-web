@@ -1,14 +1,46 @@
+"use client";
+
 import Link from "next/link";
-import { Building2, Zap, MessageSquare, Users, Shield, BarChart3 } from "lucide-react";
+import { Building2, Zap, MessageSquare, Users, Shield, BarChart3, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MarketingHeader } from "@/components/app/MarketingHeader";
 import { MarketingFooter } from "@/components/app/MarketingFooter";
 import { HeroSection } from "@/components/app/HeroSection";
+import { EarlyBirdBanner } from "@/components/app/EarlyBirdBanner";
+import { PricingSection } from "@/components/app/PricingSection";
 import { CONTAINER, PAGE_PADDING } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 
-/** Replace with your Loom embed URL (45s demo). Example: https://www.loom.com/embed/xxxxx */
 const LOOM_EMBED_URL = process.env.NEXT_PUBLIC_LOOM_EMBED_URL || "";
+
+const sectionMotion = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.3 },
+};
+
+const testimonials = [
+  {
+    quote: "We cut our first-response time in half. Leads used to sit for hours—now we reply in minutes.",
+    author: "Sarah M.",
+    location: "Houston",
+    initials: "SM",
+  },
+  {
+    quote: "One inbox for all our lead conversations. No more digging through texts and emails.",
+    author: "Mike T.",
+    location: "Dallas",
+    initials: "MT",
+  },
+  {
+    quote: "Finally we can see who's following up. The dashboard gives me visibility I never had.",
+    author: "Jennifer L.",
+    location: "Austin",
+    initials: "JL",
+  },
+];
 
 export default function MarketingHomePage() {
   return (
@@ -18,111 +50,168 @@ export default function MarketingHomePage() {
       <main>
         <HeroSection />
 
-        <section className={cn(CONTAINER, PAGE_PADDING, "py-12 max-w-5xl mx-auto")}>
-          <p className="text-center text-sm text-muted-foreground mb-6">Built for fast-moving teams</p>
-          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
-            <span className="text-sm font-medium text-muted-foreground/80">Seamless lead sync</span>
-            <span className="text-muted-foreground/40">·</span>
-            <span className="text-sm font-medium text-muted-foreground/80">SMS inbox</span>
-            <span className="text-muted-foreground/40">·</span>
-            <span className="text-sm font-medium text-muted-foreground/80">Simple billing</span>
-          </div>
-        </section>
+        <motion.section
+          {...sectionMotion}
+          className={cn(CONTAINER, PAGE_PADDING, "py-12 max-w-5xl mx-auto")}
+        >
+          <p className="text-center text-sm text-muted-foreground">
+            Fast replies, more closings—no extra tools to learn.
+          </p>
+        </motion.section>
 
-        <section className={cn(CONTAINER, PAGE_PADDING, "py-16 max-w-5xl mx-auto")}>
-          <h2 className="text-2xl font-bold text-center mb-8">Trusted by broker-owners</h2>
+        <motion.section
+          {...sectionMotion}
+          className={cn(CONTAINER, PAGE_PADDING, "py-16 max-w-5xl mx-auto")}
+        >
+          <h2 className="text-2xl font-bold text-center mb-8">
+            Trusted by Texas broker-owners
+          </h2>
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="rounded-xl border bg-card p-6 text-card-foreground">
-              <p className="text-sm text-muted-foreground italic mb-4">
-                &ldquo;We cut our first-response time in half. Zillow leads used to sit for hours—now we reply in minutes.&rdquo;
-              </p>
-              <p className="text-sm font-medium">— Sarah M., Houston</p>
+            {testimonials.map((t) => (
+              <div
+                key={t.initials}
+                className="rounded-xl border bg-card p-6 text-card-foreground flex flex-col"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <Avatar className="h-10 w-10 shrink-0">
+                    <AvatarFallback className="text-sm">{t.initials}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-medium">{t.author}</p>
+                    <p className="text-xs text-muted-foreground">{t.location}</p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground italic flex-1">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+              </div>
+            ))}
+          </div>
+        </motion.section>
+
+        <motion.section
+          {...sectionMotion}
+          className={cn(CONTAINER, PAGE_PADDING, "py-24 bg-muted/30 max-w-5xl mx-auto")}
+        >
+          <h2 className="text-3xl font-bold text-center mb-12">How it works</h2>
+          {LOOM_EMBED_URL ? (
+            <div className="mb-14 rounded-xl overflow-hidden border bg-card shadow-sm aspect-video max-w-3xl mx-auto">
+              <iframe
+                src={LOOM_EMBED_URL}
+                allowFullScreen
+                className="w-full h-full"
+                title="LeadHandler demo video"
+              />
             </div>
-            <div className="rounded-xl border bg-card p-6 text-card-foreground">
-              <p className="text-sm text-muted-foreground italic mb-4">
-                &ldquo;One inbox for all our lead conversations. No more digging through texts and emails.&rdquo;
+          ) : null}
+          <div className="flex flex-col md:flex-row md:items-start md:justify-center gap-8 md:gap-4">
+            <div className="text-center flex-1">
+              <div className="inline-flex h-12 w-12 rounded-full bg-primary/10 items-center justify-center mb-4">
+                <Users className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Capture leads</h3>
+              <p className="text-muted-foreground text-sm">
+                <strong>Setup in under 30 minutes.</strong> Connect your lead sources.{" "}
+                <strong>Leads sync to your dashboard.</strong>
               </p>
-              <p className="text-sm font-medium">— Mike T., Dallas</p>
             </div>
-            <div className="rounded-xl border bg-card p-6 text-card-foreground">
-              <p className="text-sm text-muted-foreground italic mb-4">
-                &ldquo;Finally we can see who&apos;s following up. The dashboard gives me visibility I never had.&rdquo;
+            <div className="hidden md:flex shrink-0 pt-8" aria-hidden>
+              <ChevronRight className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <div className="text-center flex-1">
+              <div className="inline-flex h-12 w-12 rounded-full bg-primary/10 items-center justify-center mb-4">
+                <MessageSquare className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Respond quickly</h3>
+              <p className="text-muted-foreground text-sm">
+                <strong>One inbox</strong> for every conversation. Never miss a lead.
               </p>
-              <p className="text-sm font-medium">— Jennifer L., Austin</p>
+            </div>
+            <div className="hidden md:flex shrink-0 pt-8" aria-hidden>
+              <ChevronRight className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <div className="text-center flex-1">
+              <div className="inline-flex h-12 w-12 rounded-full bg-primary/10 items-center justify-center mb-4">
+                <BarChart3 className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Track & close</h3>
+              <p className="text-muted-foreground text-sm">
+                Dashboard shows performance. Route leads to your agents.
+              </p>
             </div>
           </div>
-        </section>
+        </motion.section>
 
-        <section className={cn(CONTAINER, PAGE_PADDING, "py-24 bg-muted/30 max-w-5xl mx-auto")}>
-            <h2 className="text-3xl font-bold text-center mb-12">How it works</h2>
-            {LOOM_EMBED_URL ? (
-              <div className="mb-14 rounded-xl overflow-hidden border bg-card shadow-sm aspect-video max-w-3xl mx-auto">
-                <iframe
-                  src={LOOM_EMBED_URL}
-                  allowFullScreen
-                  className="w-full h-full"
-                  title="LeadHandler demo video"
-                />
-              </div>
-            ) : null}
-            <div className="grid md:grid-cols-3 gap-12">
-              <div className="text-center">
-                <div className="inline-flex h-12 w-12 rounded-full bg-primary/10 items-center justify-center mb-4">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">Capture leads</h3>
-                <p className="text-muted-foreground text-sm">Connect your lead sources. Leads flow in and sync to your dashboard.</p>
-              </div>
-              <div className="text-center">
-                <div className="inline-flex h-12 w-12 rounded-full bg-primary/10 items-center justify-center mb-4">
-                  <MessageSquare className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">Respond quickly</h3>
-                <p className="text-muted-foreground text-sm">One inbox for every conversation. Never miss a lead.</p>
-              </div>
-              <div className="text-center">
-                <div className="inline-flex h-12 w-12 rounded-full bg-primary/10 items-center justify-center mb-4">
-                  <BarChart3 className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">Track & close</h3>
-                <p className="text-muted-foreground text-sm">Dashboard shows performance. Route leads to the right agents.</p>
-              </div>
+        <motion.section
+          {...sectionMotion}
+          className={cn(CONTAINER, PAGE_PADDING, "py-24 max-w-5xl mx-auto")}
+        >
+          <h2 className="text-3xl font-bold text-center mb-12">Features</h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="rounded-xl border bg-card p-6">
+              <Zap className="h-8 w-8 text-primary mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Smart routing</h3>
+              <p className="text-muted-foreground text-sm">
+                Intelligent routing to top performers. Round-robin and escalation.
+              </p>
             </div>
-        </section>
-
-        <section className={cn(CONTAINER, PAGE_PADDING, "py-24 max-w-5xl mx-auto")}>
-            <h2 className="text-3xl font-bold text-center mb-12">Features</h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="rounded-xl border p-6">
-                <Zap className="h-8 w-8 text-primary mb-4" />
-                <h3 className="font-semibold text-lg mb-2">Smart routing</h3>
-                <p className="text-muted-foreground text-sm">Round-robin (more options coming). Get the right lead to the right agent.</p>
-              </div>
-              <div className="rounded-xl border p-6">
-                <MessageSquare className="h-8 w-8 text-primary mb-4" />
-                <h3 className="font-semibold text-lg mb-2">SMS inbox</h3>
-                <p className="text-muted-foreground text-sm">One inbox. Respond from anywhere.</p>
-              </div>
-              <div className="rounded-xl border p-6">
-                <Shield className="h-8 w-8 text-primary mb-4" />
-                <h3 className="font-semibold text-lg mb-2">Security & data</h3>
-                <p className="text-muted-foreground text-sm">Your data is stored securely; we don&apos;t overclaim compliance.</p>
-              </div>
-              <div className="rounded-xl border p-6">
-                <Building2 className="h-8 w-8 text-primary mb-4" />
-                <h3 className="font-semibold text-lg mb-2">Seamless lead sync</h3>
-                <p className="text-muted-foreground text-sm">Your leads stay in sync. One source of truth, real-time.</p>
-              </div>
+            <div className="rounded-xl border bg-card p-6">
+              <MessageSquare className="h-8 w-8 text-primary mb-4" />
+              <h3 className="font-semibold text-lg mb-2">SMS inbox</h3>
+              <p className="text-muted-foreground text-sm">
+                <strong>One inbox.</strong> Respond from anywhere.
+              </p>
             </div>
-        </section>
+            <div className="rounded-xl border bg-card p-6">
+              <Shield className="h-8 w-8 text-primary mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Security & data</h3>
+              <p className="text-muted-foreground text-sm">
+                Your data is stored securely; we don&apos;t overclaim compliance.
+              </p>
+            </div>
+            <div className="rounded-xl border bg-card p-6">
+              <Building2 className="h-8 w-8 text-primary mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Seamless lead sync</h3>
+              <p className="text-muted-foreground text-sm">
+                Your leads stay in sync. <strong>One source of truth, real-time.</strong>
+              </p>
+            </div>
+          </div>
+        </motion.section>
 
-        <section className={cn(CONTAINER, PAGE_PADDING, "py-24 bg-muted/30 max-w-3xl mx-auto text-center")}>
-            <h2 className="text-3xl font-bold mb-4">Ready to respond first?</h2>
-            <p className="text-muted-foreground mb-8">Start your free trial.</p>
-          <Button asChild size="lg">
-            <Link href="/signup">Start free trial</Link>
-          </Button>
-        </section>
+        <motion.section
+          id="pricing"
+          {...sectionMotion}
+          className={cn(CONTAINER, PAGE_PADDING, "py-24 max-w-5xl mx-auto")}
+        >
+          <h2 className="text-3xl font-bold text-center mb-4">Pricing</h2>
+          <p className="text-center text-muted-foreground mb-8">
+            Lock beta pricing before standard rates.
+          </p>
+          <EarlyBirdBanner className="mb-10" />
+          <PricingSection />
+        </motion.section>
+
+        <motion.section
+          {...sectionMotion}
+          className={cn(CONTAINER, PAGE_PADDING, "py-24 bg-muted/30 max-w-3xl mx-auto text-center")}
+        >
+          <h2 className="text-3xl font-bold mb-4">Ready to respond first?</h2>
+          <p className="text-muted-foreground mb-8">Start your free trial.</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" className="min-h-[44px]">
+              <Link href="/signup">Start free trial</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="min-h-[44px]">
+              <Link href="/pricing">See pricing</Link>
+            </Button>
+          </div>
+          <p className="mt-6 text-sm text-muted-foreground">
+            <Link href="/contact" className="font-medium text-primary hover:underline">
+              Talk to sales
+            </Link>
+          </p>
+        </motion.section>
       </main>
 
       <MarketingFooter />

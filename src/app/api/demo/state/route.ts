@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { cookies } from "next/headers";
-import { hasAirtable } from "@/lib/config";
 import { env } from "@/lib/env.mjs";
 
 const DEMO_COOKIE = "lh_demo";
@@ -9,9 +8,6 @@ const DEMO_COOKIE = "lh_demo";
 const postSchema = z.object({ enabled: z.boolean() });
 
 export async function GET() {
-  if (hasAirtable) {
-    return NextResponse.json({ success: true, data: { enabled: false } });
-  }
   const cookieStore = await cookies();
   const val = cookieStore.get(DEMO_COOKIE)?.value;
   const enabled = val === "true" ? true : val === "false" ? false : null;

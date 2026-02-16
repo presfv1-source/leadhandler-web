@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquare, Send } from "lucide-react";
 import { toast } from "sonner";
+import { AirtableErrorFallback } from "@/components/app/AirtableErrorFallback";
 
 interface Message {
   id: string;
@@ -30,6 +31,7 @@ export default function MessagesPage() {
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     fetch("/api/airtable/leads")
@@ -39,10 +41,17 @@ export default function MessagesPage() {
           const l = data.data as Lead[];
           setLeads(l.slice(0, 14));
           if (l.length > 0 && !selectedLeadId) setSelectedLeadId(l[0].id);
+          setLoadError(false);
+        } else if (data.success === false && data.error?.code === "AUTHENTICATION_REQUIRED") {
+          setLeads([]);
+          setLoadError(true);
         }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setLoading(false);
+        setLoadError(true);
+      });
   }, []);
 
   useEffect(() => {
@@ -115,6 +124,7 @@ export default function MessagesPage() {
         <h1 className="text-2xl font-bold">Messages</h1>
         <p className="text-muted-foreground text-sm">Conversations with leads</p>
       </div>
+      {loadError && <AirtableErrorFallback className="mb-4" />}
       <div className="flex flex-col md:flex-row flex-1 gap-4 min-h-0 min-w-0">
         <Card className="w-full md:w-64 shrink-0 overflow-hidden flex flex-col">
           <CardHeader className="py-4">

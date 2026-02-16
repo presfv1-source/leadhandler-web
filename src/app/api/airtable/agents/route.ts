@@ -1,22 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasAirtable } from "@/lib/config";
-import { getDemoAgents } from "@/lib/demo/data";
+import { getDemoAgentsAsAppType } from "@/lib/demoData";
 import { getDemoEnabled } from "@/app/api/auth/session/route";
+import { AirtableAuthError } from "@/lib/airtable";
 
 export async function GET(request: NextRequest) {
   try {
     const demo = await getDemoEnabled(request);
-    if (!hasAirtable || demo) {
-      const agents = getDemoAgents();
+    if (demo) {
+      const agents = getDemoAgentsAsAppType();
       return NextResponse.json({ success: true, data: agents });
+    }
+    if (!hasAirtable) {
+      return NextResponse.json({ success: true, data: [] });
     }
     const agents = await import("@/lib/airtable").then((m) => m.getAgents());
     return NextResponse.json({ success: true, data: agents });
   } catch (err) {
+    if (err instanceof AirtableAuthError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: { code: "AUTHENTICATION_REQUIRED", message: "Check Airtable connection in Settings." },
+          data: [],
+        },
+        { status: 200 }
+      );
+    }
     console.error("[airtable/agents GET]", err);
     return NextResponse.json(
-      { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch agents" } },
-      { status: 500 }
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch agents" }, data: [] },
+      { status: 200 }
     );
   }
 }

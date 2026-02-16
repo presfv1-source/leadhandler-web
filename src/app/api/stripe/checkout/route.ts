@@ -1,9 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createCheckout } from "@/lib/stripe";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
-    const url = await createCheckout();
+    const body = await request.json().catch(() => ({}));
+    const priceId = typeof body?.priceId === "string" ? body.priceId : undefined;
+    const url = await createCheckout(priceId);
     return NextResponse.json({ success: true, data: { url } });
   } catch (err) {
     console.error("[stripe/checkout POST]", err);

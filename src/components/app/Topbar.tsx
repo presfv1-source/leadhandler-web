@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DemoBadge } from "./DemoBadge";
+import { DemoToggle } from "./DemoToggle";
 import { MobileNav } from "./MobileNav";
 import { cn } from "@/lib/utils";
 import type { Role } from "@/lib/types";
@@ -43,18 +43,8 @@ export function Topbar({
     router.refresh();
   }
 
-  async function handleDemoToggle(enabled: boolean) {
-    await fetch("/api/demo/state", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ enabled }),
-    });
-    onDemoToggle?.(enabled);
-    router.refresh();
-  }
-
   const displayName =
-    !demoEnabled ? (session?.role === "owner" ? "Owner" : "Agent") : (session?.name ?? "User");
+    !demoEnabled ? (session?.role === "owner" ? "Broker" : "Agent") : (session?.name ?? "User");
   const initials = displayName
     .split(" ")
     .map((n) => n[0])
@@ -69,7 +59,13 @@ export function Topbar({
         className
       )}
     >
-      <MobileNav role={session?.role ?? "agent"} open={mobileOpen} onOpenChange={setMobileOpen} />
+      <MobileNav
+        role={session?.role ?? "agent"}
+        open={mobileOpen}
+        onOpenChange={setMobileOpen}
+        demoEnabled={demoEnabled}
+        isOwner={isOwner}
+      />
       <div className="flex-1 flex items-center gap-4">
         <div className="hidden sm:flex flex-1 max-w-md">
           <div className="relative w-full">
@@ -81,11 +77,12 @@ export function Topbar({
             />
           </div>
         </div>
-        {demoEnabled && (
-          <DemoBadge
-            enabled={demoEnabled}
-            onToggle={isOwner ? handleDemoToggle : undefined}
-            ownerOnly={isOwner}
+        {isOwner && (
+          <DemoToggle
+            demoEnabled={demoEnabled}
+            onToggle={onDemoToggle}
+            disabled={false}
+            className="hidden sm:flex"
           />
         )}
       </div>
@@ -102,7 +99,7 @@ export function Topbar({
             <div className="flex flex-col">
               <span>{displayName}</span>
               <span className="text-xs font-normal text-muted-foreground">
-                {session?.role === "owner" ? "Owner" : "Agent"}
+                {session?.role === "owner" ? "Broker" : "Agent"}
                 {demoEnabled && <span className="ml-0.5">(Demo)</span>}
               </span>
             </div>

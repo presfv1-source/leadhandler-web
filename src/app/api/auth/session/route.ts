@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 import { z } from "zod";
 import { env } from "@/lib/env.mjs";
-import { hasAirtable } from "@/lib/config";
 import type { Role } from "@/lib/types";
 
 const COOKIE_NAME = "lh_session";
@@ -49,7 +48,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function getDemoEnabled(request: NextRequest): Promise<boolean> {
-  if (hasAirtable) return false;
   const cookie = request.cookies.get(DEMO_COOKIE_NAME)?.value;
   if (cookie === "true") return true;
   if (cookie === "false") return false;

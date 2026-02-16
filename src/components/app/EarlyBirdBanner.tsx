@@ -43,8 +43,7 @@ export function EarlyBirdBanner({ className }: EarlyBirdBannerProps) {
       )}
     >
       <p className="font-bold">
-        Limited Beta: Lock $99/mo Essentials or $249/mo Pro—spots filling!
-        <span className="font-normal opacity-95"> Includes 14-day trial, no card.</span>{" "}
+        <strong>Limited Beta Launch:</strong> Lock in <strong>$99/mo Essentials</strong> (up to 15 agents) or <strong>$249/mo Pro</strong> (up to 40+, advanced routing & analytics)—spots limited before $349/$749. <strong>14-day trial, no card needed.</strong>{" "}
         <Link
           href="/signup"
           className="inline-flex items-center font-semibold underline underline-offset-2 hover:no-underline"

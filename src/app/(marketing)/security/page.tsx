@@ -19,17 +19,13 @@ const sections: Array<{
   {
     icon: Lock,
     title: "Access control",
-    body: "Session-based access with role-based views (Owner vs Agent). Credentials and API keys are never exposed in the UI; they are stored and used server-side only.",
+    body: "Session-based access with role-based views (Broker vs Agent). Credentials and API keys are never exposed in the UI; they are stored and used server-side only.",
   },
   {
     icon: Server,
     title: "Vendors we use",
-    body: "We rely on established vendors to deliver messaging, payments, and data storage. These partners have their own security and compliance programs. We do not overclaim compliance; we encourage you to review their policies as needed.",
-    list: [
-      { name: "Twilio", desc: "Messaging and voice (SMS, calls)." },
-      { name: "Stripe", desc: "Billing and subscription management." },
-      { name: "Airtable", desc: "Optional base for leads and CRM-style data when you connect it." },
-    ],
+    body: "We use industry-standard providers for SMS, payments, and data sync. These partners have their own security and compliance programs. We do not overclaim compliance; we encourage you to review their policies as needed.",
+    list: undefined,
   },
 ];
 

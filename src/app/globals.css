@@ -47,6 +47,7 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/* Theme: primary is blue accent. Use hover:bg-primary/90 for buttons. */
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);

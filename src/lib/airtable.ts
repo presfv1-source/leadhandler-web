@@ -6,9 +6,29 @@ import type { ActivityItem, Agent, Lead, Message } from "./types";
 const BASE_URL = "https://api.airtable.com/v0";
 const PAGE_SIZE = 100;
 
+/** Thrown when Airtable returns 401; callers can show "check Airtable connection" instead of crashing. */
+export class AirtableAuthError extends Error {
+  code = "AUTHENTICATION_REQUIRED" as const;
+  constructor(message: string) {
+    super(message);
+    this.name = "AirtableAuthError";
+  }
+}
+
 type AirtableRecord<T> = { id: string; fields: T; createdTime?: string };
 
+let patLogged = false;
+
 function getHeaders(): HeadersInit {
+  const key = env.server.AIRTABLE_API_KEY?.trim();
+  const baseId = env.server.AIRTABLE_BASE_ID?.trim();
+  if (!key || !baseId) {
+    throw new Error("Missing Airtable env vars: AIRTABLE_API_KEY and AIRTABLE_BASE_ID required");
+  }
+  if (!patLogged) {
+    patLogged = true;
+    console.log("[airtable] PAT:", key ? key.slice(0, 10) + "..." : "MISSING");
+  }
   return {
     Authorization: `Bearer ${env.server.AIRTABLE_API_KEY}`,
     "Content-Type": "application/json",
@@ -38,6 +58,10 @@ async function listAllRecords<T>(
     const res = await fetch(url, { headers: getHeaders(), cache: "no-store" });
     if (!res.ok) {
       const err = await res.text();
+      if (res.status === 401) {
+        console.error("[airtable] AUTHENTICATION_REQUIRED", tableName, err);
+        throw new AirtableAuthError(`Airtable ${tableName}: 401 ${err}`);
+      }
       console.error(`[airtable] ${tableName} fetch failed: ${res.status}`, err);
       throw new Error(`Airtable ${tableName}: ${res.status} ${err}`);
     }
@@ -139,6 +163,10 @@ export async function createLead(
   });
   if (!res.ok) {
     const err = await res.text();
+    if (res.status === 401) {
+      console.error("[airtable] AUTHENTICATION_REQUIRED createLead", err);
+      throw new AirtableAuthError(`Airtable create lead: 401 ${err}`);
+    }
     console.error("[airtable] createLead failed:", res.status, err);
     throw new Error(`Airtable create lead: ${res.status} ${err}`);
   }

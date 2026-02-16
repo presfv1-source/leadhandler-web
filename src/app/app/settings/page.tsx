@@ -66,7 +66,7 @@ async function SettingsContent() {
                   <Link2 className="h-5 w-5 text-amber-600" />
                 </div>
                 <div>
-                  <p className="font-medium">Airtable</p>
+                  <p className="font-medium">Lead sync</p>
                   <p className="text-sm text-muted-foreground">Leads and agents</p>
                   {!env.hasAirtable && (
                     <p className="text-xs text-muted-foreground mt-1">Set AIRTABLE_BASE_ID and AIRTABLE_API_KEY in env (or Vercel). Redeploy after adding vars.</p>
@@ -91,8 +91,8 @@ async function SettingsContent() {
                   <span className="text-primary font-bold text-sm">S</span>
                 </div>
                 <div>
-                  <p className="font-medium">Stripe</p>
-                  <p className="text-sm text-muted-foreground">Payments</p>
+                  <p className="font-medium">Payments</p>
+                  <p className="text-sm text-muted-foreground">Billing and subscriptions</p>
                   {!env.hasStripe && (
                     <p className="text-xs text-muted-foreground mt-1">Set STRIPE_SECRET_KEY and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in .env.</p>
                   )}
@@ -116,8 +116,8 @@ async function SettingsContent() {
                   <span className="text-red-600 font-bold text-sm">T</span>
                 </div>
                 <div>
-                  <p className="font-medium">Twilio</p>
-                  <p className="text-sm text-muted-foreground">SMS</p>
+                  <p className="font-medium">SMS</p>
+                  <p className="text-sm text-muted-foreground">Messaging</p>
                   {!env.hasTwilio && (
                     <p className="text-xs text-muted-foreground mt-1">Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_FROM_NUMBER in .env.</p>
                   )}

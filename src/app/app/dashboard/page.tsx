@@ -2,15 +2,17 @@ import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import { getSession, getDemoEnabled } from "@/lib/auth";
 import {
-  getDashboardStats,
-  getDemoLeads,
-  getDemoMessages,
-  getDemoAgents,
+  getDemoDashboardStats,
+  getDemoLeadsAsAppType,
+  getDemoMessagesAsAppType,
+  getDemoAgentsAsAppType,
   getDemoActivity,
   getDemoLeadsByDay,
-  computeDashboardStatsFromLeads,
-} from "@/lib/demo/data";
+} from "@/lib/demoData";
+import { computeDashboardStatsFromLeads } from "@/lib/demo/data";
+import { AirtableAuthError } from "@/lib/airtable";
 import { PageHeader } from "@/components/app/PageHeader";
+import { AirtableErrorFallback } from "@/components/app/AirtableErrorFallback";
 import { StatCard } from "@/components/app/StatCard";
 import { SectionCard } from "@/components/app/SectionCard";
 import { LeadStatusPill } from "@/components/app/LeadStatusPill";
@@ -48,13 +50,19 @@ async function DashboardContent() {
   let agents: Agent[] = [];
   let activity: ActivityItem[] = [];
   let leadsByDay: { date: string; label: string; leads: number }[] = [];
+  let airtableError = false;
 
   if (demoEnabled) {
-    const demoLeads = getDemoLeads();
-    const demoAgents = getDemoAgents();
-    stats = getDashboardStats(role, agentId);
+    const demoLeads = getDemoLeadsAsAppType();
+    const demoAgents = getDemoAgentsAsAppType();
+    stats = getDemoDashboardStats();
     leads = demoLeads;
-    messages = getDemoMessages().slice(0, 5);
+    messages = getDemoMessagesAsAppType().slice(0, 5).map((m) => ({
+      id: m.id,
+      direction: m.direction,
+      body: m.body,
+      createdAt: m.createdAt,
+    }));
     agents = demoAgents;
     activity = getDemoActivity(20);
     leadsByDay = getDemoLeadsByDay();
@@ -77,7 +85,10 @@ async function DashboardContent() {
       }));
       agents = realAgents ?? [];
       activity = realActivity ?? [];
-    } catch {
+    } catch (err) {
+      if (err instanceof AirtableAuthError) {
+        airtableError = true;
+      }
       stats = computeDashboardStatsFromLeads([], role, agentId);
       leads = [];
       messages = [];
@@ -152,7 +163,7 @@ async function DashboardContent() {
   const agentFilterId = demoEnabled ? "agent-1" : session?.userId;
   const myLeads = agentFilterId ? leads.filter((l) => l.assignedTo === agentFilterId) : [];
 
-  if (!demoEnabled && leads.length === 0) {
+  if (!demoEnabled && leads.length === 0 && !airtableError) {
     return (
       <div className="space-y-6 sm:space-y-8">
         <PageHeader
@@ -185,6 +196,7 @@ async function DashboardContent() {
           { label: "Dashboard" },
         ]}
       />
+      {airtableError && <AirtableErrorFallback className="mb-4" />}
 
       {demoEnabled && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

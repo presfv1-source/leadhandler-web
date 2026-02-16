@@ -1,16 +1,42 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { UserPlus, Clock, User } from "lucide-react";
 
 /** Optional: add public/dashboard-screenshot.png and set USE_DASHBOARD_IMAGE = true for real screenshot */
 const USE_DASHBOARD_IMAGE = false;
 const DASHBOARD_IMAGE_PATH = "/dashboard-screenshot.png";
 
+const FAKE_STATS = [
+  { label: "New leads", value: "12", tooltip: "Leads in the last 7 days" },
+  { label: "Avg response", value: "3 min", tooltip: "First-reply time across team" },
+];
+
+const FAKE_INBOX = [
+  { name: "James R.", preview: "When can we tour?", time: "2m ago" },
+  { name: "Maria S.", preview: "Thanks! See you Saturday", time: "15m ago" },
+  { name: "David K.", preview: "Interested in 3br in Heights", time: "1h ago" },
+];
+
+const FAKE_TIMELINE = [
+  { text: "Lead assigned to Sarah", time: "2m ago" },
+  { text: "New lead from Zillow — James R.", time: "5m ago" },
+  { text: "Replied to Maria S.", time: "18m ago" },
+  { text: "Status: Maria S. → Appointment", time: "1h ago" },
+  { text: "Lead assigned to Mike", time: "2h ago" },
+];
+
 export function HeroSection() {
   return (
     <section className="relative py-20 md:py-28 px-4 md:px-8 overflow-hidden">
-      {/* Subtle real estate gradient + optional image background */}
       <div
         className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-emerald-500/5"
         aria-hidden
@@ -27,18 +53,17 @@ export function HeroSection() {
             Respond first, qualify with confidence, route to the right agent.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="text-base">
+            <Button asChild size="lg" className="text-base min-h-[44px]">
               <Link href="/login">Try demo</Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="text-base">
-              <Link href="/pricing">View pricing</Link>
+            <Button asChild variant="outline" size="lg" className="text-base min-h-[44px]">
+              <Link href="/#pricing">View pricing</Link>
             </Button>
           </div>
         </div>
 
-        {/* Dashboard screenshot overlay / placeholder */}
         <div className="relative mx-auto max-w-4xl">
-          <div className="rounded-xl border border-border/80 bg-card/95 shadow-2xl shadow-primary/10 overflow-hidden ring-1 ring-black/5">
+          <div className="rounded-xl border border-border/80 bg-card/95 shadow-lg shadow-primary/10 overflow-hidden ring-1 ring-black/5">
             {USE_DASHBOARD_IMAGE ? (
               <Image
                 src={DASHBOARD_IMAGE_PATH}
@@ -51,28 +76,78 @@ export function HeroSection() {
                 blurDataURL="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 960 600'%3E%3Crect fill='%23f1f5f9' width='960' height='600'/%3E%3C/svg%3E"
               />
             ) : (
-              <div
-                className="relative aspect-[16/10] w-full bg-muted/50 flex items-center justify-center p-8"
-                aria-hidden
-              >
-                <div className="w-full max-w-2xl mx-auto space-y-4">
-                  <div className="h-3 w-48 rounded bg-muted-foreground/20" />
-                  <div className="grid grid-cols-3 gap-3">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <div
-                        key={i}
-                        className="h-20 rounded-lg bg-muted-foreground/10 border border-border/50"
-                      />
-                    ))}
+              <div className="relative aspect-[16/10] w-full bg-muted/30 p-6 md:p-8">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
+                  Dashboard preview
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-6">
+                  {FAKE_STATS.map((s) => (
+                    <Tooltip key={s.label}>
+                      <TooltipTrigger asChild>
+                        <div className="rounded-lg border bg-card px-4 py-3 shadow-sm flex items-center gap-3 cursor-default">
+                          <div className="h-9 w-9 rounded-md bg-primary/10 flex items-center justify-center">
+                            {s.label === "New leads" ? (
+                              <UserPlus className="h-4 w-4 text-primary" />
+                            ) : (
+                              <Clock className="h-4 w-4 text-primary" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">{s.label}</p>
+                            <p className="text-lg font-semibold">{s.value}</p>
+                          </div>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">{s.tooltip}</TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Inbox</p>
+                    <div className="rounded-lg border bg-card divide-y shadow-sm overflow-hidden">
+                      {FAKE_INBOX.map((t) => (
+                        <Tooltip key={t.name}>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 cursor-default">
+                              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <User className="h-4 w-4 text-primary" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium truncate">{t.name}</p>
+                                <p className="text-xs text-muted-foreground truncate">{t.preview}</p>
+                              </div>
+                              <span className="text-xs text-muted-foreground shrink-0">{t.time}</span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>Conversation with {t.name}</TooltipContent>
+                        </Tooltip>
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="h-32 rounded-lg bg-muted-foreground/10 border border-border/50" />
-                    <div className="h-32 rounded-lg bg-muted-foreground/10 border border-border/50" />
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Recent activity</p>
+                    <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
+                      <div className="relative pl-5 pr-3 py-2 space-y-0">
+                        <div className="absolute left-2 top-0 bottom-0 w-px bg-border" aria-hidden />
+                        {FAKE_TIMELINE.map((e, i) => (
+                          <Tooltip key={i}>
+                            <TooltipTrigger asChild>
+                              <div className="relative flex gap-2 py-2.5 first:pt-2 last:pb-2">
+                                <span className="absolute left-0 w-2 h-2 rounded-full bg-primary -translate-x-[calc(0.5rem-2px)] top-5" aria-hidden />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm">{e.text}</p>
+                                  <p className="text-xs text-muted-foreground">{e.time}</p>
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>Activity in your brokerage</TooltipContent>
+                          </Tooltip>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <span className="absolute text-sm text-muted-foreground/60">
-                  Dashboard preview
-                </span>
               </div>
             )}
           </div>
