@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth";
 import { getAirtableUserPlan } from "@/lib/airtable";
 
 export type PlanId = "free" | "essentials" | "pro";
 
 export async function GET() {
   try {
-    const nextAuth = await auth();
-    const email = nextAuth?.user?.email;
+    const session = await getSession();
+    const email = session?.email;
     if (!email) {
       return NextResponse.json({ success: true, data: { planId: "free" as PlanId } });
     }

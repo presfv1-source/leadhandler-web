@@ -19,8 +19,11 @@ function getDevAdminEmail(): string {
 }
 
 const secret = env.server.NEXTAUTH_SECRET?.trim() || process.env.AUTH_SECRET?.trim();
-if (process.env.NODE_ENV === "production" && !secret) {
-  throw new Error("AUTH_SECRET or NEXTAUTH_SECRET is required in production");
+const nextAuthUrl = env.server.NEXTAUTH_URL?.trim() || process.env.NEXTAUTH_URL?.trim();
+// Require secret at runtime in production (not at build time), so Vercel build succeeds before env is set
+if (process.env.NODE_ENV === "production" && typeof window === "undefined") {
+  if (!secret) console.error("AUTH_SECRET or NEXTAUTH_SECRET is required in production. Set it in Vercel → Settings → Environment Variables.");
+  if (!nextAuthUrl || nextAuthUrl.includes("localhost")) console.error("NEXTAUTH_URL must be your production URL in production (e.g. https://your-app.vercel.app). Set it in Vercel → Settings → Environment Variables.");
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({

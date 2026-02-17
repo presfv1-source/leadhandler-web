@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
-import { Building2, Eye, EyeOff, Loader2 } from "lucide-react";
+import { signInWithPopup, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { Building2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -17,13 +16,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
-
-const DEV_EMAIL =
-  typeof process.env.NEXT_PUBLIC_DEV_LOGIN_EMAIL === "string" &&
-  process.env.NEXT_PUBLIC_DEV_LOGIN_EMAIL.trim() !== ""
-    ? process.env.NEXT_PUBLIC_DEV_LOGIN_EMAIL.trim()
-    : "presfv1@gmail.com";
 
 const DEFAULT_CALLBACK = "/app/dashboard";
 
@@ -31,62 +23,59 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl")?.trim() || DEFAULT_CALLBACK;
-  const [email, setEmail] = useState(DEV_EMAIL);
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
-    const error = searchParams.get("error");
-    const code = searchParams.get("code");
-    if (code === "AccountNotFound") {
-      toast.error("Account not found — contact support.");
-      return;
+  async function createSession(idToken: string): Promise<boolean> {
+    const res = await fetch("/api/auth/firebase/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+      credentials: "include",
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.ok) {
+      toast.error(data?.error ?? "Session failed. Try again.");
+      return false;
     }
-    if (error === "OAuthAccountNotLinked" || error === "OAuthCallback" || error === "Callback" || error === "OAuthCreateAccount") {
-      toast.error("OAuth failed. Try again or use email/password.");
-    }
-  }, [searchParams]);
+    return true;
+  }
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleGoogle() {
     setLoading(true);
     try {
-      const res = await signIn("credentials", {
-        email: email.trim(),
-        password,
-        callbackUrl,
-        redirect: false,
-      });
-      if (res?.error || res?.status === 401 || !res?.ok) {
-        let message = "Invalid email or password.";
-        if (res?.url) {
-          try {
-            const u = new URL(res.url, window.location.origin);
-            if (u.searchParams.get("code") === "AccountNotFound") message = "Account not found — contact support.";
-          } catch {
-            // ignore
-          }
-        }
-        toast.error(message);
-        return;
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      const ok = await createSession(idToken);
+      if (ok) {
+        toast.success("Welcome back!");
+        router.push(callbackUrl);
+        router.refresh();
       }
-      toast.success("Welcome back!");
-      const url = res?.url ?? callbackUrl;
-      window.location.href = url;
-    } catch {
-      toast.error("Something went wrong. Please try again.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Google sign-in failed.";
+      toast.error(msg.includes("popup") ? "Sign-in was cancelled or blocked." : "Google sign-in failed. Try again.");
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleOAuth(provider: "google" | "apple") {
+  async function handleApple() {
     setLoading(true);
     try {
-      await signIn(provider, { callbackUrl });
-    } catch {
-      toast.error("OAuth failed");
+      const provider = new OAuthProvider("apple.com");
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      const ok = await createSession(idToken);
+      if (ok) {
+        toast.success("Welcome back!");
+        router.push(callbackUrl);
+        router.refresh();
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Apple sign-in failed.";
+      toast.error(msg.includes("popup") ? "Sign-in was cancelled or blocked." : "Apple sign-in failed. Try again.");
+    } finally {
       setLoading(false);
     }
   }
@@ -121,102 +110,33 @@ export function LoginForm() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <motion.form
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            onSubmit={handleLogin}
-            className="space-y-4"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@brokerage.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-xs text-muted-foreground hover:text-primary"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <div className="relative">
-                <Input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="h-11 pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-11 w-11 text-muted-foreground hover:text-foreground"
-                  onClick={() => setShowPassword((p) => !p)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    <EyeOff className="size-4" />
-                  ) : (
-                    <Eye className="size-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
+          <p className="text-sm text-muted-foreground text-center">
+            Use Google or Apple to continue. Email/password coming soon.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
             <Button
-              type="submit"
-              className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground"
+              type="button"
+              variant="outline"
+              className="h-11"
+              onClick={handleGoogle}
               disabled={loading}
             >
               {loading ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
-                "Sign In"
+                "Google"
               )}
             </Button>
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11"
-                onClick={() => handleOAuth("google")}
-              >
-                Google
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11"
-                onClick={() => handleOAuth("apple")}
-              >
-                Apple
-              </Button>
-            </div>
-          </motion.form>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11"
+              onClick={handleApple}
+              disabled={loading}
+            >
+              Apple
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

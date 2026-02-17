@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -104,10 +103,9 @@ export default function AccountPage() {
   }, []);
 
   async function handleLogout() {
-    await fetch("/api/auth/session", { method: "DELETE" });
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     toast.success("You have been logged out");
-    await signOut({ callbackUrl: "/login" });
-    router.refresh();
+    window.location.href = "/login";
   }
 
   async function handleDemoToggle(checked: boolean) {

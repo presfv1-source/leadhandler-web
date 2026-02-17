@@ -31,6 +31,12 @@ const serverSchema = z.object({
   /** Apple Sign-In (Service ID; client secret via APPLE_SECRET) */
   APPLE_ID: z.string().default(""),
   APPLE_SECRET: z.string().default(""),
+  /** Session JWT signing (required for Firebase session cookie) */
+  AUTH_SECRET: z.string().default(""),
+  /** Firebase Admin SDK (server-only) */
+  FIREBASE_ADMIN_PROJECT_ID: z.string().default(""),
+  FIREBASE_ADMIN_CLIENT_EMAIL: z.string().default(""),
+  FIREBASE_ADMIN_PRIVATE_KEY: z.string().default(""),
 });
 
 const clientSchema = z.object({
@@ -74,6 +80,10 @@ function parseEnv() {
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     APPLE_ID: process.env.APPLE_ID,
     APPLE_SECRET: process.env.APPLE_SECRET,
+    AUTH_SECRET: process.env.AUTH_SECRET,
+    FIREBASE_ADMIN_PROJECT_ID: process.env.FIREBASE_ADMIN_PROJECT_ID,
+    FIREBASE_ADMIN_CLIENT_EMAIL: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+    FIREBASE_ADMIN_PRIVATE_KEY: process.env.FIREBASE_ADMIN_PRIVATE_KEY,
   });
 
   const client = clientSchema.safeParse({
