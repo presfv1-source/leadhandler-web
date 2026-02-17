@@ -5,34 +5,51 @@ import { env } from "@/lib/env.mjs";
 let app: App | null = null;
 let adminAuth: Auth | null = null;
 
-function getFirebaseAdmin(): { app: App; auth: Auth } | null {
+function normalizePrivateKey(value: string): string {
+  let key = value.trim();
+  if (key.length >= 2) {
+    const first = key[0];
+    const last = key[key.length - 1];
+    if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+      key = key.slice(1, -1);
+    }
+  }
+  return key.replace(/\\n/g, "\n");
+}
+
+function getFirebaseAdmin(): { app: App; auth: Auth } {
   if (adminAuth) return { app: app!, auth: adminAuth };
 
   const projectId = env.server.FIREBASE_ADMIN_PROJECT_ID?.trim();
   const clientEmail = env.server.FIREBASE_ADMIN_CLIENT_EMAIL?.trim();
-  let privateKey = env.server.FIREBASE_ADMIN_PRIVATE_KEY?.trim();
-  if (!projectId || !clientEmail || !privateKey) return null;
+  const rawKey = env.server.FIREBASE_ADMIN_PRIVATE_KEY?.trim();
 
-  if (privateKey.includes("\\n")) {
-    privateKey = privateKey.replace(/\\n/g, "\n");
+  const missing: string[] = [];
+  if (!projectId) missing.push("FIREBASE_ADMIN_PROJECT_ID");
+  if (!clientEmail) missing.push("FIREBASE_ADMIN_CLIENT_EMAIL");
+  if (!rawKey) missing.push("FIREBASE_ADMIN_PRIVATE_KEY");
+  if (missing.length > 0) {
+    throw new Error(`Missing Firebase Admin env: ${missing.join(", ")}`);
   }
 
-  try {
-    app = getApps().length ? getApp() : initializeApp({
-      credential: cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
-    });
-    adminAuth = getAuth(app);
-    return { app, auth: adminAuth };
-  } catch {
-    return null;
-  }
+  const privateKey = normalizePrivateKey(rawKey!);
+
+  app = getApps().length ? getApp() : initializeApp({
+    credential: cert({
+      projectId: projectId!,
+      clientEmail: clientEmail!,
+      privateKey,
+    }),
+  });
+  adminAuth = getAuth(app);
+  return { app, auth: adminAuth };
 }
 
 export function getAdminAuth(): Auth | null {
-  const admin = getFirebaseAdmin();
-  return admin?.auth ?? null;
+  try {
+    return getFirebaseAdmin().auth;
+  } catch (e) {
+    console.error("[firebase-admin]", e instanceof Error ? e.message : e);
+    return null;
+  }
 }
