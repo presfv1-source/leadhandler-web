@@ -33,13 +33,13 @@ export async function POST(request: NextRequest) {
   }
   const session = await getSessionToken(request);
   const effective = session?.role === "agent" ? false : parsed.data.enabled;
-  const cookieStore = await cookies();
-  cookieStore.set(DEMO_COOKIE, effective ? "true" : "false", {
+  const res = NextResponse.json({ success: true, data: { enabled: effective } });
+  res.cookies.set(DEMO_COOKIE, effective ? "true" : "false", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 365,
     path: "/",
   });
-  return NextResponse.json({ success: true, data: { enabled: effective } });
+  return res;
 }

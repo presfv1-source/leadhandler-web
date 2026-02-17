@@ -178,7 +178,7 @@ async function DashboardContent() {
         <EmptyState
           icon={BarChart3}
           title="No data yet"
-          description="Connect your lead sources in Settings to see your dashboard. Or turn on Demo Mode to explore with example data."
+          description="Turn on Demo Mode or connect sources in Settings to see your dashboard."
           action={{ label: "Go to Settings", href: "/app/settings" }}
         />
       </div>
@@ -186,6 +186,7 @@ async function DashboardContent() {
   }
 
   const isOwner = session?.role === "owner";
+  const isEffectiveOwner = session?.effectiveRole === "owner";
 
   return (
     <div className="min-w-0 space-y-6 sm:space-y-8">
@@ -197,7 +198,7 @@ async function DashboardContent() {
           { label: "Dashboard" },
         ]}
       />
-      {airtableError && <AirtableErrorFallback className="mb-4" />}
+      {isEffectiveOwner && airtableError && <AirtableErrorFallback className="mb-4" />}
 
       {demoEnabled && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -212,21 +213,21 @@ async function DashboardContent() {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Button asChild variant="outline" size="sm">
+      <div className="flex flex-wrap items-center gap-4">
+        <Button asChild variant="outline" size="sm" className="min-h-[44px]">
           <Link href="/app/leads" className="flex items-center gap-2">
             <UserPlus className="h-4 w-4" />
             Add lead
           </Link>
         </Button>
-        <Button asChild variant="outline" size="sm">
+        <Button asChild variant="outline" size="sm" className="min-h-[44px]">
           <Link href="/app/messages" className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             View inbox
           </Link>
         </Button>
-        {isOwner && (
-          <Button asChild variant="outline" size="sm">
+        {isEffectiveOwner && (
+          <Button asChild variant="outline" size="sm" className="min-h-[44px]">
             <Link href="/app/routing" className="flex items-center gap-2">
               <Route className="h-4 w-4" />
               Routing
@@ -254,13 +255,13 @@ async function DashboardContent() {
         ))}
       </div>
 
-      {isOwner && (
+      {isEffectiveOwner && (
         <SectionCard title="Lead activity">
           <LeadActivityChart data={leadsByDay} />
         </SectionCard>
       )}
 
-      {isOwner && (
+      {isEffectiveOwner && (
         <SectionCard title="Recent activity">
           <RecentActivity
             items={activity}
@@ -303,7 +304,7 @@ async function DashboardContent() {
           )}
         </SectionCard>
 
-        {isOwner ? (
+        {isEffectiveOwner ? (
           <SectionCard title="Agent leaderboard">
             <DashboardAgentLeaderboard agents={agents} />
           </SectionCard>

@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Zap, Building2, Check } from "lucide-react";
 import { toast } from "sonner";
+
+type PlanId = "free" | "essentials" | "pro";
 
 /** Matches marketing: Essentials $99, Pro $249. Enterprise = contact for custom. */
 const plans = [
@@ -38,11 +40,19 @@ const plans = [
   },
 ];
 
-/** Current plan for UI (stub: from session or subscription API later). */
-const CURRENT_PLAN_ID = "pro";
-
 export default function BillingPage() {
   const [loading, setLoading] = useState(false);
+  const [planId, setPlanId] = useState<PlanId | null>(null);
+
+  useEffect(() => {
+    fetch("/api/billing/plan")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.data?.planId) setPlanId(data.data.planId);
+        else setPlanId("free");
+      })
+      .catch(() => setPlanId("free"));
+  }, []);
 
   async function handleUpgrade(planId: string, priceId: string) {
     setLoading(true);
@@ -83,19 +93,24 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Billing</h1>
         <p className="text-muted-foreground mt-1">Manage your subscription</p>
       </div>
 
-      <Card className="border-primary/30 bg-primary/5">
+      <Card className="rounded-lg shadow-sm border-primary/30 bg-primary/5">
         <CardContent className="py-4">
           <p className="text-sm font-medium">
-            Active: <span className="capitalize">{CURRENT_PLAN_ID}</span> since Feb 2026
+            Current plan:{" "}
+            <span className="capitalize">
+              {planId === null ? "…" : planId === "free" ? "Free" : planId}
+            </span>
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Update payment or cancel in the billing portal below.
+            {planId === "free"
+              ? "Upgrade below or open the billing portal if you have an active subscription."
+              : "Update payment or cancel in the billing portal below."}
           </p>
         </CardContent>
       </Card>
@@ -103,10 +118,10 @@ export default function BillingPage() {
       <div className="grid gap-6 md:grid-cols-3">
         {plans.map((plan) => {
           const Icon = plan.icon;
-          const isCurrent = plan.id === CURRENT_PLAN_ID;
+          const isCurrent = planId !== null && plan.id === planId;
           const isCustom = plan.price == null;
           return (
-            <Card key={plan.id} className={plan.popular ? "border-primary shadow-sm" : ""}>
+            <Card key={plan.id} className={`rounded-lg shadow-sm ${plan.popular ? "border-primary" : ""}`}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <Icon className="h-8 w-8 text-primary" />
@@ -153,7 +168,7 @@ export default function BillingPage() {
         })}
       </div>
 
-      <Card>
+      <Card className="rounded-lg shadow-sm">
         <CardHeader>
           <CardTitle>Manage subscription</CardTitle>
           <p className="text-sm text-muted-foreground">

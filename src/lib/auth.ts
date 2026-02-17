@@ -5,7 +5,10 @@ import type { Role } from "./types";
 
 export interface Session {
   userId: string;
+  /** Real role from auth (used for demo toggle and backend access). */
   role: Role;
+  /** View-as role for UI/nav; only differs when role === 'owner' and lh_view_as is set. */
+  effectiveRole: Role;
   name?: string;
   isDemo: boolean;
   /** Set when role is agent: Airtable Agent record id for filtering leads */
@@ -13,18 +16,15 @@ export interface Session {
 }
 
 const OVERRIDE_COOKIE = "lh_session_override";
+const VIEW_AS_COOKIE = "lh_view_as";
+const VALID_VIEW_AS = ["owner", "broker", "agent"] as const;
 
-function parseOverrideCookie(value: string | undefined): { name?: string; role?: Role } | null {
+function parseOverrideCookie(value: string | undefined): { name?: string } | null {
   if (!value?.trim()) return null;
   try {
-    const parsed = JSON.parse(value) as { name?: string; role?: string };
-    const role =
-      parsed.role === "owner" || parsed.role === "broker" || parsed.role === "agent"
-        ? (parsed.role as Role)
-        : undefined;
+    const parsed = JSON.parse(value) as { name?: string };
     return {
       name: typeof parsed.name === "string" ? parsed.name.trim() : undefined,
-      role,
     };
   } catch {
     return null;
@@ -40,8 +40,15 @@ export async function getSession(): Promise<Session | null> {
 
   const cookieStore = await cookies();
   const override = parseOverrideCookie(cookieStore.get(OVERRIDE_COOKIE)?.value);
+  const viewAsRaw = cookieStore.get(VIEW_AS_COOKIE)?.value?.toLowerCase();
   const demoCookie = cookieStore.get("lh_demo")?.value;
-  const role = (override?.role ?? user.role ?? "broker") as Role;
+
+  const role = (user.role ?? "broker") as Role;
+  const effectiveRole: Role =
+    role === "owner" && viewAsRaw && VALID_VIEW_AS.includes(viewAsRaw as Role)
+      ? (viewAsRaw as Role)
+      : role;
+
   const name = override?.name ?? user.name ?? user.email?.split("@")[0];
   const userId = user.userId ?? (nextAuthSession as { user?: { id?: string } })?.user?.id ?? "";
 
@@ -52,6 +59,7 @@ export async function getSession(): Promise<Session | null> {
   return {
     userId,
     role,
+    effectiveRole,
     name: name ?? undefined,
     isDemo,
     agentId: user.agentId,

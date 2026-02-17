@@ -40,6 +40,16 @@ function normalizeSource(s: string | undefined): string {
   return (s ?? "").trim().toLowerCase();
 }
 
+const KNOWN_SOURCES = ["zillow", "realtor.com", "website", "facebook leads"];
+
+/** Treat empty or unknown source as "Other" for filtering. */
+function sourceMatchesFilter(leadSource: string | undefined, filter: SourceFilterValue): boolean {
+  const normalized = normalizeSource(leadSource);
+  if (filter === "All") return true;
+  if (filter === "Other") return !normalized || !KNOWN_SOURCES.includes(normalized);
+  return normalized === normalizeSource(filter);
+}
+
 const columns: ColumnDef<Lead>[] = [
   {
     accessorKey: "name",
@@ -116,10 +126,7 @@ export function LeadsDataList({ leads }: LeadsDataListProps) {
   const [globalFilter, setGlobalFilter] = useState("");
   const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>("All");
 
-  const filteredBySource =
-    sourceFilter === "All"
-      ? leads
-      : leads.filter((l) => normalizeSource(l.source) === normalizeSource(sourceFilter));
+  const filteredBySource = leads.filter((l) => sourceMatchesFilter(l.source, sourceFilter));
 
   const table = useReactTable({
     data: filteredBySource,

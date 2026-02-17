@@ -16,6 +16,8 @@ export const demoLeads: { id: string; name: string; phone: string; source: strin
   { id: "8", name: "Sarah Nguyen", phone: "+17135551241", source: "Website", status: "appointment", created: "2026-02-15", lastMessage: "Saturday 10am?" },
   { id: "9", name: "Michael Brown", phone: "+17135551242", source: "Zillow", status: "qualified", created: "2026-02-12", lastMessage: "What's the HOA situation?" },
   { id: "10", name: "Emily Davis", phone: "+17135551243", source: "Realtor.com", status: "new", created: "2026-02-16", lastMessage: "First-time buyer here" },
+  { id: "11", name: "Chris Taylor", phone: "+17135551244", source: "Facebook Leads", status: "contacted", created: "2026-02-15", lastMessage: "Saw your ad for Houston area" },
+  { id: "12", name: "Pat Johnson", phone: "+17135551245", source: "Zillow", status: "lost", created: "2026-02-11", lastMessage: "Went with another agent" },
 ];
 
 export const demoConversations: {
@@ -107,6 +109,11 @@ export function getDemoLeadsAsAppType(): Lead[] {
   }));
 }
 
+function derivedWeight(closeRate: number): number {
+  const w = Math.round(closeRate / 10);
+  return Math.min(10, Math.max(1, w));
+}
+
 export function getDemoAgentsAsAppType(): Agent[] {
   return demoAgents.map((a, i) => ({
     id: `agent-demo-${i + 1}`,
@@ -115,6 +122,7 @@ export function getDemoAgentsAsAppType(): Agent[] {
     phone: a.phone ?? "+17135550000",
     active: true,
     closeRate: a.closeRate,
+    roundRobinWeight: derivedWeight(a.closeRate),
     createdAt: "2026-02-01T00:00:00.000Z",
     metrics: {
       leadsAssigned: Math.floor(demoLeads.length / demoAgents.length) + (i < demoLeads.length % demoAgents.length ? 1 : 0),

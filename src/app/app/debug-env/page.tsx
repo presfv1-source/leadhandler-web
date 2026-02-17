@@ -1,12 +1,9 @@
+import { notFound } from "next/navigation";
 import { env } from "@/lib/env.mjs";
 
 export default function DebugEnvPage() {
   if (process.env.NODE_ENV !== "development") {
-    return (
-      <div className="p-6 text-sm text-muted-foreground">
-        This page is only available in development.
-      </div>
-    );
+    notFound();
   }
 
   const key = env.server.AIRTABLE_API_KEY ?? "";

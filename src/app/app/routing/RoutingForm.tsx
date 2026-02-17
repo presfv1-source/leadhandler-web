@@ -40,11 +40,13 @@ export function RoutingForm({ agents, demoEnabled }: RoutingFormProps) {
   const [weights, setWeights] = useState<Record<string, number>>(() => {
     const init: Record<string, number> = {};
     agents.forEach((a) => {
-      init[a.id] = a.closeRate != null ? derivedWeight(a.closeRate) : 5;
+      init[a.id] = a.roundRobinWeight ?? (a.closeRate != null ? derivedWeight(a.closeRate) : 5);
     });
     return init;
   });
   const [escalationIds, setEscalationIds] = useState<string[]>([]);
+  const [prioritizeZillow, setPrioritizeZillow] = useState(false);
+  const [zillowAgentIds, setZillowAgentIds] = useState<string[]>([]);
 
   function handleWeightChange(agentId: string, value: string) {
     const n = parseInt(value, 10);
@@ -58,7 +60,13 @@ export function RoutingForm({ agents, demoEnabled }: RoutingFormProps) {
     );
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function toggleZillowAgent(agentId: string) {
+    setZillowAgentIds((prev) =>
+      prev.includes(agentId) ? prev.filter((id) => id !== agentId) : [...prev, agentId]
+    );
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
     const timeoutInput = form.elements.namedItem("timeout") as HTMLInputElement;
@@ -76,15 +84,40 @@ export function RoutingForm({ agents, demoEnabled }: RoutingFormProps) {
         toast.error("All agent weights must be between 1 and 10");
         return;
       }
+      const sum = agents.reduce((s, a) => s + (weights[a.id] ?? 0), 0);
+      if (sum <= 0) {
+        toast.error("Weights must sum to more than 0");
+        return;
+      }
     }
     setSaving(true);
-    toast.success("Saved!");
-    setSaving(false);
+    try {
+      if (demoEnabled) {
+        toast.success("Demo mode: routing settings not persisted.");
+        setSaving(false);
+        return;
+      }
+      const res = await fetch("/api/routing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weights }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Routing settings saved.");
+      } else {
+        toast.error(data.error?.message ?? "Could not save routing settings");
+      }
+    } catch {
+      toast.error("Could not save routing settings");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <Card>
+      <Card className="rounded-lg shadow-sm">
         <CardHeader>
           <CardTitle>Routing mode</CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -131,7 +164,7 @@ export function RoutingForm({ agents, demoEnabled }: RoutingFormProps) {
           </div>
 
           {mode === "weighted" && agents.length > 0 && (
-            <div className="rounded-md border mt-4">
+            <div className="rounded-md border shadow-sm mt-4">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -166,7 +199,7 @@ export function RoutingForm({ agents, demoEnabled }: RoutingFormProps) {
                 Weights are auto-set from close rates. Higher close rate = higher weight.
               </p>
               {agents.length > 0 ? (
-                <div className="rounded-md border">
+                <div className="rounded-md border shadow-sm">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -178,7 +211,7 @@ export function RoutingForm({ agents, demoEnabled }: RoutingFormProps) {
                     <TableBody>
                       {agents.map((a) => {
                         const rate = a.closeRate ?? (a.metrics?.leadsAssigned
-                          ? Math.round((a.metrics.closedCount / a.metrics.leadsAssigned) * 100)
+                          ? Math.round((a.metrics.closedCount ?? 0) / (a.metrics.leadsAssigned || 1) * 100)
                           : 0);
                         const w = derivedWeight(rate);
                         return (
@@ -200,7 +233,46 @@ export function RoutingForm({ agents, demoEnabled }: RoutingFormProps) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="rounded-lg shadow-sm">
+        <CardHeader>
+          <CardTitle>Source-based rules</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Prioritize specific agents for certain lead sources (e.g. Zillow).
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={prioritizeZillow}
+              onChange={(e) => setPrioritizeZillow(e.target.checked)}
+              className="rounded border-input"
+            />
+            <span className="text-sm font-medium">Prioritize Zillow leads</span>
+          </label>
+          {prioritizeZillow && agents.length > 0 && (
+            <div className="rounded-md border p-3 space-y-2 max-h-[200px] overflow-y-auto">
+              <p className="text-xs text-muted-foreground">Agents to prioritize for Zillow:</p>
+              {agents.map((a) => (
+                <label
+                  key={a.id}
+                  className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 -mx-2 min-h-[44px]"
+                >
+                  <input
+                    type="checkbox"
+                    checked={zillowAgentIds.includes(a.id)}
+                    onChange={() => toggleZillowAgent(a.id)}
+                    className="rounded border-input"
+                  />
+                  <span className="text-sm">{a.name}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-lg shadow-sm">
         <CardHeader>
           <CardTitle>Escalation</CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -248,7 +320,7 @@ export function RoutingForm({ agents, demoEnabled }: RoutingFormProps) {
           </div>
         </CardContent>
       </Card>
-      <Button type="submit" disabled={saving} className="min-h-[44px]">
+      <Button type="submit" disabled={saving} className="min-h-[44px] rounded-md">
         Save
       </Button>
     </form>

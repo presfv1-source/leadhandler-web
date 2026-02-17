@@ -27,6 +27,8 @@ export interface Agent {
   brokerageId?: string;
   /** Optional close rate (0–100) for performance-based routing. */
   closeRate?: number;
+  /** Optional weight (1–10) for weighted round robin. Stored in Airtable as round_robin_weight. */
+  roundRobinWeight?: number;
   metrics?: {
     leadsAssigned: number;
     qualifiedCount: number;

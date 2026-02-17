@@ -10,9 +10,11 @@ const STORAGE_KEY = "leadhandler-demo-banner-dismissed";
 interface DemoModeBannerProps {
   demoEnabled: boolean;
   isOwner: boolean;
+  /** When true (Airtable connected), show "Turn off Demo Mode" instead of "Connect in Settings" */
+  hasBackendConnected?: boolean;
 }
 
-export function DemoModeBanner({ demoEnabled, isOwner }: DemoModeBannerProps) {
+export function DemoModeBanner({ demoEnabled, isOwner, hasBackendConnected = false }: DemoModeBannerProps) {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
@@ -46,19 +48,21 @@ export function DemoModeBanner({ demoEnabled, isOwner }: DemoModeBannerProps) {
     >
       <span>
         Demo: sample data.{" "}
-        {isOwner ? (
-          <>
-            <Link
-              href="/app/settings"
-              className="font-medium text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-            >
-              Connect in Settings
-            </Link>{" "}
-            to go live.
-          </>
-        ) : (
-          "Connect in Settings to go live."
-        )}
+        {hasBackendConnected
+          ? "Turn off Demo Mode in the header to see live data."
+          : isOwner
+            ? (
+              <>
+                <Link
+                  href="/app/settings"
+                  className="font-medium text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                >
+                  Connect in Settings
+                </Link>{" "}
+                to go live.
+              </>
+            )
+            : "Connect in Settings to go live."}
       </span>
       <button
         type="button"

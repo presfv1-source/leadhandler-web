@@ -27,6 +27,7 @@ export async function GET() {
     data: {
       name: session.name,
       role: session.role,
+      effectiveRole: session.effectiveRole,
       userId: session.userId,
       demoEnabled,
       ...(session.agentId != null && { agentId: session.agentId }),
@@ -42,7 +43,6 @@ export async function getDemoEnabled(_request: NextRequest): Promise<boolean> {
 
 const updateSessionSchema = z.object({
   name: z.string().min(0).max(200).optional(),
-  role: z.enum(["owner", "broker", "agent"]).optional(),
 });
 
 const cookieOptions = {
@@ -56,8 +56,8 @@ const cookieOptions = {
 export async function POST(request: NextRequest) {
   const body = await request.json();
 
-  // Update session (name and/or role) when already logged in — stored in override cookie
-  if (body.email == null && body.password == null && (body.name != null || body.role != null)) {
+  // Update session (name only) when already logged in — stored in override cookie. View-as role uses lh_view_as cookie set by client.
+  if (body.email == null && body.password == null && body.name != null) {
     const parsed = updateSessionSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -73,13 +73,8 @@ export async function POST(request: NextRequest) {
       );
     }
     const name = parsed.data.name !== undefined ? parsed.data.name.trim() : existing.name;
-    const role = parsed.data.role ?? existing.role;
-    const override = JSON.stringify({
-      name: name || (role === "owner" ? "Owner" : role === "broker" ? "Broker" : "Agent"),
-      role,
-    });
     const res = NextResponse.json({ success: true });
-    res.cookies.set(OVERRIDE_COOKIE, override, cookieOptions);
+    res.cookies.set(OVERRIDE_COOKIE, JSON.stringify({ name }), cookieOptions);
     return res;
   }
 
@@ -90,9 +85,12 @@ export async function POST(request: NextRequest) {
   );
 }
 
+const VIEW_AS_COOKIE = "lh_view_as";
+
 export async function DELETE() {
   const res = NextResponse.json({ success: true });
   res.cookies.set(OVERRIDE_COOKIE, "", { maxAge: 0, path: "/" });
   res.cookies.set(DEMO_COOKIE_NAME, "", { maxAge: 0, path: "/" });
+  res.cookies.set(VIEW_AS_COOKIE, "", { maxAge: 0, path: "/" });
   return res;
 }

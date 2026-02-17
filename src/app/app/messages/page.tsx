@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquare, Send } from "lucide-react";
 import { toast } from "sonner";
 import { AirtableErrorFallback } from "@/components/app/AirtableErrorFallback";
+import { EmptyState } from "@/components/app/EmptyState";
 
 interface Message {
   id: string;
@@ -123,6 +124,23 @@ export default function MessagesPage() {
       <div className="flex flex-col md:flex-row h-[calc(100vh-8rem)] gap-4 min-w-0">
         <Skeleton className="w-full md:w-64 shrink-0 h-48 md:h-full" />
         <Skeleton className="flex-1 min-h-64 md:min-h-0" />
+      </div>
+    );
+  }
+
+  if (leads.length === 0 && !loadError) {
+    return (
+      <div className="space-y-6 sm:space-y-8">
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold">Messages</h1>
+          <p className="text-muted-foreground text-sm">Conversations with leads</p>
+        </div>
+        <EmptyState
+          icon={MessageSquare}
+          title="No conversations yet"
+          description="Turn on Demo Mode or connect sources in Settings to see messages here."
+          action={{ label: "Go to Settings", href: "/app/settings" }}
+        />
       </div>
     );
   }

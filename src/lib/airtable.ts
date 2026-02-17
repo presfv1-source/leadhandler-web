@@ -184,22 +184,30 @@ export async function createLead(
 }
 
 // ---- Agents ----
-// Expected fields: Name, Email, Phone, Active (checkbox).
+// Expected fields: Name, Email, Phone, Active (checkbox), Round Robin Weight (1–10), Close Rate (0–100 optional).
 type AgentFields = {
   Name?: string;
   Email?: string;
   Phone?: string;
   Active?: boolean;
+  RoundRobinWeight?: number;
+  CloseRate?: number;
 };
 
 function recordToAgent(r: AirtableRecord<AgentFields>): Agent {
   const f = r.fields ?? {};
+  const w = f.RoundRobinWeight;
+  const num = typeof w === "number" && !Number.isNaN(w) ? Math.min(10, Math.max(1, Math.round(w))) : undefined;
+  const cr = f.CloseRate;
+  const closeRate = typeof cr === "number" && !Number.isNaN(cr) ? Math.min(100, Math.max(0, Math.round(cr))) : undefined;
   return {
     id: r.id,
     name: (f.Name ?? "").toString().trim() || "—",
     email: (f.Email ?? "").toString().trim(),
     phone: (f.Phone ?? "").toString().trim(),
     active: f.Active === true,
+    roundRobinWeight: num,
+    closeRate,
     createdAt: r.createdTime ?? undefined,
   };
 }
@@ -215,6 +223,25 @@ export const getAgents = hasAirtable
   ? unstable_cache(getAgentsUncached, ["airtable-agents"], { revalidate: 60, tags: ["agents"] })
   : getAgentsUncached;
 
+/** Update one agent's round-robin weight (1–10). Used by routing settings. */
+export async function updateAgentRoundRobinWeight(agentId: string, weight: number): Promise<void> {
+  const table = env.server.AIRTABLE_TABLE_AGENTS;
+  if (!table || !hasAirtable) return;
+  const n = Math.min(10, Math.max(1, Math.round(weight)));
+  const url = `${tableUrl(table)}/${agentId}`;
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify({ fields: { RoundRobinWeight: n } }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    if (res.status === 401) throw new AirtableAuthError(`Airtable update agent: 401 ${err}`);
+    throw new Error(`Airtable update agent weight: ${res.status} ${err}`);
+  }
+}
+
 // ---- Users (optional: Email, Role owner/broker/agent, Agent link) ----
 export type AirtableUser = { role: "owner" | "broker" | "agent"; agentId?: string };
 
@@ -222,6 +249,10 @@ type UserFields = {
   Email?: string;
   Role?: string;
   Agent?: string[];
+  /** Optional bcrypt hash for Credentials login. Only read for server-side auth. */
+  PasswordHash?: string;
+  /** Optional: subscription plan from Stripe (free | essentials | pro). */
+  Plan?: string;
 };
 
 const VALID_ROLES = ["owner", "broker", "agent"] as const;
@@ -233,8 +264,17 @@ function parseRole(raw: string): ValidRole {
   return "broker";
 }
 
-/** Look up user by email in optional Users table. Returns null if table not configured or user not found. */
+/** Look up user by email in optional Users table. Returns null if table not configured or user not found. Does not include PasswordHash. */
 export async function getAirtableUserByEmail(email: string): Promise<AirtableUser | null> {
+  const withHash = await getAirtableUserByEmailForAuth(email);
+  if (!withHash) return null;
+  return { role: withHash.role, agentId: withHash.agentId };
+}
+
+/** Look up user by email including PasswordHash. For server-side Credentials auth only; do not expose hash. */
+export async function getAirtableUserByEmailForAuth(
+  email: string
+): Promise<{ role: ValidRole; agentId?: string; passwordHash?: string } | null> {
   const table = env.server.AIRTABLE_TABLE_USERS?.trim();
   if (!table || !hasAirtable) return null;
   const trimmed = email.trim().toLowerCase();
@@ -247,7 +287,11 @@ export async function getAirtableUserByEmail(email: string): Promise<AirtableUse
     if (!first?.fields) return null;
     const role = parseRole((first.fields.Role ?? "").toString());
     const agentLink = Array.isArray(first.fields.Agent) ? first.fields.Agent[0] : undefined;
-    return { role, agentId: agentLink ?? undefined };
+    const passwordHash =
+      typeof first.fields.PasswordHash === "string" && first.fields.PasswordHash.trim()
+        ? first.fields.PasswordHash.trim()
+        : undefined;
+    return { role, agentId: agentLink ?? undefined, passwordHash };
   } catch {
     return null;
   }
@@ -303,6 +347,50 @@ export async function getAgentIdByEmail(email: string): Promise<string | null> {
     return records[0]?.id ?? null;
   } catch {
     return null;
+  }
+}
+
+/** Plan id stored in Airtable Users (optional Plan field). Returns null if no table/field or not set. */
+export async function getAirtableUserPlan(email: string): Promise<string | null> {
+  const table = env.server.AIRTABLE_TABLE_USERS?.trim();
+  if (!table || !hasAirtable) return null;
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) return null;
+  const escaped = trimmed.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  const formula = `LOWER({Email}) = "${escaped}"`;
+  try {
+    const records = await listAllRecords<UserFields>(table, formula);
+    const plan = records[0]?.fields?.Plan;
+    if (typeof plan !== "string" || !plan.trim()) return null;
+    const lower = plan.trim().toLowerCase();
+    if (lower === "essentials" || lower === "pro" || lower === "free") return lower;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** Update Plan field for user by email. No-op if Users table or record not found. */
+export async function updateAirtableUserPlan(email: string, planId: string): Promise<void> {
+  const table = env.server.AIRTABLE_TABLE_USERS?.trim();
+  if (!table || !hasAirtable) return;
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) return;
+  const escaped = trimmed.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  const formula = `LOWER({Email}) = "${escaped}"`;
+  try {
+    const records = await listAllRecords<UserFields>(table, formula);
+    const recordId = records[0]?.id;
+    if (!recordId) return;
+    const url = `${tableUrl(table)}/${recordId}`;
+    await fetch(url, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify({ fields: { Plan: planId } }),
+      cache: "no-store",
+    });
+  } catch {
+    // ignore
   }
 }
 

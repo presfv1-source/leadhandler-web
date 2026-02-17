@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/", label: "LeadHandler.ai", primary: true },
+  { href: "/how-it-works", label: "How it works", primary: false },
   { href: "/pricing", label: "Pricing", primary: false },
   { href: "/security", label: "Security", primary: false },
   { href: "/privacy", label: "Privacy", primary: false },

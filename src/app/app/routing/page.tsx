@@ -12,7 +12,7 @@ export default async function RoutingPage() {
   const agents: Agent[] = demoEnabled ? getDemoAgentsAsAppType() : await getAgents();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Routing</h1>
         <p className="text-muted-foreground mt-1">

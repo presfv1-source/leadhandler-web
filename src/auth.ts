@@ -2,8 +2,10 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Apple from "next-auth/providers/apple";
 import Credentials from "next-auth/providers/credentials";
+import { compareSync } from "bcryptjs";
 import { env } from "@/lib/env.mjs";
 import {
+  getAirtableUserByEmailForAuth,
   getAirtableUserByEmail,
   getAgentIdByEmail,
   createAirtableUser,
@@ -40,14 +42,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         const email = credentials?.email?.toString()?.trim();
-        const _password = credentials?.password?.toString();
+        const password = credentials?.password?.toString();
         if (!email) return null;
         const emailLower = email.toLowerCase();
         const allowedBroker = getAllowedBrokerEmail().toLowerCase();
 
         try {
-          const airtableUser = await getAirtableUserByEmail(email);
+          const airtableUser = await getAirtableUserByEmailForAuth(email);
           if (airtableUser) {
+            if (airtableUser.passwordHash) {
+              if (!password || !compareSync(password, airtableUser.passwordHash)) {
+                return null;
+              }
+            } else if (emailLower !== allowedBroker) {
+              return null;
+            }
             let agentId = airtableUser.agentId;
             if (airtableUser.role === "agent" && !agentId) {
               const resolved = await getAgentIdByEmail(email);

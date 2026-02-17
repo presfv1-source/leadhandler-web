@@ -70,6 +70,7 @@ When demo mode is **on** (default), the app uses in-memory seed data. No API key
 1. Create a webhook scenario in [Make](https://make.com).
 2. Add `MAKE_WEBHOOK_URL` to `.env.local`.
 3. The `/api/make/trigger` route forwards payloads to that URL.
+4. Configure the scenario to write Lead **Source** and **Status** (and optionally closure/appointment) to Airtable so the dashboard and leads list stay accurate.
 
 ## Replacing mock auth
 

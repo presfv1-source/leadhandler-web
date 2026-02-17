@@ -56,7 +56,12 @@ function setStoredBool(key: string, value: boolean) {
 
 export default function AccountPage() {
   const router = useRouter();
-  const [session, setSession] = useState<{ name?: string; role: string; demoEnabled?: boolean } | null>(null);
+  const [session, setSession] = useState<{
+    name?: string;
+    role: string;
+    effectiveRole?: string;
+    demoEnabled?: boolean;
+  } | null>(null);
   const [demoEnabled, setDemoEnabled] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [demoModalOpen, setDemoModalOpen] = useState(false);
@@ -70,8 +75,23 @@ export default function AccountPage() {
       fetch("/api/demo/state").then((r) => r.json()),
     ]).then(([sessionRes, demoRes]) => {
       if (sessionRes.success && sessionRes.data) {
-        setSession(sessionRes.data);
-        setEditName(sessionRes.data.name ?? "");
+        const data = sessionRes.data as { role?: string; effectiveRole?: string; name?: string; demoEnabled?: boolean; userId?: string };
+        const role = data.role ?? "broker";
+        setSession({ ...data, role, effectiveRole: data.effectiveRole ?? role });
+        setEditName(data.name ?? "");
+        // Persist view-as across navigations: if owner and we have viewAsRole in sessionStorage, re-apply cookie and sync state
+        if (role === "owner" && typeof window !== "undefined") {
+          try {
+            const stored = sessionStorage.getItem("viewAsRole");
+            const viewAs = stored === "owner" || stored === "broker" || stored === "agent" ? stored : null;
+            if (viewAs && viewAs !== (data.effectiveRole ?? role)) {
+              document.cookie = `lh_view_as=${viewAs}; path=/; max-age=86400`;
+              setSession((prev) => (prev ? { ...prev, effectiveRole: viewAs } : null));
+            }
+          } catch {
+            // ignore
+          }
+        }
       }
       if (demoRes.success && demoRes.data?.enabled != null) setDemoEnabled(demoRes.data.enabled);
       setLoading(false);
@@ -110,14 +130,19 @@ export default function AccountPage() {
     }
   }
 
-  async function handleRoleSwitch(role: "owner" | "broker" | "agent") {
-    await fetch("/api/auth/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role, name: session?.name ?? editName }),
-    });
-    router.refresh();
-    setSession((prev) => (prev ? { ...prev, role } : null));
+  function setViewAsCookie(role: string) {
+    document.cookie = `lh_view_as=${role}; path=/; max-age=86400`;
+  }
+
+  function handleViewAsSwitch(role: "owner" | "broker" | "agent") {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("viewAsRole", role);
+      setViewAsCookie(role);
+    }
+    setSession((prev) => (prev ? { ...prev, effectiveRole: role } : null));
+    toast.success(`Switched to ${roleLabel(role)} view`);
+    // Allow cookie to be sent on next request
+    requestAnimationFrame(() => router.refresh());
   }
 
   function handleNameSave() {
@@ -125,7 +150,7 @@ export default function AccountPage() {
     fetch("/api/auth/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: editName.trim(), role: session?.role }),
+      body: JSON.stringify({ name: editName.trim() }),
     })
       .then((r) => r.json())
       .then((data) => {
@@ -161,10 +186,10 @@ export default function AccountPage() {
     );
   }
 
-  const viewRole = session?.role;
+  const effectiveRole = session?.effectiveRole ?? session?.role;
   const displayName =
     session?.demoEnabled === false
-      ? roleLabel(viewRole)
+      ? roleLabel(effectiveRole)
       : (session?.name ?? (editName || "User"));
   const initials = (session?.name ?? (editName || "User"))
     .split(" ")
@@ -217,39 +242,39 @@ export default function AccountPage() {
         </CardContent>
       </Card>
 
-      {/* View as (preview) — owner only, to preview broker/agent nav/data */}
+      {/* View as (preview) — owner only; always visible so owner can switch back. Persists via cookie + sessionStorage. */}
       {session?.role === "owner" && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">View as (preview)</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Switch role to change navigation. For testing only; changes are saved to session.
+              Preview the app as Broker or Agent. Navigation and some UI will match the selected view. You can switch back to Owner anytime.
             </p>
           </CardHeader>
           <CardContent>
             <div className="flex gap-2">
               <Button
-                variant={viewRole === "owner" ? "default" : "outline"}
+                variant={effectiveRole === "owner" ? "default" : "outline"}
                 size="sm"
-                onClick={() => handleRoleSwitch("owner")}
+                onClick={() => handleViewAsSwitch("owner")}
                 className="min-h-[44px]"
               >
                 <Building2 className="h-4 w-4 mr-2" />
                 Owner
               </Button>
               <Button
-                variant={viewRole === "broker" ? "default" : "outline"}
+                variant={effectiveRole === "broker" ? "default" : "outline"}
                 size="sm"
-                onClick={() => handleRoleSwitch("broker")}
+                onClick={() => handleViewAsSwitch("broker")}
                 className="min-h-[44px]"
               >
                 <Building2 className="h-4 w-4 mr-2" />
                 Broker
               </Button>
               <Button
-                variant={viewRole === "agent" ? "default" : "outline"}
+                variant={effectiveRole === "agent" ? "default" : "outline"}
                 size="sm"
-                onClick={() => handleRoleSwitch("agent")}
+                onClick={() => handleViewAsSwitch("agent")}
                 className="min-h-[44px]"
               >
                 <User className="h-4 w-4 mr-2" />

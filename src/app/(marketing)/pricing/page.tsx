@@ -29,6 +29,20 @@ export default function PricingPage() {
           <PricingSection />
         </div>
 
+        <section className="mt-12 md:mt-16 rounded-xl border bg-muted/30 p-6 md:p-8 text-center max-w-2xl mx-auto">
+          <h2 className={cn(TYPO.h2, "text-xl")}>For Houston brokers</h2>
+          <p className={cn(TYPO.muted, "mt-2 text-sm")}>
+            Speed-to-lead wins listings. Get instant SMS response, AI qualification, and fair routing—so every lead gets a fast reply and the right agent. Try the demo with no setup.
+          </p>
+          <Link
+            href="/login"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 min-h-[44px] text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            Try demo
+            <ArrowRight className="size-4" aria-hidden />
+          </Link>
+        </section>
+
         <section className="mt-12 md:mt-16">
           <h2 className={cn(TYPO.h2, "text-center text-xl")}>
             Frequently asked questions
@@ -59,7 +73,7 @@ export default function PricingPage() {
         <div className="mt-12 md:mt-16 text-center">
           <Link
             href="/signup"
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 min-h-[44px] text-base font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
           >
             Claim Beta Spot
             <ArrowRight className="size-4" aria-hidden />

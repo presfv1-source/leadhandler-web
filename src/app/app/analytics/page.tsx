@@ -1,43 +1,35 @@
+import { Suspense } from "react";
 import Link from "next/link";
-import { BarChart3, LayoutDashboard, UserPlus, Clock, TrendingUp, MessageSquare } from "lucide-react";
+import { BarChart3, UserPlus, Clock, TrendingUp, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { getSession, getDemoEnabled } from "@/lib/auth";
 import { demoAnalytics, getDemoLeadsByDay } from "@/lib/demoData";
 import { AnalyticsChart } from "@/components/app/AnalyticsChart";
+import { EmptyState } from "@/components/app/EmptyState";
+import { PageHeader } from "@/components/app/PageHeader";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default async function AnalyticsPage() {
+async function AnalyticsContent() {
   const session = await getSession();
   const demoEnabled = await getDemoEnabled(session);
 
   if (!demoEnabled) {
     return (
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold">Analytics</h1>
-          <p className="text-muted-foreground mt-1">Performance and lead analytics</p>
-        </div>
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <BarChart3 className="h-5 w-5 text-primary" />
-              </div>
-              <CardTitle>Analytics</CardTitle>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Turn on Demo Mode in the header to see sample analytics, or connect your lead sources for real data.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="default">
-              <Link href="/app/dashboard" className="inline-flex items-center gap-2">
-                <LayoutDashboard className="h-4 w-4" />
-                Go to Dashboard
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="space-y-6 sm:space-y-8">
+        <PageHeader
+          title="Analytics"
+          subtitle="Performance and lead analytics"
+          breadcrumbs={[
+            { label: "Home", href: "/app/dashboard" },
+            { label: "Analytics" },
+          ]}
+        />
+        <EmptyState
+          icon={BarChart3}
+          title="No analytics yet"
+          description="Turn on Demo Mode or connect sources in Settings to see analytics."
+          action={{ label: "Go to Settings", href: "/app/settings" }}
+        />
       </div>
     );
   }
@@ -45,13 +37,13 @@ export default async function AnalyticsPage() {
   const leadsByDay = getDemoLeadsByDay();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Analytics</h1>
         <p className="text-muted-foreground mt-1">Performance and lead analytics</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="rounded-lg shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Leads</CardTitle>
             <UserPlus className="h-4 w-4 text-muted-foreground" />
@@ -60,7 +52,7 @@ export default async function AnalyticsPage() {
             <div className="text-2xl font-bold">{demoAnalytics.totalLeads}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-lg shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg Response</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -69,7 +61,7 @@ export default async function AnalyticsPage() {
             <div className="text-2xl font-bold">{demoAnalytics.avgResponseMin} min</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-lg shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Conversion</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -78,7 +70,7 @@ export default async function AnalyticsPage() {
             <div className="text-2xl font-bold">{demoAnalytics.conversionRate}%</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-lg shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
@@ -88,7 +80,7 @@ export default async function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
-      <Card>
+      <Card className="rounded-lg shadow-sm">
         <CardHeader>
           <CardTitle>Leads over time</CardTitle>
           <p className="text-sm text-muted-foreground">Lead volume by day (demo data)</p>
@@ -103,5 +95,25 @@ export default async function AnalyticsPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function AnalyticsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-6 sm:space-y-8">
+          <Skeleton className="h-10 w-48" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-24 rounded-lg" />
+            ))}
+          </div>
+          <Skeleton className="h-64 w-full rounded-lg" />
+        </div>
+      }
+    >
+      <AnalyticsContent />
+    </Suspense>
   );
 }

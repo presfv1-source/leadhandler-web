@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { getSession, getDemoEnabled } from "@/lib/auth";
+import { hasAirtable } from "@/lib/config";
 import { AppShell } from "@/components/app/AppShell";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -9,7 +10,7 @@ async function AppLayoutInner({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   const demoEnabled = await getDemoEnabled(session);
   return (
-    <AppShell session={session} demoEnabled={demoEnabled}>
+    <AppShell session={session} demoEnabled={demoEnabled} hasBackendConnected={hasAirtable}>
       {children}
     </AppShell>
   );

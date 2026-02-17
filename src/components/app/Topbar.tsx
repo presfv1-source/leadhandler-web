@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Search, LogOut, User } from "lucide-react";
+import { Search, LogOut, User, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -17,11 +17,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DemoToggle } from "./DemoToggle";
 import { MobileNav } from "./MobileNav";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Role } from "@/lib/types";
 
+const VIEW_AS_COOKIE = "lh_view_as";
+const VIEW_AS_STORAGE = "viewAsRole";
+const ROLES: Role[] = ["owner", "broker", "agent"];
+function viewAsLabel(r: Role) {
+  return r === "owner" ? "Owner" : r === "broker" ? "Broker" : "Agent";
+}
+
 interface TopbarProps {
-  session: { name?: string; role: Role } | null;
+  session: { name?: string; role: Role; effectiveRole?: Role } | null;
   demoEnabled: boolean;
   isOwner: boolean;
   onDemoToggle?: (enabled: boolean) => void;
@@ -44,8 +52,19 @@ export function Topbar({
     router.refresh();
   }
 
+  function handleViewAs(role: Role) {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(VIEW_AS_STORAGE, role);
+      document.cookie = `${VIEW_AS_COOKIE}=${role}; path=/; max-age=86400`;
+    }
+    toast.success(`Switched to ${viewAsLabel(role)} view`);
+    requestAnimationFrame(() => router.refresh());
+  }
+
+  const effectiveRole = session?.effectiveRole ?? session?.role;
+  const realRole = session?.role;
   const roleLabel =
-    session?.role === "owner" ? "Owner" : session?.role === "broker" ? "Broker" : "Agent";
+    effectiveRole === "owner" ? "Owner" : effectiveRole === "broker" ? "Broker" : "Agent";
   const displayName = !demoEnabled ? roleLabel : (session?.name ?? "User");
   const initials = displayName
     .split(" ")
@@ -62,7 +81,7 @@ export function Topbar({
       )}
     >
       <MobileNav
-        role={session?.role ?? "agent"}
+        role={effectiveRole ?? "agent"}
         open={mobileOpen}
         onOpenChange={setMobileOpen}
         demoEnabled={demoEnabled}
@@ -101,11 +120,32 @@ export function Topbar({
             <div className="flex flex-col">
               <span>{displayName}</span>
               <span className="text-xs font-normal text-muted-foreground">
-                {roleLabel}
+                Viewing as {roleLabel}
                 {demoEnabled && <span className="ml-0.5">(Demo)</span>}
               </span>
             </div>
           </DropdownMenuLabel>
+          {realRole === "owner" && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                View as
+              </DropdownMenuLabel>
+              {ROLES.map((r) => (
+                <DropdownMenuItem
+                  key={r}
+                  onClick={() => handleViewAs(r)}
+                  className="max-md:min-h-[44px]"
+                >
+                  <Building2 className="mr-2 h-4 w-4" />
+                  {viewAsLabel(r)}
+                  {effectiveRole === r && (
+                    <span className="ml-auto text-xs text-primary">✓</span>
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild className="max-md:min-h-[44px]">
             <a href="/app/account" className="flex items-center">
