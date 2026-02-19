@@ -15,21 +15,26 @@ export const metadata: Metadata = {
   description: "Turn new leads into conversations faster. AI-powered SMS response and routing for real estate teams.",
 };
 
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ""}>
-      <html lang="en">
-        <body className={`${inter.variable} font-sans antialiased`}>
-          <TooltipProvider>
-            {children}
-            <Toaster position="top-center" richColors />
-          </TooltipProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+  const content = (
+    <html lang="en">
+      <body className={`${inter.variable} font-sans antialiased`}>
+        <TooltipProvider>
+          {children}
+          <Toaster position="top-center" richColors />
+        </TooltipProvider>
+      </body>
+    </html>
   );
+
+  if (clerkPublishableKey) {
+    return <ClerkProvider publishableKey={clerkPublishableKey}>{content}</ClerkProvider>;
+  }
+  return content;
 }
