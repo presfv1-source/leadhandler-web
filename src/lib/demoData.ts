@@ -7,7 +7,7 @@ import type { Lead, Agent, Message, DashboardStats, ActivityItem } from "@/lib/t
 
 export const demoLeads: { id: string; name: string; phone: string; source: string; status: Lead["status"]; created: string; lastMessage: string }[] = [
   { id: "1", name: "John Doe", phone: "+17135551234", source: "Zillow", status: "qualified", created: "2026-02-15", lastMessage: "Interested in 3BR Heights" },
-  { id: "2", name: "Maria Santos", phone: "+17135551235", source: "Realtor.com", status: "qualified", created: "2026-02-15", lastMessage: "When can we tour?" },
+  { id: "2", name: "Maria Santos", phone: "+17135551235", source: "Realtor.com", status: "qualified", created: "2026-02-15", lastMessage: "Tell me more about the property" },
   { id: "3", name: "James Wilson", phone: "+17135551236", source: "Zillow", status: "appointment", created: "2026-02-14", lastMessage: "Wednesday at 2pm works" },
   { id: "4", name: "Lisa Chen", phone: "+17135551237", source: "Website", status: "new", created: "2026-02-16", lastMessage: "Hi, looking for home in Houston" },
   { id: "5", name: "Robert Martinez", phone: "+17135551238", source: "Zillow", status: "qualified", created: "2026-02-13", lastMessage: "Budget around 450k" },
@@ -36,7 +36,7 @@ export const demoConversations: {
       { from: "lead", text: "Hi, looking for home in Houston", time: "15m ago" },
       { from: "agent", text: "Great! What area and budget?", time: "12m ago" },
       { from: "lead", text: "Heights, 3BR, around 400k", time: "10m ago" },
-      { from: "agent", text: "I have a few matches. When can we tour?", time: "2m ago" },
+      { from: "agent", text: "I have a few matches. When are you free to see a few options?", time: "2m ago" },
     ],
   },
   {
@@ -44,7 +44,7 @@ export const demoConversations: {
     leadId: "2",
     leadName: "Maria Santos",
     messages: [
-      { from: "lead", text: "When can we tour?", time: "1h ago" },
+      { from: "lead", text: "Tell me more about the property", time: "1h ago" },
       { from: "agent", text: "Tomorrow after 2pm or Saturday morning.", time: "45m ago" },
       { from: "lead", text: "Saturday works, thanks!", time: "30m ago" },
     ],
@@ -83,7 +83,7 @@ export const demoConversations: {
     leadName: "David Kim",
     messages: [
       { from: "lead", text: "Interested in 3BR in Heights", time: "2h ago" },
-      { from: "agent", text: "Great! I have 2 new listings there. Want a tour this week?", time: "1h ago" },
+      { from: "agent", text: "Great! I have 2 new listings there. Want to see a few options this week?", time: "1h ago" },
       { from: "lead", text: "Yes, Thursday afternoon?", time: "45m ago" },
     ],
   },

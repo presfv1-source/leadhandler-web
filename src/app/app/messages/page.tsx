@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MessageSquare, Send } from "lucide-react";
+import { MessageSquare, Send, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { AirtableErrorFallback } from "@/components/app/AirtableErrorFallback";
 import { EmptyState } from "@/components/app/EmptyState";
@@ -26,22 +27,34 @@ interface Lead {
 
 export default function MessagesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [body, setBody] = useState("");
+  const [searchName, setSearchName] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
+  const filteredLeads = searchName.trim()
+    ? leads.filter((l) => l.name.toLowerCase().includes(searchName.trim().toLowerCase()))
+    : leads;
+
   useEffect(() => {
+    const leadIdFromUrl = searchParams.get("leadId");
     fetch("/api/airtable/leads")
       .then((r) => r.json())
       .then((data) => {
         if (data.success && data.data) {
           const l = data.data as Lead[];
           setLeads(l.slice(0, 14));
-          if (l.length > 0 && !selectedLeadId) setSelectedLeadId(l[0].id);
+          if (l.length > 0) {
+            const toSelect = leadIdFromUrl && l.some((x) => x.id === leadIdFromUrl)
+              ? leadIdFromUrl
+              : l[0].id;
+            setSelectedLeadId(toSelect);
+          }
           setLoadError(false);
         } else if (data.success === false && data.error?.code === "AUTHENTICATION_REQUIRED") {
           setLeads([]);
@@ -56,6 +69,12 @@ export default function MessagesPage() {
         toast.error("Failed to load conversations. Check your connection or try again.");
       });
   }, []);
+  useEffect(() => {
+    const leadIdFromUrl = searchParams.get("leadId");
+    if (leadIdFromUrl && leads.some((l) => l.id === leadIdFromUrl)) {
+      setSelectedLeadId(leadIdFromUrl);
+    }
+  }, [searchParams, leads]);
 
   useEffect(() => {
     if (!selectedLeadId) return;
@@ -130,9 +149,9 @@ export default function MessagesPage() {
 
   if (leads.length === 0 && !loadError) {
     return (
-      <div className="space-y-6 sm:space-y-8">
+      <div className="space-y-6 sm:space-y-8 w-full">
         <div className="mb-4">
-          <h1 className="text-2xl font-bold">Messages</h1>
+          <h1 className="text-2xl font-bold">Your SMS Inbox – Conversations from Leads</h1>
           <p className="text-muted-foreground text-sm">Conversations with leads</p>
         </div>
         <EmptyState
@@ -146,20 +165,29 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-10rem)]">
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold">Messages</h1>
+    <div className="flex flex-col w-full h-[calc(100vh-8rem)] md:h-[calc(100vh-10rem)] min-w-0">
+      <div className="mb-4 shrink-0">
+        <h1 className="text-2xl font-bold">Your SMS Inbox – Conversations from Leads</h1>
         <p className="text-muted-foreground text-sm">Conversations with leads</p>
       </div>
-      {loadError && <AirtableErrorFallback className="mb-4" />}
-      <div className="flex flex-col md:flex-row flex-1 gap-4 min-h-0 min-w-0">
-        <Card className="w-full md:w-64 shrink-0 overflow-hidden flex flex-col">
-          <CardHeader className="py-4">
+      {loadError && <AirtableErrorFallback className="mb-4 shrink-0" />}
+      <div className="flex flex-col md:flex-row flex-1 gap-4 min-h-0 min-w-0 overflow-hidden">
+        <Card className="w-full md:w-64 shrink-0 overflow-hidden flex flex-col min-h-0">
+          <CardHeader className="py-4 shrink-0">
             <h2 className="font-medium text-sm">Conversations</h2>
+            <div className="relative mt-2">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="Search by name..."
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                className="pl-8 h-9"
+              />
+            </div>
           </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto p-0">
+          <CardContent className="flex-1 overflow-y-auto p-0 min-h-0">
             <div className="space-y-0">
-              {leads.map((lead) => (
+              {filteredLeads.map((lead) => (
                 <button
                   key={lead.id}
                   onClick={() => setSelectedLeadId(lead.id)}
@@ -170,27 +198,27 @@ export default function MessagesPage() {
                   <div className="font-medium truncate">{lead.name}</div>
                 </button>
               ))}
-              {leads.length === 0 && (
+              {filteredLeads.length === 0 && (
                 <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                  No conversations yet
+                  {searchName.trim() ? "No names match your search." : "No conversations yet"}
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
-        <Card className="flex-1 flex flex-col min-w-0">
+        <Card className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
           {selectedLeadId ? (
             <>
-              <CardHeader className="py-4 border-b">
+              <CardHeader className="py-4 border-b shrink-0">
                 <h2 className="font-medium">
                   {leads.find((l) => l.id === selectedLeadId)?.name ?? "Conversation"}
                 </h2>
               </CardHeader>
-              <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+              <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
                 {messages.map((m) => (
                   <div
                     key={m.id}
-                    className={`flex ${m.direction === "out" ? "justify-end" : "justify-start"}`}
+                    className={`flex flex-col gap-0.5 ${m.direction === "out" ? "items-end" : "items-start"}`}
                   >
                     <div
                       className={`max-w-[80%] rounded-lg px-4 py-2 text-sm ${
@@ -201,6 +229,14 @@ export default function MessagesPage() {
                     >
                       {m.body}
                     </div>
+                    <span className="text-xs text-muted-foreground px-1">
+                      {new Date(m.createdAt).toLocaleString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </span>
                   </div>
                 ))}
                 {messages.length === 0 && (

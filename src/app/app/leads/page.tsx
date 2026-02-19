@@ -54,7 +54,7 @@ async function LeadsContent() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="w-full space-y-6 sm:space-y-8">
       <PageHeader
         title="Leads"
         subtitle={`${leads.length} total leads`}

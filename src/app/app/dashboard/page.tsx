@@ -32,6 +32,7 @@ import type { ActivityItem, Agent, Lead, DashboardStats } from "@/lib/types";
 import { BarChart3, UserPlus, MessageSquare, Route } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const DEFAULT_STATS: DashboardStats = {
   leadsToday: 0,
@@ -51,7 +52,7 @@ async function DashboardContent() {
 
   let stats: DashboardStats = DEFAULT_STATS;
   let leads: Lead[] = [];
-  let messages: { id: string; direction: "in" | "out"; body: string; createdAt: string }[] = [];
+  let messages: { id: string; direction: "in" | "out"; body: string; createdAt: string; leadId?: string }[] = [];
   let agents: Agent[] = [];
   let activity: ActivityItem[] = [];
   let leadsByDay: { date: string; label: string; leads: number }[] = [];
@@ -67,6 +68,7 @@ async function DashboardContent() {
       direction: m.direction,
       body: m.body,
       createdAt: m.createdAt,
+      leadId: m.leadId,
     }));
     agents = demoAgents;
     activity = getDemoActivity(20);
@@ -87,6 +89,7 @@ async function DashboardContent() {
         direction: m.direction,
         body: m.body,
         createdAt: m.createdAt,
+        leadId: m.leadId,
       }));
       agents = realAgents ?? [];
       activity = realActivity ?? [];
@@ -130,6 +133,7 @@ async function DashboardContent() {
       typeof (m as { createdAt?: unknown }).createdAt === "string"
         ? (m as { createdAt: string }).createdAt
         : new Date().toISOString(),
+    leadId: typeof (m as { leadId?: unknown }).leadId === "string" ? (m as { leadId: string }).leadId : undefined,
   }));
 
   // Normalize activity: stable keys, valid ActivityType, required fields for ActivityFeed
@@ -222,8 +226,6 @@ async function DashboardContent() {
         </div>
       )}
 
-      <DashboardTestSmsCard phoneNumber={twilioNumber} />
-
       <div className="flex flex-wrap items-center gap-4">
         <Button asChild variant="outline" size="sm" className="min-h-[44px]">
           <Link href="/app/leads" className="flex items-center gap-2">
@@ -287,39 +289,74 @@ async function DashboardContent() {
         </SectionCard>
       )}
 
-      {/* was: title="Trusted by Texas Broker-Owners" */}
+      {/* Trusted by section removed per polish – uncomment to restore:
       <SectionCard title="Trusted by Broker-Owners">
         <DashboardTestimonials />
       </SectionCard>
+      */}
 
       <div className="grid min-w-0 gap-6 lg:grid-cols-2">
         <SectionCard title="Recent messages">
-          {messages.length ? (
-            <ul className="divide-y divide-border rounded-md" role="list">
-              {messages.map((m) => (
-                <li
-                  key={m.id}
-                  className="min-h-[44px] flex items-center gap-2 py-3 text-sm"
-                >
-                  <span
-                    className={
-                      m.direction === "in"
-                        ? "text-muted-foreground shrink-0"
-                        : "text-foreground font-medium shrink-0"
-                    }
-                  >
-                    {m.direction === "in" ? "In" : "Out"}:
-                  </span>
-                  <span className="min-w-0 truncate text-muted-foreground">
-                    {m.body.slice(0, 60)}
-                    {m.body.length > 60 ? "…" : ""}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground py-4">No recent messages</p>
-          )}
+          <p className="text-xs text-muted-foreground mb-4">
+            This shows recent SMS conversations – click View to open full thread in Messages.
+          </p>
+          <div className="gap-4 rounded-md">
+            {messages.length ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[80px]">From</TableHead>
+                    <TableHead>Message</TableHead>
+                    <TableHead className="w-[100px]">Time</TableHead>
+                    <TableHead className="w-[70px]">Status</TableHead>
+                    <TableHead className="w-[60px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {messages.map((m) => {
+                    const timeStr = new Date(m.createdAt).toLocaleTimeString(undefined, {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    });
+                    return (
+                      <TableRow key={m.id} className="hover:bg-muted/50 min-h-[44px]">
+                        <TableCell className="font-medium">
+                          {m.direction === "in" ? "Lead" : "You"}
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate text-muted-foreground">
+                          {m.body.slice(0, 60)}
+                          {m.body.length > 60 ? "…" : ""}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-xs">
+                          {timeStr}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={
+                              m.direction === "in"
+                                ? "text-muted-foreground"
+                                : "text-foreground font-medium"
+                            }
+                          >
+                            {m.direction === "in" ? "In" : "Out"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button asChild variant="ghost" size="sm" className="h-8 text-xs">
+                            <Link href={m.leadId ? `/app/messages?leadId=${m.leadId}` : "/app/messages"}>
+                              View
+                            </Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-sm text-muted-foreground py-4">No recent messages</p>
+            )}
+          </div>
         </SectionCard>
 
         {isEffectiveOwner ? (
@@ -351,6 +388,8 @@ async function DashboardContent() {
           </SectionCard>
         )}
       </div>
+
+      <DashboardTestSmsCard phoneNumber={twilioNumber} />
     </div>
   );
 }

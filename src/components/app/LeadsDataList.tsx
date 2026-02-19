@@ -33,6 +33,7 @@ import type { Lead } from "@/lib/types";
 
 const PAGE_SIZE = 10;
 
+// Real sources: Integrate via webhooks/emails later (Zillow API, Realtor webhooks, etc.) – for now demo only.
 const SOURCE_OPTIONS = ["All", "Zillow", "Realtor.com", "Website", "HAR", "Facebook Leads", "Referral", "Open house", "Other"] as const;
 type SourceFilterValue = (typeof SOURCE_OPTIONS)[number];
 
@@ -178,7 +179,7 @@ export function LeadsDataList({ leads }: LeadsDataListProps) {
       {/* Desktop: table with horizontal scroll on small viewports */}
       <div
         className={cn(
-          "hidden rounded-lg border overflow-hidden min-w-0",
+          "hidden rounded-lg border overflow-hidden min-w-0 w-full shadow-sm",
           `${RESPONSIVE_LIST_BREAKPOINT}:block overflow-x-auto`
         )}
       >

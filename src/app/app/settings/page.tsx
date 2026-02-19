@@ -1,29 +1,38 @@
 import { Suspense } from "react";
 import { getSession, getDemoEnabled } from "@/lib/auth";
 import { getDemoBrokerage } from "@/lib/demo/data";
-import { getEnvSummary } from "@/lib/config";
+import { getDemoAgentsAsAppType } from "@/lib/demoData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, Check, X, Link2 } from "lucide-react";
+import { SettingsSections } from "@/components/app/SettingsSections";
+import type { Agent } from "@/lib/types";
 
 async function SettingsContent() {
-  const [session, brokerage, env] = await Promise.all([
+  const [session, brokerage] = await Promise.all([
     getSession(),
     Promise.resolve(getDemoBrokerage()),
-    Promise.resolve(getEnvSummary()),
   ]);
   const demoEnabled = await getDemoEnabled(session);
+  let agents: Agent[] = [];
+  if (demoEnabled) {
+    agents = getDemoAgentsAsAppType();
+  } else {
+    try {
+      const airtable = await import("@/lib/airtable");
+      agents = await airtable.getAgents();
+    } catch {
+      agents = [];
+    }
+  }
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-muted-foreground mt-1">
-          Brokerage and integrations
+          Brokerage, account, and team
         </p>
       </div>
 
@@ -52,128 +61,22 @@ async function SettingsContent() {
         </CardContent>
       </Card>
 
+      <SettingsSections
+        session={session ? { name: session.name, email: session.email } : null}
+        agents={agents}
+      />
+
+      {/* Integrations section commented out per polish – uncomment to restore:
       <Card>
         <CardHeader>
           <CardTitle>Integrations</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Connect your tools. Each integration unlocks specific features. How to connect: add keys to .env (see README) or follow the instructions below.
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Lead sources (e.g. Zillow, Realtor.com, Website) come from integrations and webhook tags before SMS. Configure your Make scenario to write Lead <strong>Source</strong> and <strong>Status</strong> (and optionally closure/appointment) to Airtable so the dashboard stays accurate.
-          </p>
+          ...
         </CardHeader>
-        <CardContent>
-          {session?.effectiveRole !== "owner" ? (
-            <p className="text-sm text-muted-foreground py-2">
-              Contact owner for integrations.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                    <Link2 className="h-5 w-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Lead sync</p>
-                    <p className="text-sm text-muted-foreground">Leads and agents</p>
-                    {!env.hasAirtable && (
-                      <p className="text-xs text-muted-foreground mt-1">Set AIRTABLE_BASE_ID and AIRTABLE_API_KEY in env (or Vercel). Redeploy after adding vars.</p>
-                    )}
-                  </div>
-                </div>
-                {env.hasAirtable ? (
-                  <Badge className="gap-1 bg-emerald-600 hover:bg-emerald-600 text-white border-0">
-                    <Check className="h-3 w-3" />
-                    Connected
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" className="gap-1">
-                    <X className="h-3 w-3" />
-                    Not configured
-                  </Badge>
-                )}
-              </div>
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <span className="text-primary font-bold text-sm">S</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">Payments</p>
-                    <p className="text-sm text-muted-foreground">Billing and subscriptions</p>
-                    {!env.hasStripe && (
-                      <p className="text-xs text-muted-foreground mt-1">Set STRIPE_SECRET_KEY and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in .env.</p>
-                    )}
-                  </div>
-                </div>
-                {env.hasStripe ? (
-                  <Badge className="gap-1 bg-emerald-600 hover:bg-emerald-600 text-white border-0">
-                    <Check className="h-3 w-3" />
-                    Connected
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" className="gap-1">
-                    <X className="h-3 w-3" />
-                    Not configured
-                  </Badge>
-                )}
-              </div>
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center">
-                    <span className="text-red-600 font-bold text-sm">T</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">SMS</p>
-                    <p className="text-sm text-muted-foreground">Messaging</p>
-                    {!env.hasTwilio && (
-                      <p className="text-xs text-muted-foreground mt-1">Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_FROM_NUMBER in .env.</p>
-                    )}
-                  </div>
-                </div>
-                {env.hasTwilio ? (
-                  <Badge className="gap-1 bg-emerald-600 hover:bg-emerald-600 text-white border-0">
-                    <Check className="h-3 w-3" />
-                    Connected
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" className="gap-1">
-                    <X className="h-3 w-3" />
-                    Not configured
-                  </Badge>
-                )}
-              </div>
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-teal-100 flex items-center justify-center">
-                    <span className="text-teal-600 font-bold text-sm">A</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">Automations</p>
-                    <p className="text-sm text-muted-foreground">Trigger workflows from lead events</p>
-                    {!env.hasMake && (
-                      <p className="text-xs text-muted-foreground mt-1">Set MAKE_WEBHOOK_URL in .env.</p>
-                    )}
-                  </div>
-                </div>
-                {env.hasMake ? (
-                  <Badge className="gap-1 bg-emerald-600 hover:bg-emerald-600 text-white border-0">
-                    <Check className="h-3 w-3" />
-                    Connected
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" className="gap-1">
-                    <X className="h-3 w-3" />
-                    Not configured
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
-        </CardContent>
+        <CardContent>...</CardContent>
       </Card>
+      */}
 
+      {/* Demo mode card commented out per polish – uncomment to restore:
       {demoEnabled && (
         <Card>
           <CardHeader>
@@ -184,6 +87,7 @@ async function SettingsContent() {
           </CardHeader>
         </Card>
       )}
+      */}
     </div>
   );
 }
