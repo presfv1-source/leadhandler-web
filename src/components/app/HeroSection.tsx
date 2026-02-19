@@ -48,17 +48,17 @@ export function HeroSection() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,var(--primary)/8%,transparent)]" aria-hidden />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_80%_60%,var(--burnt-orange)/6%,transparent)]" aria-hidden />
 
-      <div className="relative container max-w-6xl mx-auto">
+      <div className="relative container max-w-7xl mx-auto">
         <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-foreground">
-            Respond first. <span className="underline decoration-burnt-orange/60 decoration-2 underline-offset-4">Close more.</span>
+            {MARKETING_POSITIONING.headline}
           </h1>
           <p className="text-xl text-muted-foreground mb-10">
             {MARKETING_POSITIONING.subheadline}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="text-base min-h-[44px] hover:ring-2 hover:ring-burnt-orange/40 hover:ring-offset-2">
-              <Link href="/login">Try demo</Link>
+              <Link href="/demo">Try demo</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="text-base min-h-[44px]">
               <Link href="/#pricing">View pricing</Link>
@@ -66,7 +66,7 @@ export function HeroSection() {
           </div>
         </div>
 
-        <div className="relative mx-auto max-w-5xl min-w-0">
+        <div className="relative mx-auto max-w-6xl min-w-0">
           <div className="rounded-xl border border-border/80 bg-card/95 shadow-lg shadow-primary/10 overflow-hidden ring-1 ring-black/5 min-w-0">
             {USE_DASHBOARD_IMAGE ? (
               <Image
@@ -84,7 +84,7 @@ export function HeroSection() {
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
                   Dashboard preview
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
                   {PREVIEW_STATS.map((s) => (
                     <Tooltip key={s.label}>
                       <TooltipTrigger asChild>
@@ -110,7 +110,7 @@ export function HeroSection() {
                     </Tooltip>
                   ))}
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
+                <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-muted-foreground mb-2">Inbox</p>
                     <div className="rounded-lg border bg-card divide-y shadow-sm overflow-hidden min-w-0">

@@ -1,90 +1,321 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { MarketingHeader } from "@/components/app/MarketingHeader";
-import { MarketingFooter } from "@/components/app/MarketingFooter";
-import { EarlyBirdBanner } from "@/components/app/EarlyBirdBanner";
-import { PricingSection } from "@/components/app/PricingSection";
-import { CONTAINER, PAGE_PADDING, TYPO } from "@/lib/ui";
+import { Check, ChevronDown } from "lucide-react";
+import { Navbar } from "@/components/marketing/Navbar";
+import { Footer } from "@/components/marketing/Footer";
+import { CtaBanner } from "@/components/marketing/CtaBanner";
+import { FadeUp } from "@/components/marketing/FadeUp";
+import { SectionLabel } from "@/components/marketing/SectionLabel";
+import { CONTAINER, PAGE_PADDING } from "@/lib/ui";
 import { cn } from "@/lib/utils";
-import { MARKETING_POSITIONING } from "@/lib/marketingContent";
+
+type BillingInterval = "monthly" | "annual";
+
+const PLANS = [
+  {
+    id: "essentials",
+    name: "Essentials",
+    priceMonthly: 99,
+    priceAnnual: 79,
+    standardPrice: 349,
+    description:
+      "For growing brokerages that need fast lead response and smart routing.",
+    features: [
+      "Up to 15 agents",
+      "AI SMS qualification",
+      "Shared inbox",
+      "Round-robin routing",
+      "Basic dashboard",
+      "Lead status pipeline",
+      "14-day free trial",
+    ],
+    featured: false,
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    priceMonthly: 249,
+    priceAnnual: 199,
+    standardPrice: 749,
+    description:
+      "For established brokerages that want full automation and analytics.",
+    features: [
+      "Up to 40+ agents",
+      "Everything in Essentials",
+      "Weighted & performance routing",
+      "Escalation targets",
+      "Analytics dashboard",
+      "Priority support",
+      "Dedicated onboarding",
+    ],
+    featured: true,
+    urgency: "Only 7 beta spots left",
+  },
+];
+
+const COMPARISON = [
+  { feature: "Agents", essentials: "Up to 15", pro: "Up to 40+" },
+  { feature: "AI SMS", essentials: "✓", pro: "✓" },
+  { feature: "Round-robin routing", essentials: "✓", pro: "✓" },
+  { feature: "Shared inbox", essentials: "✓", pro: "✓" },
+  { feature: "Basic dashboard", essentials: "✓", pro: "✓" },
+  { feature: "Analytics", essentials: "—", pro: "✓" },
+  { feature: "Weighted routing", essentials: "—", pro: "✓" },
+  { feature: "Escalation", essentials: "—", pro: "✓" },
+  { feature: "Priority support", essentials: "—", pro: "✓" },
+  { feature: "Onboarding", essentials: "—", pro: "✓" },
+];
+
+const FAQ_ITEMS = [
+  {
+    q: "How does the free trial work?",
+    a: "14 days, full access, no card needed. You can set up your brokerage, connect lead sources, and try every feature before committing.",
+  },
+  {
+    q: "Can I switch plans later?",
+    a: "Yes. Upgrade or downgrade anytime from your billing settings. Changes take effect at the next billing cycle.",
+  },
+  {
+    q: "How many leads can I handle?",
+    a: "Unlimited leads on all plans. Pricing is based on the number of agents, not lead volume.",
+  },
+  {
+    q: "Do I need technical setup?",
+    a: "No dev needed. Setup takes under 30 minutes. We'll guide you through connecting your lead sources and Twilio.",
+  },
+  {
+    q: "What happens after the beta?",
+    a: "Your price locks in at the beta rate as long as you stay subscribed. We'll never raise your price for existing customers.",
+  },
+  {
+    q: "Do you offer refunds?",
+    a: "Yes. 14-day money-back guarantee. If it's not a fit, we'll refund you—no questions asked.",
+  },
+];
+
+function FaqItem({
+  question,
+  answer,
+  open,
+  onToggle,
+}: {
+  question: string;
+  answer: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="border-b border-gray-200 last:border-0">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between gap-4 py-4 text-left font-sans"
+      >
+        <span className="font-medium text-[#0A0A0A]">{question}</span>
+        <ChevronDown
+          className={cn("h-5 w-5 shrink-0 text-gray-500 transition-transform", open && "rotate-180")}
+          aria-hidden
+        />
+      </button>
+      {open && (
+        <p className="pb-4 font-sans text-gray-500 text-sm leading-relaxed pr-8">{answer}</p>
+      )}
+    </div>
+  );
+}
 
 export default function PricingPage() {
+  const [interval, setInterval] = useState<BillingInterval>("monthly");
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <MarketingHeader />
-
-      <main className={cn(CONTAINER, PAGE_PADDING, "flex-1 py-12 md:py-16")}>
-        <div className="text-center">
-          <h1 className={cn(TYPO.h1, "text-3xl md:text-4xl")}>Pricing</h1>
-          <p className={cn(TYPO.muted, "mt-2")}>
-            Choose the plan that fits your brokerage.
-          </p>
-          <p className={cn(TYPO.muted, "mt-1 text-sm")}>
-            {/* was: Texas real estate teams */}
-            SMS-first lead response for real estate teams.
-          </p>
-        </div>
-
-        <EarlyBirdBanner className="mt-8" />
-
-        <div className="mt-10 md:mt-12">
-          <PricingSection />
-        </div>
-
-        <section className="mt-12 md:mt-16 rounded-xl border bg-muted/30 p-6 md:p-8 text-center max-w-2xl mx-auto">
-          {/* was: For Houston brokers */}
-          <h2 className={cn(TYPO.h2, "text-xl")}>For brokers</h2>
-          <p className={cn(TYPO.muted, "mt-2 text-sm")}>
-            {MARKETING_POSITIONING.subheadline} Try the demo with no setup.
-          </p>
-          <Link
-            href="/login"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 min-h-[44px] text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            Try demo
-            <ArrowRight className="size-4" aria-hidden />
-          </Link>
-        </section>
-
-        <section className="mt-12 md:mt-16">
-          <h2 className={cn(TYPO.h2, "text-center text-xl")}>
-            Frequently asked questions
-          </h2>
-          <div className="mx-auto mt-8 max-w-2xl space-y-6 text-sm">
-            {[
-              {
-                q: "How long does onboarding take?",
-                a: "Most brokerages are up and running within a few days. We'll walk you through connecting your lead sources and agents.",
-              },
-              {
-                q: "Can I try it first?",
-                a: "Yes. Start in Demo Mode with sample data—no setup required. When you're ready, connect your own sources in Settings.",
-              },
-              {
-                q: "Can I cancel anytime?",
-                a: "Yes. You can cancel or change your plan at any time from Billing. No long-term commitment.",
-              },
-            ].map(({ q, a }) => (
-              <div key={q}>
-                <h3 className={cn(TYPO.h3, "text-base")}>{q}</h3>
-                <p className={cn(TYPO.muted, "mt-1")}>{a}</p>
+    <div className="min-h-screen flex flex-col bg-white">
+      <Navbar />
+      <main>
+        <FadeUp>
+          <section className="py-16 md:py-24 bg-white">
+            <div className={cn(CONTAINER, PAGE_PADDING)}>
+              <div className="text-center max-w-2xl mx-auto">
+                <SectionLabel className="mb-3">Pricing</SectionLabel>
+                <h1 className="font-display font-extrabold text-[#0A0A0A] tracking-tight text-[clamp(2.5rem,5vw,4rem)] mb-4">
+                  Simple pricing for serious brokerages.
+                </h1>
+                <p className="font-sans text-gray-500 text-lg">
+                  14-day free trial. No credit card required. Cancel anytime.
+                </p>
+                <div className="flex justify-center items-center gap-3 mt-8">
+                  <div className="inline-flex rounded-xl border border-gray-200 bg-gray-50 p-1">
+                    <button
+                      type="button"
+                      onClick={() => setInterval("monthly")}
+                      className={cn(
+                        "rounded-lg px-4 py-2 text-sm font-sans font-medium transition-colors min-h-[44px]",
+                        interval === "monthly"
+                          ? "bg-white text-[#0A0A0A] shadow-sm"
+                          : "text-gray-500 hover:text-[#0A0A0A]"
+                      )}
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setInterval("annual")}
+                      className={cn(
+                        "rounded-lg px-4 py-2 text-sm font-sans font-medium transition-colors min-h-[44px] flex items-center gap-2",
+                        interval === "annual"
+                          ? "bg-white text-[#0A0A0A] shadow-sm"
+                          : "text-gray-500 hover:text-[#0A0A0A]"
+                      )}
+                    >
+                      Annual
+                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                        Save 20%
+                      </span>
+                    </button>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-        </section>
 
-        <div className="mt-12 md:mt-16 text-center">
-          <Link
-            href="/signup"
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 min-h-[44px] text-base font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-          >
-            Claim Beta Spot
-            <ArrowRight className="size-4" aria-hidden />
-          </Link>
-        </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mt-12">
+                {PLANS.map((plan) => {
+                  const price = interval === "annual" ? plan.priceAnnual : plan.priceMonthly;
+                  return (
+                    <div
+                      key={plan.id}
+                      className={cn(
+                        "rounded-2xl border bg-white p-6 sm:p-8 shadow-sm flex flex-col transition-all hover:border-blue-200 hover:shadow-lg",
+                        plan.featured ? "border-2 border-blue-500 shadow-md relative" : "border-gray-200"
+                      )}
+                    >
+                      {plan.featured && (
+                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-1 text-xs font-sans font-medium text-white">
+                          Most Popular
+                        </span>
+                      )}
+                      <span className="inline-flex w-fit rounded-full bg-orange-100 px-2.5 py-1 text-xs font-sans font-medium text-orange-800 mb-4">
+                        Beta pricing
+                      </span>
+                      <h2 className="font-display font-semibold text-xl text-[#0A0A0A] mb-1">
+                        {plan.name}
+                      </h2>
+                      <div className="flex items-baseline gap-2 mb-4 flex-wrap">
+                        <span className="font-display text-4xl font-bold text-[#0A0A0A]">
+                          ${price}
+                        </span>
+                        <span className="font-sans text-gray-500">/mo</span>
+                        {interval === "annual" && (
+                          <span className="text-sm font-sans text-gray-400">
+                            (billed annually)
+                          </span>
+                        )}
+                        <span className="text-sm font-sans text-gray-400 line-through w-full">
+                          normally ${plan.standardPrice}/mo
+                        </span>
+                      </div>
+                      <p className="font-sans text-gray-500 text-sm mb-6 leading-relaxed">
+                        {plan.description}
+                      </p>
+                      <ul className="space-y-3 mb-6 flex-1">
+                        {plan.features.map((f) => (
+                          <li key={f} className="flex items-start gap-2 text-sm font-sans text-gray-600">
+                            <Check className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" aria-hidden />
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                      {plan.urgency && (
+                        <p className="text-sm font-sans text-amber-700 mb-4">🔥 {plan.urgency}</p>
+                      )}
+                      <Link
+                        href="/signup"
+                        className="inline-flex items-center justify-center rounded-xl px-6 py-3 font-sans font-semibold bg-[#2563EB] text-white hover:opacity-90 min-h-[48px] w-full"
+                      >
+                        Claim Beta Spot
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        </FadeUp>
+
+        <FadeUp>
+          <section className="py-16 md:py-24 bg-gray-50 border-t border-gray-200">
+            <div className={cn(CONTAINER, PAGE_PADDING)}>
+              <h2 className="font-display font-bold text-[#0A0A0A] text-2xl mb-8 text-center">
+                Feature comparison
+              </h2>
+              <div className="max-w-2xl mx-auto overflow-hidden rounded-2xl border border-gray-200 bg-white">
+                <table className="w-full text-left font-sans text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 bg-gray-50">
+                      <th className="px-4 py-3 font-semibold text-[#0A0A0A]">Feature</th>
+                      <th className="px-4 py-3 font-semibold text-[#0A0A0A]">Essentials</th>
+                      <th className="px-4 py-3 font-semibold text-[#0A0A0A]">Pro</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {COMPARISON.map((row, i) => (
+                      <tr
+                        key={row.feature}
+                        className={cn(
+                          "border-b border-gray-100 last:border-0",
+                          i % 2 === 1 && "bg-gray-50/50"
+                        )}
+                      >
+                        <td className="px-4 py-3 text-gray-600">{row.feature}</td>
+                        <td className="px-4 py-3">
+                          {row.essentials === "✓" ? (
+                            <span className="text-blue-600">✓</span>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {row.pro === "✓" ? (
+                            <span className="text-blue-600">✓</span>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </FadeUp>
+
+        <FadeUp>
+          <section className="py-16 md:py-24 bg-gray-50">
+            <div className={cn(CONTAINER, PAGE_PADDING)}>
+              <h2 className="font-display font-bold text-[#0A0A0A] text-2xl mb-8 text-center">
+                Common questions
+              </h2>
+              <div className="max-w-2xl mx-auto rounded-2xl border border-gray-200 bg-white p-6">
+                {FAQ_ITEMS.map((item, i) => (
+                  <FaqItem
+                    key={item.q}
+                    question={item.q}
+                    answer={item.a}
+                    open={openFaq === i}
+                    onToggle={() => setOpenFaq(openFaq === i ? null : i)}
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
+        </FadeUp>
+
+        <FadeUp>
+          <CtaBanner />
+        </FadeUp>
+        <Footer />
       </main>
-
-      <MarketingFooter />
     </div>
   );
 }

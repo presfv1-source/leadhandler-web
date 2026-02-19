@@ -1,78 +1,67 @@
 import Link from "next/link";
-import { ArrowRight, MessageSquare, Route, UserCheck, Zap } from "lucide-react";
-import { MarketingHeader } from "@/components/app/MarketingHeader";
-import { MarketingFooter } from "@/components/app/MarketingFooter";
-import { CONTAINER, PAGE_PADDING, TYPO } from "@/lib/ui";
+import { MessageSquare, Route, Users } from "lucide-react";
+import { Navbar } from "@/components/marketing/Navbar";
+import { Footer } from "@/components/marketing/Footer";
+import { SectionLabel } from "@/components/marketing/SectionLabel";
+import { CONTAINER, PAGE_PADDING } from "@/lib/ui";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { HOW_IT_WORKS_STEPS } from "@/lib/marketingContent";
 
-const steps = [
-  {
-    title: "Lead comes in",
-    description: "New leads from Zillow, Realtor.com, your website, or other sources hit your pipeline.",
-    icon: Zap,
-  },
-  {
-    title: "Respond quickly",
-    description: "One inbox for every conversation. Automated SMS follow-up and lead status tracking—no lead left waiting.",
-    icon: MessageSquare,
-  },
-  {
-    title: "Routed to the right agent",
-    description: "Round robin, weighted, or performance-based routing gets the lead to the best agent.",
-    icon: Route,
-  },
-  {
-    title: "You close",
-    description: "One inbox, clear visibility, and faster follow-up so your team closes more.",
-    icon: UserCheck,
-  },
-];
+const stepIcons = [Users, MessageSquare, Route];
+
+export const metadata = {
+  title: "LeadHandler.ai — How it works",
+  description:
+    "AI-powered SMS lead qualification and routing for real estate brokerages. Capture, engage, qualify, and route.",
+};
 
 export default function HowItWorksPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <MarketingHeader />
-
-      <main className={cn(CONTAINER, PAGE_PADDING, "flex-1 py-12 md:py-16")}>
-        <div className="max-w-2xl mx-auto text-center mb-12">
-          <h1 className={cn(TYPO.h1, "text-3xl md:text-4xl")}>How it works</h1>
-          <p className={cn(TYPO.muted, "mt-2")}>
-            Four steps from lead to close.
+    <div className="min-h-screen flex flex-col bg-white">
+      <Navbar />
+      <main className={cn(CONTAINER, PAGE_PADDING, "flex-1 py-16 md:py-24")}>
+        <div className="max-w-2xl mx-auto text-center mb-14">
+          <SectionLabel className="mb-3">How it works</SectionLabel>
+          <h1 className="font-display font-extrabold text-[#0A0A0A] tracking-tight text-[clamp(2rem,4vw,3rem)] mb-4">
+            From new lead to booked appointment — automatically.
+          </h1>
+          <p className="font-sans text-gray-500 text-lg leading-relaxed">
+            Capture, engage, qualify, and route — so your team closes more.
           </p>
         </div>
 
-        <ol className="space-y-8 md:space-y-12 max-w-3xl mx-auto">
-          {steps.map((step, i) => {
-            const Icon = step.icon;
+        <ol className="space-y-10 md:space-y-14 max-w-3xl mx-auto">
+          {HOW_IT_WORKS_STEPS.map((step, i) => {
+            const Icon = stepIcons[i] ?? Users;
             return (
-              <li key={step.title} className="flex gap-4 md:gap-6">
-                <div className="flex shrink-0 items-center justify-center h-12 w-12 rounded-xl bg-primary/10 text-primary">
+              <li key={step.title} className="flex gap-6 md:gap-8">
+                <div className="flex shrink-0 w-14 h-14 rounded-full bg-blue-50 ring-4 ring-blue-50 flex items-center justify-center text-blue-600">
                   <Icon className="h-6 w-6" aria-hidden />
                 </div>
-                <div className="min-w-0">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <div className="min-w-0 pt-1">
+                  <span className="text-xs font-sans font-bold uppercase tracking-widest text-blue-600">
                     Step {i + 1}
                   </span>
-                  <h2 className={cn(TYPO.h2, "mt-1 text-xl")}>{step.title}</h2>
-                  <p className={cn(TYPO.muted, "mt-2")}>{step.description}</p>
+                  <h2 className="font-display font-semibold text-[#0A0A0A] text-xl mt-2">
+                    {step.title}
+                  </h2>
+                  <p className="font-sans text-gray-500 mt-2 leading-relaxed">{step.body}</p>
                 </div>
               </li>
             );
           })}
         </ol>
 
-        <div className="mt-12 md:mt-16 text-center">
-          <Button asChild size="lg" className="min-h-[44px]">
-            <Link href="/login" className="inline-flex items-center gap-2">
-              Try demo
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
-          </Button>
+        <div className="mt-14 text-center">
+          <Link
+            href="/demo"
+            className="inline-flex items-center justify-center rounded-xl px-6 py-3 font-sans font-semibold bg-[#2563EB] text-white hover:opacity-90 min-h-[48px]"
+          >
+            Try demo →
+          </Link>
         </div>
       </main>
-
-      <MarketingFooter />
+      <Footer />
     </div>
   );
 }

@@ -1,36 +1,33 @@
 /**
- * Single source of truth for marketing positioning, features, how-it-works, and pricing.
- * Use across homepage, pricing page, and in-app billing so copy cannot drift.
+ * Single source of truth for marketing positioning, features, how-it-works.
+ * Use across homepage, pricing page, demo page, and hero. Client-facing only—no internal implementation details.
  */
 
 export const MARKETING_POSITIONING = {
-  headline: "Respond first. Close more.",
+  headline: "Automatically engage, qualify, and route every new lead",
   subheadline:
-    "Speed-to-lead wins listings. Broker-owners use LeadHandler for fast SMS follow-up, lead status tracking, and fair routing—from one inbox.",
+    "LeadHandler instantly responds to new leads via SMS, asks key questions to identify serious buyers, and routes qualified prospects to the right agent — so your team closes more without manual follow-up.",
   valueProps: [
-    "Reply in minutes with one shared inbox",
-    "Fair round-robin and weighted routing to your agents",
-    "Dashboard visibility and activity feed so nothing slips",
+    "Instant SMS follow-up to every new lead",
+    "Automated lead filtering and routing",
+    "Full visibility in one shared inbox",
   ],
-  /** Optional trust line; use in one place only. Texas is optional. */
-  trustLine: "Trusted by Broker-Owners",
+  /** Optional trust line; do NOT hardcode Texas everywhere. */
+  trustLine: null as string | null,
 } as const;
 
 export const HOW_IT_WORKS_STEPS = [
   {
-    title: "Capture leads",
-    description:
-      "Connect your lead sources. Leads sync to your dashboard. Setup in under 30 minutes.",
+    title: "Capture",
+    body: "New leads appear in your dashboard automatically so nothing slips through.",
   },
   {
-    title: "Respond quickly",
-    description:
-      "One inbox for every conversation. Automated SMS follow-up and lead status tracking. Never miss a lead.",
+    title: "Engage & qualify",
+    body: "Instant SMS follow-up asks key questions to identify serious buyers and filter low-intent inquiries.",
   },
   {
     title: "Route & track",
-    description:
-      "Round-robin or weighted routing gets the lead to the right agent. Dashboard shows activity and performance.",
+    body: "Qualified leads are assigned using your routing rules, with full visibility and status tracking.",
   },
 ] as const;
 
@@ -40,59 +37,55 @@ export interface FeatureCard {
   bullets: [string, string];
 }
 
+/** Client-facing feature cards only. No Integrations, Demo mode, or Airtable/Twilio/Stripe/Make as main features. */
 export const FEATURES: FeatureCard[] = [
   {
-    id: "sms-inbox",
-    title: "SMS inbox",
-    bullets: [
-      "One shared inbox for all lead conversations.",
-      "Respond from anywhere; every message is logged.",
-    ],
+    id: "sms-followup",
+    title: "Instant SMS follow-up",
+    bullets: ["Responds in seconds", "Works 24/7"],
+  },
+  {
+    id: "qualification",
+    title: "Automated lead qualification",
+    bullets: ["Asks key questions", "Filters low-intent"],
   },
   {
     id: "routing",
-    title: "Round-robin & weighted routing",
+    title: "Smart routing rules",
     bullets: [
-      "Distribute leads fairly with round-robin or weight by agent.",
-      "Optional performance-based and escalation targets in routing.",
+      "Round-robin, weighted, or performance-based",
+      "Escalation if not handled",
     ],
   },
   {
-    id: "lead-pipeline",
-    title: "Lead status pipeline & filtering",
+    id: "inbox",
+    title: "One shared team inbox",
     bullets: [
-      "Track status from new to contacted, qualified, appointment, closed.",
-      "Filter and search leads by source, agent, and status.",
+      "All conversations in one place",
+      "Owners can monitor and step in",
     ],
   },
   {
-    id: "dashboard",
-    title: "Dashboard & activity feed",
+    id: "pipeline",
+    title: "Lead pipeline + filtering",
     bullets: [
-      "Today's metrics and recent activity in one view.",
-      "Demo mode available; live data when sources are connected.",
+      "Track status",
+      "Filter by source, agent, and stage",
     ],
   },
   {
     id: "roles",
-    title: "Roles & permissions",
+    title: "Owner + agent roles",
     bullets: [
-      "Owner and agent roles with appropriate visibility.",
-      "Agents see assigned leads; owners see full brokerage view.",
-    ],
-  },
-  {
-    id: "integrations",
-    title: "Integrations",
-    bullets: [
-      "Connect Airtable, Twilio, and Stripe when configured.",
-      "Lead sync and SMS work once env is set; no fake claims.",
+      "Owners control routing and visibility",
+      "Agents see assigned leads",
     ],
   },
 ];
 
+/** Show only under a small "Coming soon" label; do not present as a core feature. */
 export const COMING_SOON_FEATURES = [
-  "AI-assisted qualification",
+  { title: "AI-assisted qualification", note: "Coming soon" },
 ] as const;
 
 export type PricingVariant = "beta" | "standard";
@@ -110,7 +103,6 @@ export interface PricingPlan {
   primary?: boolean;
   badge?: string;
   footnote?: string;
-  /** Env key for Stripe price ID, e.g. NEXT_PUBLIC_STRIPE_PRICE_ID_ESSENTIALS */
   priceIdEnvKey?: string;
 }
 
@@ -209,7 +201,6 @@ export const PRICING_PLANS_STANDARD: PricingPlan[] = [
   },
 ];
 
-/** Comparison rows for Beta Essentials vs Pro (feature name, essentials column, pro column). */
 export const PRICING_COMPARISON_BETA = [
   { feature: "Agents", essentials: "Up to 15", pro: "Up to 40+" },
   { feature: "Automated SMS follow-up", essentials: "✓", pro: "✓" },
@@ -221,7 +212,6 @@ export const PRICING_COMPARISON_BETA = [
   { feature: "Priority support", essentials: "—", pro: "✓" },
 ] as const;
 
-/** Plans shown in app billing (Beta Essentials + Pro + Enterprise). */
 export const BILLING_PLANS: PricingPlan[] = [
   ...PRICING_PLANS_BETA,
   PRICING_PLANS_STANDARD.find((p) => p.id === "enterprise")!,

@@ -1,15 +1,22 @@
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getSession, getDemoEnabled } from "@/lib/auth";
 import { getDemoAgentsAsAppType } from "@/lib/demoData";
 import { AirtableAuthError } from "@/lib/airtable";
-import { AgentsTable } from "@/components/app/AgentsTable";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Agent } from "@/lib/types";
+import { AgentsPageContent } from "./AgentsPageContent";
 
-async function AgentsContent() {
+export const dynamic = "force-dynamic";
+
+async function AgentsData() {
   const session = await getSession();
-  const demoEnabled = await getDemoEnabled(session);
-  let agents = Array.from<import("@/lib/types").Agent>([]);
+  const effectiveRole = session?.effectiveRole ?? session?.role;
+  if (effectiveRole === "agent") redirect("/app/dashboard");
+
+  let agents: Agent[] = [];
   let airtableError = false;
+  const demoEnabled = await getDemoEnabled(session);
 
   if (demoEnabled) {
     agents = getDemoAgentsAsAppType();
@@ -18,21 +25,18 @@ async function AgentsContent() {
       const airtable = await import("@/lib/airtable");
       agents = await airtable.getAgents();
     } catch (err) {
-      if (err instanceof AirtableAuthError) {
-        airtableError = true;
-      }
-      // was: else { throw err; } — fallback to empty so UI shows empty state instead of throwing
+      if (err instanceof AirtableAuthError) airtableError = true;
       agents = [];
     }
   }
 
-  const showEmptyState = !demoEnabled && agents.length === 0 && !airtableError;
+  const showEmpty = !demoEnabled && agents.length === 0 && !airtableError;
 
   return (
-    <AgentsTable
+    <AgentsPageContent
       agents={agents}
       airtableError={airtableError}
-      showEmptyState={showEmptyState}
+      showEmptyState={showEmpty}
     />
   );
 }
@@ -43,11 +47,15 @@ export default function AgentsPage() {
       fallback={
         <div className="space-y-8">
           <Skeleton className="h-10 w-32" />
-          <Skeleton className="h-96 w-full" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-48 rounded-2xl" />
+            ))}
+          </div>
         </div>
       }
     >
-      <AgentsContent />
+      <AgentsData />
     </Suspense>
   );
 }

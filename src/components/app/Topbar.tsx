@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
-import { Search, LogOut, User, Building2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Bell, LogOut, User, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -15,8 +14,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { DemoToggle } from "./DemoToggle";
-import { MobileNav } from "./MobileNav";
+import { SidebarNavContent } from "./Sidebar";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Role } from "@/lib/types";
@@ -26,6 +26,26 @@ const VIEW_AS_STORAGE = "viewAsRole";
 const ROLES: Role[] = ["owner", "broker", "agent"];
 function viewAsLabel(r: Role) {
   return r === "owner" ? "Owner" : r === "broker" ? "Broker" : "Agent";
+}
+
+const PATH_TITLES: Record<string, string> = {
+  "/app/dashboard": "Dashboard",
+  "/app/leads": "Leads",
+  "/app/inbox": "Inbox",
+  "/app/routing": "Lead Routing",
+  "/app/agents": "Agents",
+  "/app/analytics": "Analytics",
+  "/app/billing": "Billing & Plan",
+  "/app/settings": "Settings",
+  "/app/account": "Account",
+};
+
+function getPageTitle(pathname: string): string {
+  if (PATH_TITLES[pathname]) return PATH_TITLES[pathname];
+  for (const [path, title] of Object.entries(PATH_TITLES)) {
+    if (pathname.startsWith(path + "/")) return title;
+  }
+  return "App";
 }
 
 interface TopbarProps {
@@ -44,6 +64,7 @@ export function Topbar({
   className,
 }: TopbarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { signOut } = useClerk();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -60,11 +81,11 @@ export function Topbar({
     requestAnimationFrame(() => router.refresh());
   }
 
-  const effectiveRole = session?.effectiveRole ?? session?.role;
+  const effectiveRole = session?.effectiveRole ?? session?.role ?? "agent";
   const realRole = session?.role;
   const roleLabel =
     effectiveRole === "owner" ? "Owner" : effectiveRole === "broker" ? "Broker" : "Agent";
-  const displayName = !demoEnabled ? roleLabel : (session?.name ?? "User");
+  const displayName = session?.name ?? "User";
   const initials = displayName
     .split(" ")
     .map((n) => n[0])
@@ -72,93 +93,129 @@ export function Topbar({
     .toUpperCase()
     .slice(0, 2) || "U";
 
+  const pageTitle = getPageTitle(pathname);
+
   return (
-    <header
-      className={cn(
-        "flex h-14 items-center gap-4 border-b bg-background px-4 shrink-0",
-        className
-      )}
-    >
-      <MobileNav
-        role={effectiveRole ?? "agent"}
-        open={mobileOpen}
-        onOpenChange={setMobileOpen}
-        demoEnabled={demoEnabled}
-        isOwner={isOwner}
-      />
-      <div className="flex-1 flex items-center gap-4">
-        <div className="hidden sm:flex flex-1 max-w-md">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search leads..."
-              className="pl-9 bg-muted/50"
-              readOnly
+    <>
+      <header
+        className={cn(
+          "sticky top-0 z-30 flex h-[60px] items-center gap-4 border-b border-slate-200 bg-white px-4 shrink-0",
+          className
+        )}
+      >
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild className="md:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 min-h-[44px] min-w-[44px] text-slate-600"
+                aria-label="Open menu"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent
+              side="left"
+              className="w-72 max-w-[calc(100vw-2rem)] bg-slate-900 border-slate-800 p-0"
+            >
+              <div className="p-4 border-b border-slate-800">
+                <span className="font-display font-semibold text-white">
+                  LeadHandler
+                </span>
+              </div>
+              <SidebarNavContent
+                role={effectiveRole}
+                onLinkClick={() => setMobileOpen(false)}
+              />
+            </SheetContent>
+          </Sheet>
+          <h1 className="font-display font-semibold text-lg text-slate-900 truncate">
+            {pageTitle}
+          </h1>
+        </div>
+
+        {isOwner && (
+          <div className="hidden sm:flex items-center">
+            <DemoToggle
+              demoEnabled={demoEnabled}
+              onToggle={onDemoToggle}
+              disabled={false}
             />
           </div>
-        </div>
-        {isOwner && (
-          <DemoToggle
-            demoEnabled={demoEnabled}
-            onToggle={onDemoToggle}
-            disabled={false}
-            className="hidden sm:flex"
-          />
         )}
-      </div>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-11 w-11 min-h-[44px] min-w-[44px] rounded-full md:h-9 md:w-9 md:min-h-0 md:min-w-0">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback>{initials}</AvatarFallback>
-            </Avatar>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 text-slate-600 hover:text-slate-900"
+            aria-label="Notifications"
+          >
+            <Bell className="h-5 w-5" />
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>
-            <div className="flex flex-col">
-              <span>{displayName}</span>
-              <span className="text-xs font-normal text-muted-foreground">
-                Viewing as {roleLabel}
-                {demoEnabled && <span className="ml-0.5">(Demo)</span>}
-              </span>
-            </div>
-          </DropdownMenuLabel>
-          {realRole === "owner" && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                View as
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="relative h-10 w-10 rounded-full min-h-[44px] min-w-[44px] md:h-9 md:w-9 md:min-h-0 md:min-w-0"
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-slate-200 text-slate-700 font-sans">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col font-sans">
+                  <span className="text-slate-900">{displayName}</span>
+                  <span className="text-xs font-normal text-slate-500">
+                    Viewing as {roleLabel}
+                    {demoEnabled && " (Demo)"}
+                  </span>
+                </div>
               </DropdownMenuLabel>
-              {ROLES.map((r) => (
-                <DropdownMenuItem
-                  key={r}
-                  onClick={() => handleViewAs(r)}
-                  className="max-md:min-h-[44px]"
-                >
-                  <Building2 className="mr-2 h-4 w-4" />
-                  {viewAsLabel(r)}
-                  {effectiveRole === r && (
-                    <span className="ml-auto text-xs text-primary">✓</span>
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem asChild className="max-md:min-h-[44px]">
-            <a href="/app/account" className="flex items-center">
-              <User className="mr-2 h-4 w-4" />
-              Account
-            </a>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogout} className="max-md:min-h-[44px]">
-            <LogOut className="mr-2 h-4 w-4" />
-            Log out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </header>
+              {realRole === "owner" && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs font-normal text-slate-500">
+                    View as
+                  </DropdownMenuLabel>
+                  {ROLES.map((r) => (
+                    <DropdownMenuItem
+                      key={r}
+                      onClick={() => handleViewAs(r)}
+                      className="max-md:min-h-[44px]"
+                    >
+                      {viewAsLabel(r)}
+                      {effectiveRole === r && (
+                        <span className="ml-auto text-xs text-blue-600">✓</span>
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild className="max-md:min-h-[44px]">
+                <a href="/app/account" className="flex items-center">
+                  <User className="mr-2 h-4 w-4" />
+                  Account
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="max-md:min-h-[44px] text-red-600"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
+    </>
   );
 }

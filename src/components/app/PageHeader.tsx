@@ -1,12 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import {
-  PAGE_HEADER,
-  PAGE_TITLE,
-  PAGE_SUBTITLE,
-  PAGE_HEADER_ACTIONS,
-} from "@/lib/ui";
 import { Breadcrumbs } from "./Breadcrumbs";
 import type { BreadcrumbSegment } from "./Breadcrumbs";
 
@@ -26,16 +20,31 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <div className={cn(PAGE_HEADER, "flex-col items-stretch", className)}>
+    <div
+      className={cn(
+        "flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 flex-col items-stretch",
+        className
+      )}
+    >
       {breadcrumbs != null && breadcrumbs.length > 0 && (
         <Breadcrumbs segments={breadcrumbs} className="mb-2" />
       )}
-      <div className={cn(PAGE_HEADER, "flex-1 min-w-0")}>
+      <div className="flex flex-1 min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="min-w-0">
-          <h1 className={PAGE_TITLE}>{title}</h1>
-          {subtitle && <p className={cn(PAGE_SUBTITLE, "mt-1")}>{subtitle}</p>}
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="mt-1 text-sm text-slate-500 sm:text-base font-sans">
+              {subtitle}
+            </p>
+          )}
         </div>
-        {right != null && <div className={PAGE_HEADER_ACTIONS}>{right}</div>}
+        {right != null && (
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {right}
+          </div>
+        )}
       </div>
     </div>
   );

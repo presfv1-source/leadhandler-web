@@ -2,98 +2,251 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { MarketingHeader } from "@/components/app/MarketingHeader";
-import { MarketingFooter } from "@/components/app/MarketingFooter";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { CONTAINER_NARROW, PAGE_PADDING, TYPO } from "@/lib/ui";
+import { Navbar } from "@/components/marketing/Navbar";
+import { Footer } from "@/components/marketing/Footer";
+import { FadeUp } from "@/components/marketing/FadeUp";
+import { SectionLabel } from "@/components/marketing/SectionLabel";
+import { CONTAINER, PAGE_PADDING } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 
-export default function ContactPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+const AGENTS_OPTIONS = ["1-5", "6-15", "16-40", "40+"];
 
-  async function handleSubmit(e: React.FormEvent) {
+export default function ContactPage() {
+  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    brokerage: "",
+    email: "",
+    phone: "",
+    agents: "",
+    message: "",
+  });
+
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, message }),
-      });
-      if (!res.ok) throw new Error("Failed to send");
-      toast.success("Message sent. We'll get back to you soon.");
-      setName("");
-      setEmail("");
-      setMessage("");
-    } catch {
-      toast.error("Something went wrong. Please try again or email us directly.");
-    } finally {
-      setLoading(false);
-    }
+    setSubmitted(true);
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <MarketingHeader />
+    <div className="min-h-screen flex flex-col bg-white">
+      <Navbar />
+      <main>
+        <FadeUp>
+          <section className="py-16 md:py-24 bg-white">
+            <div className={cn(CONTAINER, PAGE_PADDING)}>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+                {/* Left column */}
+                <div>
+                  <SectionLabel className="mb-3">Contact</SectionLabel>
+                  <h1 className="font-display font-extrabold text-[#0A0A0A] tracking-tight text-[clamp(2rem,4vw,3rem)] mb-4">
+                    Let&apos;s talk about your brokerage.
+                  </h1>
+                  <p className="font-sans text-gray-500 text-lg leading-relaxed mb-8">
+                    Whether you want a demo, have questions about pricing, or want to talk
+                    about your specific setup — we&apos;re here. Real humans, fast replies.
+                  </p>
+                  <div className="space-y-4 font-sans text-gray-600">
+                    <p className="flex items-center gap-3">
+                      <span aria-hidden>📧</span>
+                      Email:{" "}
+                      <a
+                        href="mailto:hello@leadhandler.ai"
+                        className="text-blue-600 hover:underline"
+                      >
+                        hello@leadhandler.ai
+                      </a>
+                    </p>
+                    <p className="flex items-center gap-3">
+                      <span aria-hidden>📍</span>
+                      Location: Houston, TX
+                    </p>
+                    <p className="flex items-center gap-3">
+                      <span aria-hidden>⏱</span>
+                      Response time: Usually within a few hours
+                    </p>
+                  </div>
+                  <Link
+                    href="/demo"
+                    className="mt-6 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-sans font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                  >
+                    Or book a demo call →
+                  </Link>
+                </div>
 
-      <main className={cn(CONTAINER_NARROW, PAGE_PADDING, "flex-1 py-12 md:py-16")}>
-        <h1 className={cn(TYPO.h1)}>Contact us</h1>
-        <p className={cn(TYPO.muted, "mt-2")}>
-          Have a question or want to see a demo for your brokerage? Send us a message.
-        </p>
+                {/* Right column — form */}
+                <div className="rounded-2xl border border-gray-200 bg-gray-50/50 p-6 sm:p-8">
+                  {submitted ? (
+                    <div className="text-center py-8">
+                      <p className="font-display font-semibold text-[#0A0A0A] text-xl mb-2">
+                        Thanks!
+                      </p>
+                      <p className="font-sans text-gray-500">
+                        We&apos;ll be in touch within a few hours.
+                      </p>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                      <div>
+                        <label
+                          htmlFor="name"
+                          className="block text-sm font-sans font-medium text-gray-700 mb-1"
+                        >
+                          Full name
+                        </label>
+                        <input
+                          id="name"
+                          type="text"
+                          required
+                          value={form.name}
+                          onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
+                          className="w-full rounded-xl border border-gray-200 px-4 py-3 font-sans text-[#0A0A0A] focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+                          placeholder="Your name"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="brokerage"
+                          className="block text-sm font-sans font-medium text-gray-700 mb-1"
+                        >
+                          Brokerage name
+                        </label>
+                        <input
+                          id="brokerage"
+                          type="text"
+                          required
+                          value={form.brokerage}
+                          onChange={(e) =>
+                            setForm((s) => ({ ...s, brokerage: e.target.value }))
+                          }
+                          className="w-full rounded-xl border border-gray-200 px-4 py-3 font-sans text-[#0A0A0A] focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+                          placeholder="Your brokerage"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="email"
+                          className="block text-sm font-sans font-medium text-gray-700 mb-1"
+                        >
+                          Email
+                        </label>
+                        <input
+                          id="email"
+                          type="email"
+                          required
+                          value={form.email}
+                          onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
+                          className="w-full rounded-xl border border-gray-200 px-4 py-3 font-sans text-[#0A0A0A] focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+                          placeholder="you@brokerage.com"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="phone"
+                          className="block text-sm font-sans font-medium text-gray-700 mb-1"
+                        >
+                          Phone <span className="text-gray-400">(optional)</span>
+                        </label>
+                        <input
+                          id="phone"
+                          type="tel"
+                          value={form.phone}
+                          onChange={(e) => setForm((s) => ({ ...s, phone: e.target.value }))}
+                          className="w-full rounded-xl border border-gray-200 px-4 py-3 font-sans text-[#0A0A0A] focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+                          placeholder="(555) 000-0000"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="agents"
+                          className="block text-sm font-sans font-medium text-gray-700 mb-1"
+                        >
+                          Number of agents
+                        </label>
+                        <select
+                          id="agents"
+                          value={form.agents}
+                          onChange={(e) =>
+                            setForm((s) => ({ ...s, agents: e.target.value }))
+                          }
+                          className="w-full rounded-xl border border-gray-200 px-4 py-3 font-sans text-[#0A0A0A] focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none bg-white"
+                        >
+                          <option value="">Select</option>
+                          {AGENTS_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="message"
+                          className="block text-sm font-sans font-medium text-gray-700 mb-1"
+                        >
+                          Message
+                        </label>
+                        <textarea
+                          id="message"
+                          required
+                          rows={4}
+                          value={form.message}
+                          onChange={(e) =>
+                            setForm((s) => ({ ...s, message: e.target.value }))
+                          }
+                          className="w-full rounded-xl border border-gray-200 px-4 py-3 font-sans text-[#0A0A0A] focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none resize-none"
+                          placeholder="How can we help?"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full rounded-xl px-6 py-3 font-sans font-semibold bg-[#2563EB] text-white hover:opacity-90 min-h-[48px]"
+                      >
+                        Send message →
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        </FadeUp>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div>
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-              className="mt-2"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@brokerage.com"
-              className="mt-2"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="message">Message</Label>
-            <Textarea
-              id="message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="How can we help?"
-              className="mt-2 min-h-[120px]"
-              required
-            />
-          </div>
-          <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-            {loading ? "Sending…" : "Send message"}
-            <ArrowRight className="ml-2 size-4" aria-hidden />
-          </Button>
-        </form>
+        <FadeUp>
+          <section className="py-12 md:py-16 bg-gray-50 border-t border-gray-200">
+            <div className={cn(CONTAINER, PAGE_PADDING)}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                <div>
+                  <h3 className="font-display font-semibold text-[#0A0A0A] mb-2">
+                    How fast can I get started?
+                  </h3>
+                  <p className="font-sans text-gray-500 text-sm leading-relaxed">
+                    You can be live in under 30 minutes. We&apos;ll help you connect your
+                    lead sources and set up routing.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-display font-semibold text-[#0A0A0A] mb-2">
+                    Do you offer demos?
+                  </h3>
+                  <p className="font-sans text-gray-500 text-sm leading-relaxed">
+                    Yes. Book a call and we&apos;ll walk you through the full platform with
+                    your own brokerage in mind.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-display font-semibold text-[#0A0A0A] mb-2">
+                    Is there a free trial?
+                  </h3>
+                  <p className="font-sans text-gray-500 text-sm leading-relaxed">
+                    14 days, full access, no credit card required.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </FadeUp>
+        <Footer />
       </main>
-
-      <MarketingFooter />
     </div>
   );
 }
