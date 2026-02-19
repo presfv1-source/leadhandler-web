@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, Zap, MessageSquare, Users, Shield, BarChart3, ChevronRight, Quote } from "lucide-react";
+import { Building2, MessageSquare, Users, Shield, BarChart3, ChevronRight, Quote, Route } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -12,6 +12,7 @@ import { EarlyBirdBanner } from "@/components/app/EarlyBirdBanner";
 import { PricingSection } from "@/components/app/PricingSection";
 import { CONTAINER, PAGE_PADDING, SECTION_CARD } from "@/lib/ui";
 import { cn } from "@/lib/utils";
+import { MARKETING_POSITIONING, HOW_IT_WORKS_STEPS, FEATURES } from "@/lib/marketingContent";
 
 const LOOM_EMBED_URL = process.env.NEXT_PUBLIC_LOOM_EMBED_URL || "";
 
@@ -55,7 +56,7 @@ export default function MarketingHomePage() {
           className={cn(CONTAINER, PAGE_PADDING, "py-12 max-w-5xl mx-auto")}
         >
           <p className="text-center text-sm text-muted-foreground">
-            Fast replies, more closings—no extra tools to learn.
+            {MARKETING_POSITIONING.valueProps[0]} — no extra tools to learn.
           </p>
         </motion.section>
 
@@ -64,8 +65,7 @@ export default function MarketingHomePage() {
           className={cn(CONTAINER, PAGE_PADDING, "py-16 max-w-5xl mx-auto")}
         >
           <h2 className="text-2xl font-bold text-center mb-8">
-            {/* was: Trusted by Texas broker-owners */}
-            Trusted by Broker-Owners
+            {MARKETING_POSITIONING.trustLine}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {testimonials.map((t) => (
@@ -107,40 +107,21 @@ export default function MarketingHomePage() {
             </div>
           ) : null}
           <div className="flex flex-col md:flex-row md:items-start md:justify-center gap-8 md:gap-4">
-            <div className="text-center flex-1">
-              <div className="inline-flex h-12 w-12 rounded-full bg-primary/10 items-center justify-center mb-4">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Capture leads</h3>
-              <p className="text-muted-foreground text-sm">
-                <strong>Setup in under 30 minutes.</strong> Connect your lead sources.{" "}
-                <strong>Leads sync to your dashboard.</strong>
-              </p>
-            </div>
-            <div className="hidden md:flex shrink-0 pt-8" aria-hidden>
-              <ChevronRight className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <div className="text-center flex-1">
-              <div className="inline-flex h-12 w-12 rounded-full bg-primary/10 items-center justify-center mb-4">
-                <MessageSquare className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Respond quickly</h3>
-              <p className="text-muted-foreground text-sm">
-                <strong>One inbox</strong> for every conversation. Never miss a lead.
-              </p>
-            </div>
-            <div className="hidden md:flex shrink-0 pt-8" aria-hidden>
-              <ChevronRight className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <div className="text-center flex-1">
-              <div className="inline-flex h-12 w-12 rounded-full bg-primary/10 items-center justify-center mb-4">
-                <BarChart3 className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Track & close</h3>
-              <p className="text-muted-foreground text-sm">
-                Dashboard shows performance. Route leads to your agents.
-              </p>
-            </div>
+            {HOW_IT_WORKS_STEPS.map((step, i) => {
+              const Icon = [Users, MessageSquare, BarChart3][i];
+              return (
+                <div key={step.title} className="flex flex-col md:flex-row md:items-center md:flex-1 gap-4">
+                  {i > 0 ? <div className="hidden md:flex shrink-0 pt-8" aria-hidden><ChevronRight className="h-6 w-6 text-muted-foreground" /></div> : null}
+                  <div className="text-center flex-1">
+                    <div className="inline-flex h-12 w-12 rounded-full bg-primary/10 items-center justify-center mb-4">
+                      <Icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
+                    <p className="text-muted-foreground text-sm">{step.description}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </motion.section>
 
@@ -150,35 +131,20 @@ export default function MarketingHomePage() {
           className={cn(CONTAINER, PAGE_PADDING, "py-24 max-w-5xl mx-auto")}
         >
           <h2 className="text-3xl font-bold text-center mb-12">Features</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-            <div className="rounded-xl border bg-card p-6">
-              <Zap className="h-8 w-8 text-primary mb-4" />
-              <h3 className="font-semibold text-lg mb-2">Smart routing</h3>
-              <p className="text-muted-foreground text-sm">
-                Intelligent routing to top performers. Round-robin and escalation.
-              </p>
-            </div>
-            <div className="rounded-xl border bg-card p-6">
-              <MessageSquare className="h-8 w-8 text-primary mb-4" />
-              <h3 className="font-semibold text-lg mb-2">SMS inbox</h3>
-              <p className="text-muted-foreground text-sm">
-                <strong>One inbox.</strong> Respond from anywhere.
-              </p>
-            </div>
-            <div className="rounded-xl border bg-card p-6">
-              <Shield className="h-8 w-8 text-primary mb-4" />
-              <h3 className="font-semibold text-lg mb-2">Security & data</h3>
-              <p className="text-muted-foreground text-sm">
-                Your data is stored securely; we don&apos;t overclaim compliance.
-              </p>
-            </div>
-            <div className="rounded-xl border bg-card p-6">
-              <Building2 className="h-8 w-8 text-primary mb-4" />
-              <h3 className="font-semibold text-lg mb-2">Seamless lead sync</h3>
-              <p className="text-muted-foreground text-sm">
-                Your leads stay in sync. <strong>One source of truth, real-time.</strong>
-              </p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {FEATURES.map((f) => {
+              const Icon = f.id === "sms-inbox" ? MessageSquare : f.id === "routing" ? Route : f.id === "lead-pipeline" ? Users : f.id === "dashboard" ? BarChart3 : f.id === "roles" ? Shield : Building2;
+              return (
+                <div key={f.id} className="rounded-xl border bg-card p-6">
+                  <Icon className="h-8 w-8 text-primary mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">{f.title}</h3>
+                  <ul className="text-muted-foreground text-sm space-y-1">
+                    <li>{f.bullets[0]}</li>
+                    <li>{f.bullets[1]}</li>
+                  </ul>
+                </div>
+              );
+            })}
           </div>
         </motion.section>
 

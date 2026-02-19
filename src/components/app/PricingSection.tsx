@@ -32,78 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-
-const BETA_PLANS = [
-  {
-    name: "Essentials",
-    price: 99,
-    priceAnnual: 990,
-    period: "/mo",
-    description: "AI qual, round-robin, inbox, basic dashboard.",
-    features: ["Up to 15 agents", "AI lead qualification", "Round-robin routing", "SMS inbox", "Basic dashboard"],
-    cta: "Claim Beta Spot",
-    href: "/signup",
-    primary: false,
-  },
-  {
-    name: "Pro",
-    badge: "Popular",
-    price: 249,
-    priceAnnual: 2490,
-    period: "/mo",
-    description: "Everything in Essentials, plus advanced routing & escalation, detailed analytics, priority support. Up to 40+ agents.",
-    footnote: "Spots limited before standard $349/$749.",
-    features: ["Up to 40+ agents", "Everything in Essentials", "Advanced routing & escalation", "Detailed analytics", "Priority support"],
-    cta: "Claim Beta Spot",
-    href: "/signup",
-    primary: true,
-  },
-];
-
-const STANDARD_PLANS = [
-  {
-    name: "Essentials",
-    price: 349,
-    period: "/mo",
-    description: "For established teams.",
-    features: ["Up to 15 agents", "AI qualification", "Lead routing", "SMS inbox", "Seamless lead sync"],
-    cta: "Get started",
-    href: "/signup",
-    primary: false,
-  },
-  {
-    name: "Pro",
-    badge: "Popular",
-    price: 749,
-    period: "/mo",
-    description: "For scaling brokerages.",
-    features: ["Up to 40+ agents", "Everything in Essentials", "Performance visibility", "Priority support"],
-    cta: "Get started",
-    href: "/signup",
-    primary: true,
-  },
-  {
-    name: "Enterprise",
-    price: null,
-    period: "Custom",
-    description: "Dedicated support and custom options.",
-    features: ["Custom limits", "Dedicated support", "API access", "SLA"],
-    cta: "Contact sales",
-    href: "/contact",
-    primary: false,
-  },
-];
-
-const COMPARISON_ROWS = [
-  { feature: "Agents", essentials: "Up to 15", pro: "Up to 40+" },
-  { feature: "AI lead qualification", essentials: "✓", pro: "✓" },
-  { feature: "Round-robin routing", essentials: "✓", pro: "✓" },
-  { feature: "SMS inbox", essentials: "✓", pro: "✓" },
-  { feature: "Basic dashboard", essentials: "✓", pro: "✓" },
-  { feature: "Advanced analytics", essentials: "—", pro: "✓" },
-  { feature: "Escalation", essentials: "—", pro: "✓" },
-  { feature: "Priority support", essentials: "—", pro: "✓" },
-];
+import { PRICING_PLANS_BETA, PRICING_PLANS_STANDARD, PRICING_COMPARISON_BETA } from "@/lib/marketingContent";
 
 const AGENT_RANGES = [
   { value: "1-5", label: "1–5 agents" },
@@ -269,7 +198,7 @@ export function PricingSection() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          {BETA_PLANS.map((plan) => {
+          {PRICING_PLANS_BETA.map((plan) => {
             const price = annual ? plan.priceAnnual : plan.price;
             const period = annual ? "/yr" : plan.period;
             return (
@@ -346,7 +275,7 @@ export function PricingSection() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {COMPARISON_ROWS.map((row) => (
+                {PRICING_COMPARISON_BETA.map((row) => (
                   <TableRow key={row.feature}>
                     <TableCell className="font-medium">{row.feature}</TableCell>
                     <TableCell className="text-center text-muted-foreground">
@@ -376,7 +305,7 @@ export function PricingSection() {
 
       <TabsContent value="standard" className="mt-0">
         <div className="grid gap-6 md:grid-cols-3">
-          {STANDARD_PLANS.map((plan) => (
+          {PRICING_PLANS_STANDARD.map((plan) => (
             <Card
               key={plan.name}
               className={cn(

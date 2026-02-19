@@ -7,38 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Zap, Building2, Check } from "lucide-react";
 import { toast } from "sonner";
+import { BILLING_PLANS } from "@/lib/marketingContent";
 
-type PlanId = "free" | "essentials" | "pro";
+type PlanId = "free" | "essentials" | "pro" | "enterprise";
 
-/** Matches marketing: Essentials $99, Pro $249. Enterprise = contact for custom. */
-const plans = [
-  {
-    id: "essentials",
-    name: "Essentials",
-    price: 99,
-    icon: Zap,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ESSENTIALS ?? "",
-    features: ["Up to 15 agents", "AI qualification", "Lead routing", "SMS inbox", "Seamless lead sync"],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: 249,
-    icon: Building2,
-    popular: true,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO ?? "",
-    features: ["Up to 40+ agents", "Everything in Essentials", "Advanced routing & analytics", "Priority support"],
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    price: null,
-    icon: CreditCard,
-    priceId: "",
-    custom: true,
-    features: ["Custom limits", "Dedicated support", "API access", "SLA"],
-  },
-];
+const PLAN_ICONS = { essentials: Zap, pro: Building2, enterprise: CreditCard } as const;
+const PLAN_POPULAR: Record<string, boolean> = { pro: true };
+
+function getPriceId(planId: string): string {
+  if (planId === "essentials") return process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ESSENTIALS ?? "";
+  if (planId === "pro") return process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO ?? "";
+  return "";
+}
 
 export default function BillingPage() {
   const [loading, setLoading] = useState(false);
@@ -116,16 +96,17 @@ export default function BillingPage() {
       </Card>
 
       <div className="grid gap-6 md:grid-cols-3">
-        {plans.map((plan) => {
-          const Icon = plan.icon;
+        {BILLING_PLANS.map((plan) => {
+          const Icon = PLAN_ICONS[plan.id as keyof typeof PLAN_ICONS] ?? CreditCard;
           const isCurrent = planId !== null && plan.id === planId;
           const isCustom = plan.price == null;
+          const priceId = getPriceId(plan.id);
           return (
-            <Card key={plan.id} className={`rounded-lg shadow-sm ${plan.popular ? "border-primary" : ""}`}>
+            <Card key={plan.id} className={`rounded-lg shadow-sm ${PLAN_POPULAR[plan.id] ? "border-primary" : ""}`}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <Icon className="h-8 w-8 text-primary" />
-                  {plan.popular && <Badge>Popular</Badge>}
+                  {PLAN_POPULAR[plan.id] && <Badge>Popular</Badge>}
                 </div>
                 <CardTitle>{plan.name}</CardTitle>
                 <p className="text-3xl font-bold">
@@ -155,8 +136,8 @@ export default function BillingPage() {
                 ) : (
                   <Button
                     className="w-full min-h-[44px]"
-                    variant={plan.popular && !isCurrent ? "default" : "outline"}
-                    onClick={() => handleUpgrade(plan.id, plan.priceId)}
+                    variant={PLAN_POPULAR[plan.id] && !isCurrent ? "default" : "outline"}
+                    onClick={() => handleUpgrade(plan.id, priceId)}
                     disabled={loading || isCurrent}
                   >
                     {isCurrent ? "Current plan" : "Upgrade"}

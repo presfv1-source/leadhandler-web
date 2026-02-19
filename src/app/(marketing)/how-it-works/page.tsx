@@ -13,8 +13,8 @@ const steps = [
     icon: Zap,
   },
   {
-    title: "AI responds",
-    description: "We qualify and reply in minutes so you respond first—no lead left waiting.",
+    title: "Respond quickly",
+    description: "One inbox for every conversation. Automated SMS follow-up and lead status tracking—no lead left waiting.",
     icon: MessageSquare,
   },
   {

@@ -24,7 +24,15 @@ export function Sidebar({ role, className }: SidebarProps) {
         className
       )}
     >
-      <nav className="flex-1 p-4 space-y-4" aria-label="App navigation">
+      <div className="p-4 border-b shrink-0">
+        <Link
+          href="/"
+          className="flex items-center justify-center rounded-lg px-3 py-2 min-h-[44px] text-base font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+        >
+          LeadHandler.ai
+        </Link>
+      </div>
+      <nav className="flex-1 p-4 space-y-4 overflow-y-auto" aria-label="App navigation">
         {groups.map((group, gi) => (
           <div key={group.label}>
             {gi > 0 && <Separator className="mb-4" />}

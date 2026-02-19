@@ -6,6 +6,7 @@ import { EarlyBirdBanner } from "@/components/app/EarlyBirdBanner";
 import { PricingSection } from "@/components/app/PricingSection";
 import { CONTAINER, PAGE_PADDING, TYPO } from "@/lib/ui";
 import { cn } from "@/lib/utils";
+import { MARKETING_POSITIONING } from "@/lib/marketingContent";
 
 export default function PricingPage() {
   return (
@@ -34,7 +35,7 @@ export default function PricingPage() {
           {/* was: For Houston brokers */}
           <h2 className={cn(TYPO.h2, "text-xl")}>For brokers</h2>
           <p className={cn(TYPO.muted, "mt-2 text-sm")}>
-            Speed-to-lead wins listings. Get instant SMS response, AI qualification, and fair routing—so every lead gets a fast reply and the right agent. Try the demo with no setup.
+            {MARKETING_POSITIONING.subheadline} Try the demo with no setup.
           </p>
           <Link
             href="/login"
