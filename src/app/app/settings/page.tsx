@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SettingsSections } from "@/components/app/SettingsSections";
+import { DevTestToolsSection } from "@/components/app/DevTestToolsSection";
 import type { Agent } from "@/lib/types";
 
 async function SettingsContent() {
@@ -64,6 +65,10 @@ async function SettingsContent() {
       <SettingsSections
         session={session ? { name: session.name, email: session.email } : null}
         agents={agents}
+      />
+
+      <DevTestToolsSection
+        phoneNumber={process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_FROM_NUMBER || "+1-XXX-XXX-XXXX"}
       />
 
       {/* Integrations section commented out per polish – uncomment to restore:

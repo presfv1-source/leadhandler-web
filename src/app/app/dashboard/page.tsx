@@ -22,7 +22,7 @@ import { EmptyState } from "@/components/app/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RecentActivity } from "@/components/app/RecentActivity";
 import { DevRoleSwitcher } from "@/components/app/DevRoleSwitcher";
-import { DashboardTestSmsCard } from "@/components/app/DashboardTestSmsCard";
+import { NewLeadAlertBanner } from "@/components/app/NewLeadAlertBanner";
 
 const LeadActivityChart = dynamic(
   () => import("@/components/app/LeadActivityChart").then((m) => m.LeadActivityChart),
@@ -48,7 +48,6 @@ async function DashboardContent() {
   const demoEnabled = await getDemoEnabled(session);
   const role = session?.role ?? "broker";
   const agentId = role === "agent" ? session?.agentId : undefined;
-  const twilioNumber = process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_FROM_NUMBER || "+1-XXX-XXX-XXXX";
 
   let stats: DashboardStats = DEFAULT_STATS;
   let leads: Lead[] = [];
@@ -211,6 +210,10 @@ async function DashboardContent() {
       </p>
       {isEffectiveOwner && airtableError && <AirtableErrorFallback className="mb-4" />}
 
+      {isEffectiveOwner && (
+        <NewLeadAlertBanner />
+      )}
+
       {process.env.NODE_ENV === "development" && <DevRoleSwitcher />}
 
       {demoEnabled && (
@@ -268,6 +271,15 @@ async function DashboardContent() {
         ))}
       </div>
 
+      <SectionCard title="Today's performance" className="bg-muted/30">
+        <p className="text-sm">
+          <span className="font-medium">Today&apos;s leads: 3</span>
+          <span className="text-muted-foreground mx-2">|</span>
+          <span className="font-medium">Response time: 2.5 min</span>
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">Summary for broker view; live data when connected.</p>
+      </SectionCard>
+
       {isEffectiveOwner && (
         <SectionCard title="Lead activity">
           <LeadActivityChart data={leadsByDay} />
@@ -275,14 +287,14 @@ async function DashboardContent() {
       )}
 
       {isEffectiveOwner && (
-        <SectionCard title="Recent activity">
+        <SectionCard title="Recent activity" bodyClassName="min-h-[220px]">
           <RecentActivity
             items={activity}
             emptyMessage={
               !demoEnabled && leads.length === 0
                 ? "Connect your lead sources in Settings to see activity."
                 : demoEnabled
-                  ? "No activity yet – text the test number to start!"
+                  ? "No activity yet."
                   : "No recent activity—add a lead!"
             }
           />
@@ -296,7 +308,7 @@ async function DashboardContent() {
       */}
 
       <div className="grid min-w-0 gap-6 lg:grid-cols-2">
-        <SectionCard title="Recent messages">
+        <SectionCard title="Recent messages" bodyClassName="min-h-[280px]">
           <p className="text-xs text-muted-foreground mb-4">
             This shows recent SMS conversations – click View to open full thread in Messages.
           </p>
@@ -360,7 +372,7 @@ async function DashboardContent() {
         </SectionCard>
 
         {isEffectiveOwner ? (
-          <SectionCard title="Agent leaderboard">
+          <SectionCard title="Agent leaderboard" bodyClassName="min-h-[280px]">
             <DashboardAgentLeaderboard agents={agents} />
           </SectionCard>
         ) : (
@@ -389,7 +401,7 @@ async function DashboardContent() {
         )}
       </div>
 
-      <DashboardTestSmsCard phoneNumber={twilioNumber} />
+      {/* Test Magic Number card removed – moved to Settings > Dev / Test Tools */}
     </div>
   );
 }
