@@ -13,6 +13,8 @@ const AGENTS_OPTIONS = ["1-5", "6-15", "16-40", "40+"];
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
     brokerage: "",
@@ -22,9 +24,28 @@ export default function ContactPage() {
     message: "",
   });
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitted(true);
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          message: [form.brokerage, form.phone, form.agents, form.message].filter(Boolean).join(" | "),
+        }),
+      });
+      const data = await res.json();
+      if (data.success !== false) setSubmitted(true);
+      else setError((data.error as { message?: string })?.message ?? "Something went wrong. Email us at hello@leadhandler.ai.");
+    } catch {
+      setError("Could not send. Email us at hello@leadhandler.ai.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -85,6 +106,10 @@ export default function ContactPage() {
                       </p>
                     </div>
                   ) : (
+                    <>
+                      {error && (
+                        <p className="text-sm text-red-600 font-sans mb-4">{error}</p>
+                      )}
                     <form onSubmit={handleSubmit} className="space-y-5">
                       <div>
                         <label
@@ -199,11 +224,13 @@ export default function ContactPage() {
                       </div>
                       <button
                         type="submit"
-                        className="w-full rounded-xl px-6 py-3 font-sans font-semibold bg-[#2563EB] text-white hover:opacity-90 min-h-[48px]"
+                        disabled={loading}
+                        className="w-full rounded-xl px-6 py-3 font-sans font-semibold bg-[#2563EB] text-white hover:opacity-90 min-h-[48px] disabled:opacity-70"
                       >
-                        Send message →
+                        {loading ? "Sending…" : "Send message →"}
                       </button>
                     </form>
+                    </>
                   )}
                 </div>
               </div>

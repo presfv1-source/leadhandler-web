@@ -8,6 +8,8 @@ export type LeadStatus =
   | "closed"
   | "lost";
 
+export type LeadSource = "zillow" | "realtor" | "direct" | "other";
+
 export interface Brokerage {
   id: string;
   name: string;
@@ -15,6 +17,12 @@ export interface Brokerage {
   address?: string;
   phone?: string;
   createdAt?: string;
+  ownerUserId?: string;
+  planTier?: "essentials" | "pro";
+  maxAgents?: number;
+  stripeCustomerId?: string | null;
+  demoMode?: boolean;
+  routingMode?: "round-robin" | "weighted" | "performance";
 }
 
 export interface Agent {
@@ -29,6 +37,12 @@ export interface Agent {
   closeRate?: number;
   /** Optional weight (1–10) for weighted round robin. Stored in Airtable as round_robin_weight. */
   roundRobinWeight?: number;
+  /** Alias for active; used in API/spec. */
+  isActive?: boolean;
+  /** Order in queue for round-robin. */
+  routingPriority?: number;
+  /** Same as roundRobinWeight (1–10) for weighted mode. */
+  routingWeight?: number;
   metrics?: {
     leadsAssigned: number;
     qualifiedCount: number;
@@ -47,10 +61,19 @@ export interface Lead {
   source: string;
   assignedTo?: string;
   assignedToName?: string;
+  /** Alias for assignedTo; used in API/spec. */
+  assignedAgentId?: string | null;
+  brokerageId?: string;
+  qualificationScore?: number;
+  aiSummary?: string | null;
+  lastMessageAt?: string | null;
+  tags?: string[];
   notes?: string;
   createdAt?: string;
   updatedAt?: string;
 }
+
+export type MessageSenderType = "ai" | "agent" | "lead";
 
 export interface Message {
   id: string;
@@ -60,6 +83,8 @@ export interface Message {
   leadId?: string;
   from?: string;
   to?: string;
+  senderType?: MessageSenderType;
+  agentId?: string | null;
 }
 
 export interface Insight {

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
+import { clerkClient } from "@clerk/nextjs/server";
+import Stripe from "stripe";
 import { updateAirtableUserPlan } from "@/lib/airtable";
+import { hasStripe } from "@/lib/config";
 import { env } from "@/lib/env.mjs";
 
 const WEBHOOK_SECRET = env.server.STRIPE_WEBHOOK_SECRET?.trim() ?? "";
@@ -28,6 +31,21 @@ function priceIdToPlanId(priceId: string): "essentials" | "pro" {
   return "pro";
 }
 
+async function syncPlanToClerk(email: string, planId: "essentials" | "pro"): Promise<void> {
+  try {
+    const client = await clerkClient();
+    const users = await client.users.getUserList({ emailAddress: [email] });
+    const user = users.data[0];
+    if (user) {
+      await client.users.updateUser(user.id, {
+        publicMetadata: { ...user.publicMetadata, plan: planId },
+      });
+    }
+  } catch (e) {
+    console.error("[webhooks/stripe] Clerk sync plan:", e);
+  }
+}
+
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
   const signature = request.headers.get("stripe-signature") ?? null;
@@ -49,10 +67,41 @@ export async function POST(request: NextRequest) {
       if (priceId) planId = priceIdToPlanId(priceId);
       if (email && typeof email === "string" && email.trim()) {
         await updateAirtableUserPlan(email.trim(), planId);
+        await syncPlanToClerk(email.trim(), planId);
       }
     }
-  } catch {
-    // Idempotent: always return 200 so Stripe does not retry
+
+    if (type === "customer.subscription.updated" && obj) {
+      const customerId = obj.customer as string | undefined;
+      if (customerId && hasStripe && env.server.STRIPE_SECRET_KEY) {
+        const StripeLib = await import("stripe");
+        const stripe = new StripeLib.default(env.server.STRIPE_SECRET_KEY);
+        const customer = await stripe.customers.retrieve(customerId);
+        const email = (customer as Stripe.Customer).email?.trim();
+        if (email) {
+          const status = obj.status as string | undefined;
+          const planId: "essentials" | "pro" = status === "active" ? "pro" : "essentials";
+          await updateAirtableUserPlan(email, planId);
+          await syncPlanToClerk(email, planId);
+        }
+      }
+    }
+
+    if (type === "customer.subscription.deleted" && obj) {
+      const customerId = obj.customer as string | undefined;
+      if (customerId && hasStripe && env.server.STRIPE_SECRET_KEY) {
+        const StripeLib = await import("stripe");
+        const stripe = new StripeLib.default(env.server.STRIPE_SECRET_KEY);
+        const customer = await stripe.customers.retrieve(customerId);
+        const email = (customer as Stripe.Customer).email?.trim();
+        if (email) {
+          await updateAirtableUserPlan(email, "essentials");
+          await syncPlanToClerk(email, "essentials");
+        }
+      }
+    }
+  } catch (e) {
+    console.error("[webhooks/stripe]", e);
   }
   return NextResponse.json({ received: true }, { status: 200 });
 }

@@ -8,6 +8,6 @@ export default async function SettingsLayout({
 }) {
   const session = await getSession();
   const role = session?.effectiveRole ?? session?.role;
-  if (role === "agent") redirect("/app/dashboard");
+  if (role === "agent") redirect("/app/leads");
   return <>{children}</>;
 }

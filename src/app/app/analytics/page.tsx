@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 async function AnalyticsData() {
   const session = await getSession();
   const effectiveRole = session?.effectiveRole ?? session?.role;
-  if (effectiveRole === "agent") redirect("/app/dashboard");
+  if (effectiveRole === "agent") redirect("/app/leads");
 
   const demoEnabled = await getDemoEnabled(session);
   const leadsByDay = demoEnabled ? getDemoLeadsByDay() : [];

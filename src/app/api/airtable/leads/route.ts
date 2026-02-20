@@ -17,16 +17,55 @@ const postSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await getSessionToken(request);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: { code: "UNAUTHORIZED", message: "Sign in to view leads" } },
+        { status: 401 }
+      );
+    }
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status") ?? undefined;
+    const source = searchParams.get("source") ?? undefined;
+    const agentIdParam = searchParams.get("agentId") ?? undefined;
+    const search = searchParams.get("search") ?? undefined;
+    const since = searchParams.get("since") ?? undefined;
+
     const demo = await getDemoEnabled(session);
+    const requestedAgentId = session?.role === "agent" ? session?.agentId : agentIdParam;
+    let leads: Awaited<ReturnType<typeof getDemoLeadsAsAppType>>;
     if (demo) {
-      const leads = getDemoLeadsAsAppType();
-      return NextResponse.json({ success: true, data: leads });
-    }
-    if (!hasAirtable) {
+      leads = getDemoLeadsAsAppType();
+    } else if (!hasAirtable) {
       return NextResponse.json({ success: true, data: [] });
+    } else {
+      leads = await import("@/lib/airtable").then((m) => m.getLeads(requestedAgentId));
     }
-    const agentId = session?.role === "agent" ? session?.agentId : undefined;
-    const leads = await import("@/lib/airtable").then((m) => m.getLeads(agentId));
+
+    if (status && status !== "all") {
+      leads = leads.filter((l) => l.status === status);
+    }
+    if (source && source !== "all") {
+      leads = leads.filter((l) => (l.source ?? "").toLowerCase() === source.toLowerCase());
+    }
+    if (agentIdParam && agentIdParam !== "all") {
+      leads = leads.filter((l) => l.assignedTo === agentIdParam);
+    }
+    if (search?.trim()) {
+      const q = search.trim().toLowerCase();
+      leads = leads.filter(
+        (l) =>
+          (l.name ?? "").toLowerCase().includes(q) ||
+          (l.phone ?? "").includes(q) ||
+          (l.email ?? "").toLowerCase().includes(q)
+      );
+    }
+    if (since) {
+      const sinceDate = new Date(since);
+      if (!Number.isNaN(sinceDate.getTime())) {
+        leads = leads.filter((l) => l.createdAt && new Date(l.createdAt) >= sinceDate);
+      }
+    }
+
     return NextResponse.json({ success: true, data: leads });
   } catch (err) {
     if (err instanceof AirtableAuthError) {

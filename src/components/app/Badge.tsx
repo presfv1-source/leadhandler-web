@@ -13,14 +13,14 @@ export type StatusBadgeVariant =
   | "lost";
 
 const variantStyles: Record<StatusBadgeVariant, string> = {
-  hot: "bg-red-100 text-red-800 border-red-200",
-  warm: "bg-orange-100 text-orange-800 border-orange-200",
-  new: "bg-sky-100 text-sky-800 border-sky-200",
-  contacted: "bg-amber-100 text-amber-800 border-amber-200",
-  qualified: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  appointment: "bg-violet-100 text-violet-800 border-violet-200",
-  closed: "bg-slate-100 text-slate-600 border-slate-200",
-  lost: "bg-slate-100 text-slate-500 border-slate-200",
+  hot: "bg-red-50 text-red-600 border border-red-100",
+  warm: "bg-orange-50 text-orange-600 border border-orange-100",
+  new: "bg-green-50 text-green-600 border border-green-100",
+  contacted: "bg-blue-50 text-blue-600 border border-blue-100",
+  qualified: "bg-purple-50 text-purple-600 border border-purple-100",
+  appointment: "bg-teal-50 text-teal-600 border border-teal-100",
+  closed: "bg-slate-100 text-slate-600 border border-slate-200",
+  lost: "bg-slate-100 text-slate-500 border border-slate-200",
 };
 
 interface BadgeProps {
@@ -42,3 +42,6 @@ export function StatusBadge({ variant, children, className }: BadgeProps) {
     </span>
   );
 }
+
+/** Alias for StatusBadge — usage: <Badge variant="hot">Hot</Badge> */
+export const Badge = StatusBadge;

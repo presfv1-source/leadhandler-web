@@ -85,6 +85,7 @@ type LeadFields = {
   Notes?: string;
   "Assigned To Name"?: string;
   "Last modified"?: string;
+  "Last Message At"?: string;
 };
 
 function recordToLead(r: AirtableRecord<LeadFields>): Lead {
@@ -141,6 +142,27 @@ export async function getLeads(assignedToAgentId?: string): Promise<Lead[]> {
   return all;
 }
 
+/** Normalize phone to last 10 digits for matching. */
+function normalizePhone(phone: string): string {
+  const digits = (phone ?? "").replace(/\D/g, "");
+  return digits.slice(-10);
+}
+
+/** Find lead by phone number (uncached). Returns null if not found or Airtable not configured. */
+export async function getLeadByPhone(phone: string): Promise<Lead | null> {
+  if (!hasAirtable) return null;
+  try {
+    const all = await getLeadsUncached();
+    const normalized = normalizePhone(phone);
+    if (!normalized) return null;
+    return all.find((l) => normalizePhone(l.phone ?? "") === normalized) ?? null;
+  } catch (e) {
+    if (e instanceof AirtableAuthError) throw e;
+    console.warn("[airtable] getLeadByPhone failed:", e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
 export async function createLead(
   lead: Omit<Lead, "id" | "createdAt" | "updatedAt">
 ): Promise<Lead> {
@@ -181,6 +203,53 @@ export async function createLead(
   }
   const created = (await res.json()) as AirtableRecord<LeadFields>;
   return recordToLead(created);
+}
+
+/** Update a lead (e.g. lastMessageAt, status, assignedTo). Only provided fields are patched. */
+export async function updateLead(id: string, data: Partial<Pick<Lead, "lastMessageAt" | "status" | "assignedTo">>): Promise<Lead> {
+  if (!hasAirtable) {
+    console.warn("[airtable] updateLead: Airtable not configured");
+    return { id, name: "", phone: "", email: "", status: "new", source: "" };
+  }
+  const table = env.server.AIRTABLE_TABLE_LEADS;
+  const fields: Record<string, unknown> = {};
+  if (data.lastMessageAt != null) fields["Last Message At"] = data.lastMessageAt;
+  if (data.status != null) fields.Status = data.status;
+  if (data.assignedTo !== undefined) fields["Assigned To"] = data.assignedTo ? [data.assignedTo] : [];
+  if (Object.keys(fields).length === 0) {
+    const all = await getLeadsUncached();
+    return all.find((l) => l.id === id) ?? { id, name: "", phone: "", email: "", status: "new", source: "" };
+  }
+  const url = `${tableUrl(table)}/${id}`;
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify({ fields }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    if (res.status === 401) throw new AirtableAuthError(`Airtable update lead: 401 ${err}`);
+    throw new Error(`Airtable update lead: ${res.status} ${err}`);
+  }
+  const updated = (await res.json()) as AirtableRecord<LeadFields>;
+  return recordToLead(updated);
+}
+
+/** Delete a lead. No-op if Airtable not configured. */
+export async function deleteLead(id: string): Promise<void> {
+  if (!hasAirtable) {
+    console.warn("[airtable] deleteLead: Airtable not configured");
+    return;
+  }
+  const table = env.server.AIRTABLE_TABLE_LEADS;
+  const url = `${tableUrl(table)}/${id}`;
+  const res = await fetch(url, { method: "DELETE", headers: getHeaders(), cache: "no-store" });
+  if (!res.ok && res.status !== 404) {
+    const err = await res.text();
+    if (res.status === 401) throw new AirtableAuthError(`Airtable delete lead: 401 ${err}`);
+    throw new Error(`Airtable delete lead: ${res.status} ${err}`);
+  }
 }
 
 // ---- Agents ----
@@ -503,6 +572,51 @@ export async function getMessages(leadId?: string): Promise<Message[]> {
   const byCreated = (a: Message, b: Message) =>
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   return records.map((r) => recordToMessage(r, leadId)).sort(byCreated);
+}
+
+/** Create a message (e.g. inbound SMS). */
+export async function createMessage(data: {
+  leadId: string;
+  body: string;
+  direction: "in" | "out";
+  senderType?: "ai" | "agent" | "lead";
+}): Promise<Message> {
+  if (!hasAirtable) {
+    console.warn("[airtable] createMessage: Airtable not configured");
+    return {
+      id: `msg-${Date.now()}`,
+      direction: data.direction,
+      body: data.body,
+      createdAt: new Date().toISOString(),
+      leadId: data.leadId,
+      senderType: data.senderType,
+    };
+  }
+  const table = env.server.AIRTABLE_TABLE_MESSAGES;
+  const url = tableUrl(table);
+  const now = new Date().toISOString();
+  const res = await fetch(url, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({
+      fields: {
+        Body: data.body,
+        Direction: data.direction === "in" ? "In" : "Out",
+        Lead: [data.leadId],
+        Created: now,
+      },
+    }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    if (res.status === 401) throw new AirtableAuthError(`Airtable create message: 401 ${err}`);
+    throw new Error(`Airtable create message: ${res.status} ${err}`);
+  }
+  const created = (await res.json()) as AirtableRecord<MessageFields>;
+  const msg = recordToMessage(created, data.leadId);
+  if (data.senderType) (msg as Message).senderType = data.senderType;
+  return msg;
 }
 
 // ---- Activity (derived from leads + messages) ----

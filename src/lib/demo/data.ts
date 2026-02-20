@@ -28,6 +28,9 @@ const BROKERAGE: Brokerage = {
   address: "5000 Kirby Dr, Houston, TX 77098",
   phone: "+17135551234",
   createdAt: "2024-01-15T00:00:00Z",
+  planTier: "pro",
+  maxAgents: 10,
+  routingMode: "round-robin",
 };
 
 let agentsCache: Agent[] | null = null;
@@ -35,21 +38,31 @@ let leadsCache: Lead[] | null = null;
 const messagesCache: Map<string, Message[]> = new Map();
 const insightsCache: Map<string, Insight[]> = new Map();
 
+/** First 4 agents use spec names (Houston); rest from seed. */
+const FIXED_AGENT_NAMES = ["Sarah Mitchell", "Marcus Johnson", "Ashley Chen", "Tyler Brooks"];
+
 function buildAgents(): Agent[] {
   if (agentsCache) return agentsCache;
-  const names = getAgentNames();
-  agentsCache = names.map((name, i) => {
+  const seedNames = getAgentNames();
+  agentsCache = seedNames.map((name, i) => {
     const id = `agent-${i + 1}`;
-    const email = randomEmail(name, id);
+    const displayName = i < FIXED_AGENT_NAMES.length ? FIXED_AGENT_NAMES[i] : name;
+    const email = randomEmail(displayName, id);
     const phone = randomPhone(id);
     const r = seededRandom(id + "active");
+    const active = i < 3 ? true : r > 0.2; // Tyler Brooks (index 3) sometimes inactive
+    const routingWeight = i < 4 ? [5, 4, 3, 2][i] : Math.min(10, Math.max(1, Math.floor(seededRandom(id + "w") * 10)));
     return {
       id,
-      name,
+      name: displayName,
       email,
       phone,
-      active: r > 0.2,
-      avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff`,
+      active,
+      isActive: active,
+      routingPriority: i + 1,
+      roundRobinWeight: routingWeight,
+      routingWeight,
+      avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=6366f1&color=fff`,
       brokerageId: BROKERAGE.id,
       metrics: {
         leadsAssigned: 0,
@@ -99,6 +112,11 @@ function buildLeads(): Lead[] {
         : i % 5 === 0
           ? `Note for ${name}`
           : undefined;
+    const qualScore = 20 + Math.floor(seededRandom(id + "q") * 80);
+    const aiSummary =
+      i % 3 === 0
+        ? `Buyer. ${i % 2 === 0 ? "3BR" : "4BR"} budget $${300 + (i % 5) * 50}k. Timeline ${i % 4 === 0 ? "60 days" : "90 days"}. ${qualScore > 70 ? "High intent." : "Early stage."}`
+        : undefined;
     leads.push({
       id,
       name,
@@ -108,6 +126,12 @@ function buildLeads(): Lead[] {
       source,
       assignedTo: agent.id,
       assignedToName: agent.name,
+      assignedAgentId: agent.id,
+      brokerageId: BROKERAGE.id,
+      qualificationScore: qualScore,
+      aiSummary: aiSummary ?? null,
+      lastMessageAt: createdAt,
+      tags: i % 5 === 0 ? ["hot"] : [],
       notes,
       createdAt,
       updatedAt: createdAt,
@@ -146,17 +170,21 @@ function buildMessagesForLead(leadId: string): Message[] {
   ];
   const count = 4 + Math.floor(seededRandom(leadId) * 6);
   const now = Date.now();
+  const agentId = lead?.assignedTo ?? undefined;
   for (let i = 0; i < count; i++) {
     const dir: "in" | "out" = i % 2 === 0 ? "in" : "out";
     const body = dir === "in" ? pick(inBodies, leadId + i) : pick(bodies, leadId + i);
     const r = seededRandom(leadId + "msgT" + i);
     const offsetMs = 2 * 60 * 1000 + r * (36 * 60 * 60 * 1000);
+    const senderType = dir === "in" ? ("lead" as const) : i === 1 ? ("ai" as const) : ("agent" as const);
     msgs.push({
       id: `${base}${i}`,
       direction: dir,
       body,
       createdAt: new Date(now - offsetMs).toISOString(),
       leadId,
+      senderType,
+      agentId: dir === "out" && senderType === "agent" ? agentId : null,
     });
   }
   msgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
@@ -208,6 +236,10 @@ export function getDemoAgents(): Agent[] {
 
 export function getDemoLeads(): Lead[] {
   return buildLeads();
+}
+
+export function getDemoLeadById(id: string): Lead | null {
+  return buildLeads().find((l) => l.id === id) ?? null;
 }
 
 export function getDemoMessages(leadId?: string): Message[] {
@@ -299,6 +331,30 @@ export function computeDashboardStatsFromLeads(
 
 export function getDashboardStats(role: Role, agentId?: string): DashboardStats {
   return computeDashboardStatsFromLeads(buildLeads(), role, agentId);
+}
+
+/** Alias for dashboard when demo; uses owner role. */
+export function getDemoDashboardStats(): DashboardStats {
+  return getDashboardStats("owner");
+}
+
+/** Analytics aggregates from demo leads (for analytics page). */
+export function getDemoAnalytics(): {
+  totalLeads: number;
+  avgResponseMin: number;
+  conversionRate: number;
+  responseRate: number;
+} {
+  const leads = buildLeads();
+  const qualified = leads.filter(
+    (l) => l.status === "qualified" || l.status === "appointment" || l.status === "closed"
+  ).length;
+  return {
+    totalLeads: leads.length,
+    avgResponseMin: 3,
+    conversionRate: leads.length ? Math.round((qualified / leads.length) * 100) : 0,
+    responseRate: 95,
+  };
 }
 
 /** Leads per day for last 7 days (for chart); derived from demo leads. */

@@ -95,8 +95,8 @@ async function DashboardContent() {
         />
         <EmptyState
           icon={BarChart3}
-          title="No data yet"
-          description="Turn on Demo Mode or connect sources in Settings to see your dashboard."
+          title="No leads yet"
+          description="Connect your lead sources in Settings to see your dashboard, or turn on Demo Mode to explore with sample data."
           action={{ label: "Go to Settings", href: "/app/settings" }}
         />
       </div>

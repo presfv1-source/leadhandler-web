@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { AirtableErrorFallback } from "@/components/app/AirtableErrorFallback";
 import { EmptyState } from "@/components/app/EmptyState";
+import { PageHeader } from "@/components/app/PageHeader";
 import { StatusBadge } from "@/components/app/Badge";
 import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
@@ -165,7 +166,9 @@ export default function InboxPage() {
   const agentName = selectedLead?.assignedToName ?? "Agent";
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-12rem)] min-h-[400px] gap-0 md:gap-4 min-w-0">
+    <div className="space-y-4 flex flex-col min-h-0">
+      <PageHeader title="Inbox" subtitle="SMS conversations with your leads" />
+      <div className="flex flex-col md:flex-row flex-1 min-h-[400px] gap-0 md:gap-4 min-w-0 h-[calc(100vh-14rem)]">
       {/* Left: conversation list */}
       <Card className="w-full md:w-80 shrink-0 flex flex-col rounded-2xl border-slate-200 shadow-sm overflow-hidden">
         <CardHeader className="py-4 border-b border-slate-200">
@@ -336,8 +339,8 @@ export default function InboxPage() {
             </CardContent>
             <div className="p-4 border-t border-slate-200">
               {demoEnabled && (
-                <p className="text-xs text-amber-600 mb-2 font-sans">
-                  SMS sending disabled in demo mode
+                <p className="text-xs text-amber-600 mb-2 font-sans" title="SMS disabled in demo mode — connect Twilio to send real messages">
+                  SMS disabled in demo mode — connect Twilio to send real messages
                 </p>
               )}
               <form onSubmit={handleSend} className="flex gap-2">
@@ -365,7 +368,8 @@ export default function InboxPage() {
             Select a conversation
           </CardContent>
         )}
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

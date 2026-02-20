@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function RoutingPage() {
   const session = await getSession();
   const effectiveRole = session?.effectiveRole ?? session?.role;
-  if (effectiveRole === "agent") redirect("/app/dashboard");
+  if (effectiveRole === "agent") redirect("/app/leads");
 
   let agents: Agent[] = [];
   let airtableError = false;

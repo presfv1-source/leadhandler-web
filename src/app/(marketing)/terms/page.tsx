@@ -19,14 +19,19 @@ export default function TermsPage() {
           <p>
             By using LeadHandler.ai you agree to use the service in compliance with applicable law and not to misuse it (e.g. spam, unauthorized access, or abuse of messaging). You are responsible for your account and the data you provide.
           </p>
+          <h2 className="font-semibold text-foreground mt-6">SMS and messaging</h2>
+          <p>
+            LeadHandler sends and receives SMS on your behalf via Twilio. By adding leads and using the platform, you represent that you have obtained consent from recipients to receive SMS from your brokerage. Message frequency varies by lead activity; typical use includes initial qualification and follow-up. Recipients may opt out at any time by replying <strong>STOP</strong> to any message; we and our carriers support standard opt-out keywords. Message and data rates may apply. Our SMS practices comply with applicable A2P (application-to-person) and carrier requirements.
+          </p>
           <p>
             The service is provided as-is. We do our best to keep it available and secure but do not guarantee uninterrupted service. Billing is handled via Stripe; subscription terms and cancellation follow your plan and our billing page.
           </p>
           <p>
-            We may update these terms; continued use after changes constitutes acceptance. For questions, contact us.
+            We may update these terms; continued use after changes constitutes acceptance.
           </p>
           <p>
-            Last updated: 2026.
+            <strong>LeadHandler.ai</strong> — Houston, TX. Contact:{" "}
+            <a href="mailto:hello@leadhandler.ai" className="font-medium text-primary hover:underline">hello@leadhandler.ai</a>. Last updated: 2026.
           </p>
         </section>
 

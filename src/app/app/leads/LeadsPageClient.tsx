@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { DataTable } from "@/components/app/DataTable";
@@ -18,7 +18,8 @@ import { LeadStatusPill } from "@/components/app/LeadStatusPill";
 import { StatusBadge } from "@/components/app/Badge";
 import { LeadDetailPanel } from "./LeadDetailPanel";
 import { useUser } from "@/hooks/useUser";
-import { Search, MoreHorizontal } from "lucide-react";
+import { Search, MoreHorizontal, Download } from "lucide-react";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,8 +35,8 @@ function qualificationColor(score: number): string {
   return "bg-green-100 text-green-800";
 }
 
-/** Demo: derive a stable pseudo score from lead id for display. */
-function qualificationScore(leadId: string): number {
+/** Demo fallback: derive a stable pseudo score from lead id when qualificationScore not set. */
+function fallbackQualificationScore(leadId: string): number {
   let h = 0;
   for (let i = 0; i < leadId.length; i++) h = (h << 5) - h + leadId.charCodeAt(i);
   return Math.abs(h) % 101;
@@ -45,9 +46,10 @@ interface LeadsPageClientProps {
   leads: Lead[];
   agents: Agent[];
   airtableError: boolean;
+  demoEnabled?: boolean;
 }
 
-export function LeadsPageClient({ leads: initialLeads, agents, airtableError }: LeadsPageClientProps) {
+export function LeadsPageClient({ leads: initialLeads, agents, airtableError, demoEnabled = false }: LeadsPageClientProps) {
   const { isOwner } = useUser();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -110,7 +112,7 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError }: 
         id: "qualification",
         header: "Score",
         cell: ({ row }) => {
-          const score = qualificationScore(row.original.id);
+          const score = row.original.qualificationScore ?? fallbackQualificationScore(row.original.id);
           return (
             <span
               className={cn(
@@ -186,6 +188,49 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError }: 
 
   const selectedLead = selectedLeadId ? initialLeads.find((l) => l.id === selectedLeadId) : null;
 
+  const sinceRef = useRef<string>(new Date().toISOString());
+  const prevNewCountRef = useRef(0);
+  useEffect(() => {
+    if (demoEnabled || !isOwner) return;
+    const interval = setInterval(() => {
+      fetch(`/api/leads?since=${encodeURIComponent(sinceRef.current)}`, { credentials: "include" })
+        .then((r) => r.json())
+        .then((data) => {
+          if (!data.success || !Array.isArray(data.data)) return;
+          const count = (data.data as Lead[]).length;
+          if (count > prevNewCountRef.current) {
+            const n = count - prevNewCountRef.current;
+            toast.info(`${n} new lead${n > 1 ? "s" : ""} arrived`);
+          }
+          prevNewCountRef.current = count;
+        })
+        .catch(() => {});
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [demoEnabled, isOwner]);
+
+  function exportCsv() {
+    const headers = ["Name", "Phone", "Email", "Source", "Status", "Assigned Agent", "Created"];
+    const rows = filteredLeads.map((l) => [
+      l.name ?? "",
+      l.phone ?? "",
+      l.email ?? "",
+      l.source ?? "",
+      l.status ?? "",
+      l.assignedToName ?? "",
+      l.createdAt ?? "",
+    ]);
+    const csv = [headers.join(","), ...rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV downloaded");
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -193,9 +238,15 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError }: 
         subtitle={`${filteredLeads.length} leads`}
         right={
           isOwner ? (
-            <Button asChild className="bg-blue-600 hover:bg-blue-700 font-sans">
-              <Link href="/app/leads?add=1">Add Lead</Link>
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={exportCsv} className="font-sans gap-2">
+                <Download className="h-4 w-4" />
+                Export CSV
+              </Button>
+              <Button asChild className="bg-blue-600 hover:bg-blue-700 font-sans">
+                <Link href="/app/leads?add=1">Add Lead</Link>
+              </Button>
+            </div>
           ) : null
         }
       />

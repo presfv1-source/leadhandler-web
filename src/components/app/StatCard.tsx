@@ -31,15 +31,17 @@ export function StatCard({
     >
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm font-medium text-slate-500 font-sans">{title}</p>
-        <div className={cn("p-2 rounded-xl", iconBg)}>
+        <div className={cn("p-2.5 rounded-xl", iconBg)}>
           <Icon className="h-5 w-5 text-slate-700" />
         </div>
       </div>
-      <p className="font-display text-3xl font-bold text-slate-900">{value}</p>
+      <p className="font-display text-3xl font-bold text-slate-900 tracking-tight">
+        {value}
+      </p>
       {change != null && (
         <p
           className={cn(
-            "text-xs font-medium mt-1 font-sans",
+            "text-xs font-medium mt-1.5 font-sans",
             changeType === "up" && "text-green-600",
             changeType === "down" && "text-red-500",
             changeType === "neutral" && "text-slate-400"

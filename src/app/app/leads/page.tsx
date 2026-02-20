@@ -41,7 +41,7 @@ async function LeadsContent() {
         <EmptyState
           icon={Users}
           title="No leads yet"
-          description="Turn on Demo Mode or connect sources in Settings to see leads here."
+          description="Connect your lead sources in Settings or turn on Demo Mode to see sample leads."
           action={{ label: "Go to Settings", href: "/app/settings" }}
         />
       </div>
@@ -53,6 +53,7 @@ async function LeadsContent() {
       leads={leads}
       agents={agents}
       airtableError={airtableError}
+      demoEnabled={demoEnabled}
     />
   );
 }

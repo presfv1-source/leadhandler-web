@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getSession, getDemoEnabled } from "@/lib/auth";
 import { getDemoBrokerage } from "@/lib/demo/data";
@@ -12,6 +13,7 @@ async function SettingsContent() {
     getSession(),
     Promise.resolve(getDemoBrokerage()),
   ]);
+  if (session?.role === "agent") redirect("/app/leads");
   const demoEnabled = await getDemoEnabled(session);
   let agents: Agent[] = [];
   if (demoEnabled) {

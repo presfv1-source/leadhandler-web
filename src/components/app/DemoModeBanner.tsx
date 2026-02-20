@@ -41,19 +41,19 @@ export function DemoModeBanner({ demoEnabled, isOwner, hasBackendConnected = fal
   return (
     <div
       className={cn(
-        "flex items-center justify-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-800 shrink-0 font-sans"
+        "bg-yellow-50 border-b border-yellow-200 text-yellow-800 text-xs text-center py-2 font-medium shrink-0 font-sans px-4"
       )}
       role="status"
       aria-label="Demo mode notice"
     >
       <span>
-        Demo Mode — using sample data. Toggle off to connect live integrations.
+        Demo Mode — using sample data. Toggle off in the top bar to connect live integrations.
         {!hasBackendConnected && isOwner && (
           <>
             {" "}
             <Link
               href="/app/settings"
-              className="font-medium text-amber-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded"
+              className="font-medium text-yellow-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 rounded"
             >
               Connect in Settings
             </Link>
@@ -63,7 +63,7 @@ export function DemoModeBanner({ demoEnabled, isOwner, hasBackendConnected = fal
       <button
         type="button"
         onClick={handleDismiss}
-        className="ml-1 p-2 -m-1 min-h-[44px] min-w-[44px] flex items-center justify-center rounded hover:bg-amber-100 text-amber-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+        className="ml-1 p-2 -m-1 min-h-[44px] min-w-[44px] flex items-center justify-center rounded hover:bg-yellow-100 text-yellow-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500"
         aria-label="Dismiss demo notice"
       >
         <X className="h-4 w-4" aria-hidden />

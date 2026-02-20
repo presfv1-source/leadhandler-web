@@ -15,7 +15,7 @@ import {
 import type { Lead } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function qualificationScore(leadId: string): number {
+function fallbackQualificationScore(leadId: string): number {
   let h = 0;
   for (let i = 0; i < leadId.length; i++) h = (h << 5) - h + leadId.charCodeAt(i);
   return Math.abs(h) % 101;
@@ -41,7 +41,7 @@ export function LeadDetailPanel({ lead, onClose, isOwner }: LeadDetailPanelProps
       .catch(() => setMessages([]));
   }, [lead.id]);
 
-  const score = qualificationScore(lead.id);
+  const score = lead.qualificationScore ?? fallbackQualificationScore(lead.id);
 
   return (
     <>
@@ -50,7 +50,7 @@ export function LeadDetailPanel({ lead, onClose, isOwner }: LeadDetailPanelProps
         aria-hidden
         onClick={onClose}
       />
-      <div className="fixed right-0 top-0 z-50 h-full w-full max-w-md bg-white shadow-xl border-l border-slate-200 flex flex-col">
+      <div className="fixed right-0 top-0 z-50 h-full w-full md:w-96 bg-white shadow-2xl border-l border-slate-200 flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-slate-200 shrink-0">
           <h2 className="font-display font-semibold text-lg text-slate-900 truncate">
             {lead.name}
@@ -94,7 +94,7 @@ export function LeadDetailPanel({ lead, onClose, isOwner }: LeadDetailPanelProps
             <p className="text-xs font-medium text-slate-500 font-sans uppercase tracking-wider">Qualification Score</p>
             <p className="text-2xl font-display font-bold text-slate-900 mt-1">{score}/100</p>
             <p className="text-sm text-slate-500 mt-2 font-sans">
-              AI summary: Lead showing interest. Engaged via SMS. Budget and location documented.
+              {lead.aiSummary ?? "Lead showing interest. Engaged via SMS. Budget and location documented."}
             </p>
           </div>
 

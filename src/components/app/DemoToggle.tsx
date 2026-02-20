@@ -8,7 +8,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-const STORAGE_KEY = "demoMode";
+const STORAGE_KEY = "lh_demo_mode";
 
 interface DemoToggleProps {
   demoEnabled: boolean;
@@ -30,7 +30,7 @@ export function DemoToggle({
     setChecked(serverDemoEnabled);
     if (typeof window !== "undefined") {
       try {
-        sessionStorage.setItem(STORAGE_KEY, serverDemoEnabled ? "true" : "false");
+        localStorage.setItem(STORAGE_KEY, serverDemoEnabled ? "true" : "false");
       } catch {
         // ignore
       }
@@ -42,7 +42,7 @@ export function DemoToggle({
     setChecked(enabled);
     try {
       if (typeof window !== "undefined") {
-        sessionStorage.setItem(STORAGE_KEY, enabled ? "true" : "false");
+        localStorage.setItem(STORAGE_KEY, enabled ? "true" : "false");
       }
     } catch {
       // ignore

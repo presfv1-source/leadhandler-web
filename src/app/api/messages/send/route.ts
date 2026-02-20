@@ -20,6 +20,12 @@ export async function POST(request: NextRequest) {
   }
   try {
     const session = await getSessionToken(request);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: { code: "UNAUTHORIZED", message: "Sign in to send messages" } },
+        { status: 401 }
+      );
+    }
     const demo = await getDemoEnabled(session);
     const { to, body, leadId } = parsed.data;
     if (demo && leadId) {

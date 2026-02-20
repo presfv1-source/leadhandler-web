@@ -3,6 +3,7 @@
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { DemoModeBanner } from "./DemoModeBanner";
+import { OnboardingGuard } from "./OnboardingGuard";
 import type { Role } from "@/lib/types";
 
 interface AppShellProps {
@@ -27,7 +28,7 @@ export function AppShell({ children, session, demoEnabled, hasBackendConnected =
         />
         <DemoModeBanner demoEnabled={demoEnabled} isOwner={isOwner} hasBackendConnected={hasBackendConnected} />
         <main className="flex-1 p-6 lg:p-8 min-w-0 overflow-auto">
-          {children}
+          <OnboardingGuard isOwner={isOwner}>{children}</OnboardingGuard>
         </main>
       </div>
     </div>
