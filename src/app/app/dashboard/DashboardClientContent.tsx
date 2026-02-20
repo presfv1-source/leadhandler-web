@@ -86,9 +86,9 @@ export function DashboardClientContent({
 
       {isOwner && airtableError && <AirtableErrorFallback className="mb-4" />}
 
-      {/* Row 1 — StatCards */}
+      {/* Row 1 — StatCards: 2-col mobile, 4-col desktop */}
       {isOwner ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="New Leads Today"
             value={stats.leadsToday}
@@ -137,10 +137,10 @@ export function DashboardClientContent({
         </div>
       )}
 
-      {/* Row 2 — Owner: Recent Leads table + Activity feed. Agent: full-width leads table */}
+      {/* Row 2 — Owner: Recent Leads + Activity (stack full-width on mobile). Agent: full-width leads table */}
       {isOwner ? (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="w-full lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
               <h2 className="font-display font-semibold text-slate-900">Recent Leads</h2>
               <Button variant="ghost" size="sm" asChild className="text-blue-600 font-sans">
@@ -181,7 +181,7 @@ export function DashboardClientContent({
               </table>
             </div>
           </div>
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="w-full lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200">
               <h2 className="font-display font-semibold text-slate-900">Recent Activity</h2>
             </div>
@@ -249,10 +249,10 @@ export function DashboardClientContent({
         </div>
       )}
 
-      {/* Row 3 — Owner only: Agent Performance + Quick Actions */}
+      {/* Row 3 — Owner only: Agent Performance + Quick Actions (full-width on mobile) */}
       {isOwner && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="w-full lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200">
               <h2 className="font-display font-semibold text-slate-900">Agent Performance</h2>
             </div>
@@ -279,7 +279,7 @@ export function DashboardClientContent({
               </table>
             </div>
           </div>
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
             <h2 className="font-display font-semibold text-slate-900 mb-4">Quick Actions</h2>
             <div className="space-y-3">
               <Button asChild className="w-full justify-start font-sans" variant="outline">

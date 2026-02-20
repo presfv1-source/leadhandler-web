@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Also set redirect URLs in Clerk Dashboard → Settings → Paths
-
 const isProtectedRoute = createRouteMatcher(["/app(.*)"]);
 
 export default clerkMiddleware(
@@ -16,8 +14,6 @@ export default clerkMiddleware(
   {
     signInUrl: "/login",
     signUpUrl: "/signup",
-    afterSignInUrl: "/app/dashboard",
-    afterSignUpUrl: "/app/dashboard",
   }
 );
 

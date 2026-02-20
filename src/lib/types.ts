@@ -71,6 +71,8 @@ export interface Lead {
   notes?: string;
   createdAt?: string;
   updatedAt?: string;
+  /** Set by API for inbox list; count of unread inbound messages. */
+  unreadCount?: number;
 }
 
 export type MessageSenderType = "ai" | "agent" | "lead";
@@ -85,6 +87,8 @@ export interface Message {
   to?: string;
   senderType?: MessageSenderType;
   agentId?: string | null;
+  /** Inbound messages only; when false, show unread indicator. */
+  read?: boolean;
 }
 
 export interface Insight {

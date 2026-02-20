@@ -27,7 +27,8 @@ export function DemoToggle({
   const [checked, setChecked] = useState(serverDemoEnabled);
 
   useEffect(() => {
-    setChecked(serverDemoEnabled);
+    const run = () => setChecked(serverDemoEnabled);
+    queueMicrotask(run);
     if (typeof window !== "undefined") {
       try {
         localStorage.setItem(STORAGE_KEY, serverDemoEnabled ? "true" : "false");

@@ -90,8 +90,11 @@ export default function AccountPage() {
   }, []);
 
   useEffect(() => {
-    setNotifyEscalations(getStoredBool(NOTIFY_ESCALATIONS_KEY, true));
-    setNotifyNewLeads(getStoredBool(NOTIFY_NEW_LEADS_KEY, true));
+    const run = () => {
+      setNotifyEscalations(getStoredBool(NOTIFY_ESCALATIONS_KEY, true));
+      setNotifyNewLeads(getStoredBool(NOTIFY_NEW_LEADS_KEY, true));
+    };
+    queueMicrotask(run);
   }, []);
 
   async function handleLogout() {
@@ -167,7 +170,7 @@ export default function AccountPage() {
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <Button variant="outline" size="sm" className="gap-2 font-sans" disabled aria-label="Avatar upload coming soon">
+            <Button variant="outline" size="sm" className="gap-2 font-sans" disabled aria-label="Avatar upload">
               <Upload className="h-4 w-4" />
               Upload photo
             </Button>
@@ -310,9 +313,9 @@ export default function AccountPage() {
           <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4 opacity-70">
             <div>
               <p className="font-medium font-sans">Two-factor authentication (2FA)</p>
-              <p className="text-xs text-slate-500 font-sans">Coming soon</p>
+              <p className="text-xs text-slate-500 font-sans">Planned</p>
             </div>
-            <Switch disabled aria-label="2FA coming soon" />
+            <Switch disabled aria-label="2FA planned" />
           </div>
         </CardContent>
       </Card>
@@ -323,6 +326,11 @@ export default function AccountPage() {
             <CardTitle className="font-display">Demo &amp; Integrations</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {demoEnabled != null && (
+              <p className="text-sm text-slate-500 font-sans">
+                Demo mode is currently <span className="font-medium text-slate-700">{demoEnabled ? "on" : "off"}</span>.
+              </p>
+            )}
             <Button
               variant="outline"
               onClick={() => setDemoModalOpen(true)}

@@ -66,6 +66,7 @@ export default function SignUpPage() {
             </Link>
           </div>
           <SignUp
+            afterSignUpUrl="/app/dashboard"
             redirectUrl="/app/dashboard"
             signInUrl="/login"
             appearance={{

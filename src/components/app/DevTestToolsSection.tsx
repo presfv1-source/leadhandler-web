@@ -21,7 +21,7 @@ export function DevTestToolsSection({ phoneNumber }: DevTestToolsSectionProps) {
   }
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader className="py-4">
         <button
           type="button"

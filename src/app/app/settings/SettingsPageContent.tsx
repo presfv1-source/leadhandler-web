@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/app/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,20 +17,41 @@ import type { Brokerage } from "@/lib/types";
 import { DevTestToolsSection } from "@/components/app/DevTestToolsSection";
 
 interface SettingsPageContentProps {
-  session: { name?: string; email?: string } | null;
+  session: { name?: string; email?: string; role?: string } | null;
   brokerage: Brokerage;
   agents: Agent[];
   devToolsPhone: string;
+  integrationStatus?: { twilio: boolean; airtable: boolean; make: boolean };
 }
+
+const INTEGRATION_OWNER_HELPER =
+  "Add the required environment variables in your Vercel project settings.";
+const INTEGRATION_NON_OWNER_HELPER =
+  "Contact your administrator to connect this integration.";
 
 export function SettingsPageContent({
   session,
   brokerage,
   agents,
   devToolsPhone,
+  integrationStatus = { twilio: false, airtable: false, make: false },
 }: SettingsPageContentProps) {
   const router = useRouter();
-  const [, setGeneralSaved] = useState(false);
+  const isOwner = session?.role === "owner" || session?.role === "broker";
+
+  const [brokerageName, setBrokerageName] = useState(brokerage.name);
+  const [brokeragePhone, setBrokeragePhone] = useState(brokerage.phone ?? "");
+  const [brokerageTimezone, setBrokerageTimezone] = useState(brokerage.timezone);
+  const [brokerageAddress, setBrokerageAddress] = useState(brokerage.address ?? "");
+  const [generalSaving, setGeneralSaving] = useState(false);
+
+  useEffect(() => {
+    setBrokerageName(brokerage.name);
+    setBrokeragePhone(brokerage.phone ?? "");
+    setBrokerageTimezone(brokerage.timezone);
+    setBrokerageAddress(brokerage.address ?? "");
+  }, [brokerage.name, brokerage.phone, brokerage.timezone, brokerage.address]);
+
   const [emailNewLead, setEmailNewLead] = useState(true);
   const [smsHotLead, setSmsHotLead] = useState(true);
   const [dailyDigest, setDailyDigest] = useState(false);
@@ -38,12 +59,41 @@ export function SettingsPageContent({
   const [qualPrompt, setQualPrompt] = useState("What is your budget and preferred area?");
   const [firstMsg, setFirstMsg] = useState("Hi {{name}}, thanks for reaching out! I'd love to help you find a home.");
   const [followUpMsg, setFollowUpMsg] = useState("Just following up — any questions about the listings I sent?");
+  const [resetDemoLoading, setResetDemoLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
 
-  function handleGeneralSave() {
-    setGeneralSaved(true);
-    toast.success("Settings saved");
-    router.refresh();
+  async function handleGeneralSave() {
+    if (!brokerageName.trim()) {
+      toast.error("Enter your brokerage name");
+      return;
+    }
+    setGeneralSaving(true);
+    try {
+      const res = await fetch("/api/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          step: 1,
+          brokerage: {
+            name: brokerageName.trim(),
+            phone: brokeragePhone.trim() || undefined,
+            timezone: brokerageTimezone.trim() || "America/Chicago",
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Settings saved");
+        router.refresh();
+      } else {
+        toast.error(data.error?.message ?? "Failed to save");
+      }
+    } catch {
+      toast.error("Failed to save");
+    } finally {
+      setGeneralSaving(false);
+    }
   }
 
   return (
@@ -82,24 +132,50 @@ export function SettingsPageContent({
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="brokerage-name" className="font-sans">Brokerage name</Label>
-                  <Input id="brokerage-name" defaultValue={brokerage.name} className="font-sans" readOnly />
+                  <Input
+                    id="brokerage-name"
+                    value={brokerageName}
+                    onChange={(e) => setBrokerageName(e.target.value)}
+                    className="font-sans"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="brokerage-phone" className="font-sans">Phone</Label>
-                  <Input id="brokerage-phone" defaultValue={brokerage.phone ?? ""} className="font-sans" readOnly />
+                  <Input
+                    id="brokerage-phone"
+                    value={brokeragePhone}
+                    onChange={(e) => setBrokeragePhone(e.target.value)}
+                    className="font-sans"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="brokerage-tz" className="font-sans">Timezone</Label>
-                  <Input id="brokerage-tz" defaultValue={brokerage.timezone} className="font-sans" readOnly />
+                  <Input
+                    id="brokerage-tz"
+                    value={brokerageTimezone}
+                    onChange={(e) => setBrokerageTimezone(e.target.value)}
+                    className="font-sans"
+                    placeholder="America/Chicago"
+                  />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="brokerage-address" className="font-sans">Address</Label>
-                  <Input id="brokerage-address" defaultValue={brokerage.address ?? ""} className="font-sans" readOnly />
+                  <Input
+                    id="brokerage-address"
+                    value={brokerageAddress}
+                    onChange={(e) => setBrokerageAddress(e.target.value)}
+                    className="font-sans"
+                    placeholder="Optional"
+                  />
                 </div>
               </div>
               <p className="text-xs text-slate-500 font-sans">Logo upload — coming soon</p>
-              <Button onClick={handleGeneralSave} className="bg-blue-600 hover:bg-blue-700 font-sans">
-                Save
+              <Button
+                onClick={handleGeneralSave}
+                disabled={generalSaving}
+                className="bg-blue-600 hover:bg-blue-700 font-sans"
+              >
+                {generalSaving ? "Saving…" : "Save changes"}
               </Button>
             </CardContent>
           </Card>
@@ -107,27 +183,74 @@ export function SettingsPageContent({
 
         <TabsContent value="integrations" className="mt-6 space-y-4">
           {[
-            { name: "Twilio (SMS)", status: "Connected", detail: "Phone: +1 555 XXX XXXX" },
-            { name: "Airtable", status: "Connected", detail: "Base linked" },
-            { name: "Make.com", status: "Webhook", detail: "Webhook URL input below" },
-            { name: "Zillow", status: "Coming soon", detail: "" },
-            { name: "Realtor.com", status: "Coming soon", detail: "" },
-          ].map((int) => (
-            <Card key={int.name} className="rounded-2xl border-slate-200 shadow-sm">
-              <CardContent className="py-4 flex flex-row items-center justify-between gap-4">
-                <div>
-                  <p className="font-display font-semibold text-slate-900">{int.name}</p>
-                  {int.detail && <p className="text-sm text-slate-500 font-sans">{int.detail}</p>}
-                </div>
-                <span className={`text-sm font-sans ${int.status === "Coming soon" ? "text-slate-400" : "text-green-600"}`}>
-                  {int.status}
-                </span>
-              </CardContent>
-            </Card>
-          ))}
+            {
+              key: "twilio",
+              name: "Twilio (SMS)",
+              configured: integrationStatus.twilio,
+              detail: devToolsPhone,
+            },
+            {
+              key: "airtable",
+              name: "Airtable",
+              configured: integrationStatus.airtable,
+              detail: "Base linked",
+            },
+            {
+              key: "make",
+              name: "Make.com",
+              configured: integrationStatus.make,
+              detail: "Webhook URL",
+            },
+            { key: "zillow", name: "Zillow", configured: null, detail: "" },
+            { key: "realtor", name: "Realtor.com", configured: null, detail: "" },
+          ].map((int) => {
+            const status =
+              int.configured === null
+                ? "Coming soon"
+                : int.configured
+                  ? "Connected"
+                  : "Not configured";
+            const helperText =
+              int.configured === null
+                ? ""
+                : int.configured
+                  ? int.detail
+                  : isOwner
+                    ? INTEGRATION_OWNER_HELPER
+                    : INTEGRATION_NON_OWNER_HELPER;
+            return (
+              <Card key={int.key} className="rounded-2xl border-slate-200 shadow-sm">
+                <CardContent className="py-4 flex flex-row items-center justify-between gap-4">
+                  <div>
+                    <p className="font-display font-semibold text-slate-900">{int.name}</p>
+                    {int.configured && int.detail && (
+                      <p className="text-sm text-slate-500 font-sans">{int.detail}</p>
+                    )}
+                    {int.configured === false && (
+                      <p className="text-sm text-slate-500 font-sans">{helperText}</p>
+                    )}
+                  </div>
+                  <span
+                    className={`text-sm font-sans ${
+                      status === "Coming soon"
+                        ? "text-slate-400"
+                        : status === "Connected"
+                          ? "text-green-600"
+                          : "text-amber-600"
+                    }`}
+                  >
+                    {status}
+                  </span>
+                </CardContent>
+              </Card>
+            );
+          })}
           <div className="rounded-2xl border border-slate-200 p-4">
             <Label htmlFor="make-webhook" className="font-sans">Make.com webhook URL</Label>
-            <Input id="make-webhook" placeholder="https://hook.eu1.make.com/..." className="mt-2 font-sans" />
+            <Input id="make-webhook" placeholder="https://hook.eu1.make.com/..." className="mt-2 font-sans" readOnly />
+            <p className="text-xs text-slate-500 font-sans mt-1">
+              {isOwner ? INTEGRATION_OWNER_HELPER : INTEGRATION_NON_OWNER_HELPER}
+            </p>
           </div>
         </TabsContent>
 
@@ -191,28 +314,47 @@ export function SettingsPageContent({
                 <AlertTriangle className="h-5 w-5" />
                 Danger Zone
               </CardTitle>
-              <p className="text-sm text-slate-500 font-sans">Permanently delete your brokerage account and all data.</p>
+              <p className="text-sm text-slate-500 font-sans">Reset demo data or contact support for account changes.</p>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="delete-confirm" className="font-sans">
-                  Type <strong>{brokerage.name}</strong> to confirm
-                </Label>
-                <Input
-                  id="delete-confirm"
-                  value={deleteConfirm}
-                  onChange={(e) => setDeleteConfirm(e.target.value)}
-                  placeholder={brokerage.name}
-                  className="mt-2 border-red-200 font-sans"
-                />
-              </div>
-              <Button
-                variant="destructive"
-                disabled={deleteConfirm !== brokerage.name}
-                className="font-sans"
-              >
-                Delete Brokerage Account
-              </Button>
+              {isOwner && (
+                <div className="rounded-xl border border-red-200 bg-red-50/50 p-4 space-y-2">
+                  <Label className="font-sans font-medium text-slate-900">Reset Demo Data</Label>
+                  <p className="text-sm text-slate-600 font-sans">
+                    Clear demo mode state and reset to default. Use this to start a fresh demo experience.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="border-red-300 text-red-700 hover:bg-red-100 font-sans"
+                    disabled={resetDemoLoading}
+                    onClick={async () => {
+                      setResetDemoLoading(true);
+                      try {
+                        const res = await fetch("/api/demo/reset", { method: "POST", credentials: "include" });
+                        if (typeof window !== "undefined") sessionStorage.clear();
+                        if (res.ok) {
+                          toast.success("Demo data reset");
+                          router.refresh();
+                        } else {
+                          toast.success("Demo state cleared locally");
+                          router.refresh();
+                        }
+                      } catch {
+                        if (typeof window !== "undefined") sessionStorage.clear();
+                        toast.success("Demo state cleared locally");
+                        router.refresh();
+                      } finally {
+                        setResetDemoLoading(false);
+                      }
+                    }}
+                  >
+                    {resetDemoLoading ? "Resetting…" : "Reset Demo Data"}
+                  </Button>
+                </div>
+              )}
+              <p className="text-sm text-slate-600 font-sans">
+                To delete your account, contact support.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>

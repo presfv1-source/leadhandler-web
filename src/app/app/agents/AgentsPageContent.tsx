@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/app/PageHeader";
 import { EmptyState } from "@/components/app/EmptyState";
 import { AirtableErrorFallback } from "@/components/app/AirtableErrorFallback";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { UserCog, UserPlus, Pencil, X } from "lucide-react";
 import type { Agent } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -13,15 +15,40 @@ interface AgentsPageContentProps {
   agents: Agent[];
   airtableError: boolean;
   showEmptyState: boolean;
+  isDemo?: boolean;
 }
 
 export function AgentsPageContent({
   agents,
   airtableError,
   showEmptyState,
+  isDemo = false,
 }: AgentsPageContentProps) {
+  const [localAgents, setLocalAgents] = useState<Agent[]>(agents);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+
+  useEffect(() => {
+    setLocalAgents(agents);
+  }, [agents]);
+
+  async function handleAvailabilityChange(agentId: string, active: boolean) {
+    setLocalAgents((p) => p.map((a) => (a.id === agentId ? { ...a, active } : a)));
+    const res = await fetch(`/api/airtable/agents/${agentId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) {
+      setLocalAgents((p) => p.map((a) => (a.id === agentId ? { ...a, active: !active } : a)));
+      toast.error(data.error?.message ?? "Failed to update availability");
+      return;
+    }
+    if (data.data) {
+      setLocalAgents((p) => p.map((a) => (a.id === agentId ? { ...a, ...data.data } : a)));
+    }
+  }
 
   if (showEmptyState) {
     return (
@@ -41,7 +68,7 @@ export function AgentsPageContent({
     <div className="space-y-6 sm:space-y-8">
       <PageHeader
         title="Agents"
-        subtitle={`${agents.length} agents`}
+        subtitle={`${localAgents.length} agents`}
         right={
           <Button
             onClick={() => setInviteOpen(true)}
@@ -54,8 +81,8 @@ export function AgentsPageContent({
       />
       {airtableError && <AirtableErrorFallback className="mb-4" />}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {agents.map((agent) => {
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {localAgents.map((agent) => {
           const initials = agent.name
             .split(" ")
             .map((n) => n[0])
@@ -78,15 +105,15 @@ export function AgentsPageContent({
                   <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 font-sans">
                     Agent
                   </span>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span
-                      className={cn(
-                        "h-2 w-2 rounded-full",
-                        agent.active ? "bg-green-500" : "bg-slate-300"
-                      )}
+                  <div className="flex items-center gap-2 mt-2 font-sans">
+                    <Switch
+                      checked={agent.active}
+                      onCheckedChange={(checked) =>
+                        handleAvailabilityChange(agent.id, checked)
+                      }
                     />
-                    <span className="text-xs text-slate-500 font-sans">
-                      {agent.active ? "Active" : "Inactive"}
+                    <span className="text-xs text-slate-600">
+                      {agent.active ? "Available" : "Unavailable"}
                     </span>
                   </div>
                 </div>
@@ -114,7 +141,12 @@ export function AgentsPageContent({
                 >
                   View Details
                 </Button>
-                <Button variant="outline" size="sm" className="font-sans">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="font-sans"
+                  onClick={() => setSelectedAgent(agent)}
+                >
                   <Pencil className="h-4 w-4" />
                 </Button>
               </div>
@@ -124,16 +156,73 @@ export function AgentsPageContent({
       </div>
 
       {inviteOpen && (
-        <InviteAgentModal onClose={() => setInviteOpen(false)} />
+        <InviteAgentModal
+          onClose={() => setInviteOpen(false)}
+          onSuccess={(agent) => {
+            setLocalAgents((prev) => [...prev, agent]);
+            setInviteOpen(false);
+          }}
+        />
       )}
       {selectedAgent && (
-        <AgentDetailPanel agent={selectedAgent} onClose={() => setSelectedAgent(null)} />
+        <AgentDetailPanel
+          agent={selectedAgent}
+          onClose={() => setSelectedAgent(null)}
+          onSave={(updated) => {
+            setLocalAgents((prev) =>
+              prev.map((a) => (a.id === updated.id ? { ...a, ...updated } : a))
+            );
+            setSelectedAgent((prev) =>
+              prev && prev.id === updated.id ? { ...prev, ...updated } : prev
+            );
+            toast.success("Agent updated");
+          }}
+        />
       )}
     </div>
   );
 }
 
-function InviteAgentModal({ onClose }: { onClose: () => void }) {
+function InviteAgentModal({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess: (agent: Agent) => void;
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const n = name.trim();
+    const em = email.trim();
+    if (!n || !em) {
+      toast.error("Name and email are required");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/airtable/agents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: n, email: em, phone: phone.trim() || undefined }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        toast.error(data.error?.message ?? "Failed to invite agent");
+        return;
+      }
+      onSuccess(data.data as Agent);
+      onClose();
+      toast.success("Agent invited");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/20" onClick={onClose} aria-hidden />
@@ -141,11 +230,13 @@ function InviteAgentModal({ onClose }: { onClose: () => void }) {
         <h3 className="font-display font-semibold text-lg text-slate-900 mb-4">
           Invite Agent
         </h3>
-        <form className="space-y-4 font-sans">
+        <form className="space-y-4 font-sans" onSubmit={handleSubmit}>
           <div>
             <label className="text-sm font-medium text-slate-700">Full name</label>
             <input
               type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
               placeholder="Jane Smith"
             />
@@ -154,6 +245,8 @@ function InviteAgentModal({ onClose }: { onClose: () => void }) {
             <label className="text-sm font-medium text-slate-700">Email</label>
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
               placeholder="jane@example.com"
             />
@@ -162,6 +255,8 @@ function InviteAgentModal({ onClose }: { onClose: () => void }) {
             <label className="text-sm font-medium text-slate-700">Phone (optional)</label>
             <input
               type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
               placeholder="+1 555 000 0000"
             />
@@ -171,8 +266,12 @@ function InviteAgentModal({ onClose }: { onClose: () => void }) {
             <Button type="button" variant="outline" onClick={onClose} className="flex-1 font-sans">
               Cancel
             </Button>
-            <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 font-sans">
-              Send Invite
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 font-sans"
+            >
+              {submitting ? "Sending…" : "Send Invite"}
             </Button>
           </div>
         </form>
@@ -181,29 +280,102 @@ function InviteAgentModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function AgentDetailPanel({ agent, onClose }: { agent: Agent; onClose: () => void }) {
-  const initials = agent.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+function AgentDetailPanel({
+  agent,
+  onClose,
+  onSave,
+}: {
+  agent: Agent;
+  onClose: () => void;
+  onSave: (updated: Agent) => void;
+}) {
+  const [name, setName] = useState(agent.name);
+  const [email, setEmail] = useState(agent.email);
+  const [phone, setPhone] = useState(agent.phone);
+  const [active, setActive] = useState(agent.active);
+  const [saving, setSaving] = useState(false);
+
+  // Sync form when agent changes (e.g. after list update)
+  useEffect(() => {
+    setName(agent.name);
+    setEmail(agent.email);
+    setPhone(agent.phone);
+    setActive(agent.active);
+  }, [agent.id, agent.name, agent.email, agent.phone, agent.active]);
+
+  const initials = (name || agent.name).split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/airtable/agents/${agent.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          active,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        toast.error(data.error?.message ?? "Failed to update agent");
+        return;
+      }
+      onSave(data.data as Agent);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <>
       <div className="fixed inset-0 z-50 bg-slate-900/20" aria-hidden onClick={onClose} />
       <div className="fixed right-0 top-0 z-50 h-full w-full max-w-md bg-white shadow-xl border-l border-slate-200 flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          <h2 className="font-display font-semibold text-lg text-slate-900">{agent.name}</h2>
+          <h2 className="font-display font-semibold text-lg text-slate-900 truncate">{name || agent.name}</h2>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
             <X className="h-5 w-5" />
           </Button>
         </div>
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-slate-200 flex items-center justify-center text-xl font-display font-semibold text-slate-700">
+            <div className="h-16 w-16 rounded-full bg-slate-200 flex items-center justify-center text-xl font-display font-semibold text-slate-700 flex-shrink-0">
               {initials}
             </div>
-            <div>
-              <p className="font-sans text-slate-600">{agent.email}</p>
-              <p className="font-sans text-slate-600">{agent.phone}</p>
-              <p className="text-sm text-slate-500 mt-1">
-                {agent.active ? "Active" : "Inactive"}
-              </p>
+            <div className="min-w-0 flex-1 space-y-2 font-sans">
+              <div>
+                <label className="text-xs font-medium text-slate-500">Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="mt-0.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-500">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-0.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-500">Phone</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="mt-0.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900"
+                />
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <Switch checked={active} onCheckedChange={setActive} />
+                <span className="text-sm text-slate-600">{active ? "Available" : "Unavailable"}</span>
+              </div>
             </div>
           </div>
           <div>
@@ -215,8 +387,13 @@ function AgentDetailPanel({ agent, onClose }: { agent: Agent; onClose: () => voi
               <li>Closed: {agent.metrics?.closedCount ?? 0}</li>
             </ul>
           </div>
-          <Button variant="outline" className="w-full font-sans">
-            Edit agent
+          <Button
+            variant="outline"
+            className="w-full font-sans"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? "Saving…" : "Save"}
           </Button>
         </div>
       </div>

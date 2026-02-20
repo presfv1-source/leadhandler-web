@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { hasAirtable } from "@/lib/config";
 import { getDemoLeadsAsAppType } from "@/lib/demoData";
+import { getDemoMessages } from "@/lib/demo/data";
 import { getDemoEnabled, getSessionToken } from "@/lib/auth";
 import { AirtableAuthError } from "@/lib/airtable";
 
@@ -64,6 +65,13 @@ export async function GET(request: NextRequest) {
       if (!Number.isNaN(sinceDate.getTime())) {
         leads = leads.filter((l) => l.createdAt && new Date(l.createdAt) >= sinceDate);
       }
+    }
+
+    if (demo) {
+      leads = leads.map((l) => ({
+        ...l,
+        unreadCount: getDemoMessages(l.id).filter((m) => m.direction === "in" && m.read === false).length,
+      }));
     }
 
     return NextResponse.json({ success: true, data: leads });

@@ -2,8 +2,6 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getSession, getDemoEnabled } from "@/lib/auth";
 import { getDemoLeadsByDay, demoAnalytics, getDemoLeadsAsAppType, getDemoAgentsAsAppType } from "@/lib/demoData";
-import { PageHeader } from "@/components/app/PageHeader";
-import { UpgradeCard } from "@/components/app/UpgradeCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnalyticsPageContent } from "./AnalyticsPageContent";
 

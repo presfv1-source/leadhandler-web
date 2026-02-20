@@ -24,15 +24,24 @@ function getPriceId(planId: string): string {
 export function BillingPageClient() {
   const [loading, setLoading] = useState(false);
   const [planId, setPlanId] = useState<PlanId | null>(null);
+  const [hasStripe, setHasStripe] = useState(false);
 
   useEffect(() => {
     fetch("/api/billing/plan")
       .then((r) => r.json())
       .then((data) => {
-        if (data.success && data.data?.planId) setPlanId(data.data.planId);
-        else setPlanId("free");
+        if (data.success && data.data) {
+          setPlanId(data.data.planId ?? "free");
+          setHasStripe(Boolean(data.data.hasStripe));
+        } else {
+          setPlanId("free");
+          setHasStripe(false);
+        }
       })
-      .catch(() => setPlanId("free"));
+      .catch(() => {
+        setPlanId("free");
+        setHasStripe(false);
+      });
   }, []);
 
   async function handleUpgrade(planId: string, priceId: string) {
@@ -74,6 +83,7 @@ export function BillingPageClient() {
   }
 
   const plansToShow = BILLING_PLANS.filter((p) => p.id === "essentials" || p.id === "pro");
+  const currentPlanFromPlans = planId != null ? BILLING_PLANS.find((p) => p.id === planId) : undefined;
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -94,9 +104,15 @@ export function BillingPageClient() {
                 {planId === null ? "…" : planId === "free" ? "Free" : planId.charAt(0).toUpperCase() + planId.slice(1)}
               </Badge>
               <p className="text-2xl font-display font-bold text-slate-900 mt-2">
-                {planId === "essentials" && "$99"}
-                {planId === "pro" && "$249"}
-                {planId !== "essentials" && planId !== "pro" && planId !== null && "/mo"}
+                {planId === null
+                  ? ""
+                  : currentPlanFromPlans?.price != null
+                    ? `$${currentPlanFromPlans.price}/mo`
+                    : planId === "free"
+                      ? ""
+                      : currentPlanFromPlans?.id === "enterprise"
+                        ? "Custom"
+                        : "/mo"}
               </p>
               <p className="text-sm text-slate-500 font-sans mt-1">
                 Renews next billing cycle. Agents: 3/15 used (usage bar in Settings).
@@ -112,7 +128,7 @@ export function BillingPageClient() {
                   Upgrade to Pro →
                 </Button>
               )}
-              {(planId === "pro" || planId === "essentials") && (
+              {hasStripe && (planId === "pro" || planId === "essentials") && (
                 <Button variant="outline" onClick={handlePortal} disabled={loading} className="font-sans">
                   Manage Subscription
                 </Button>
@@ -122,58 +138,67 @@ export function BillingPageClient() {
         </CardContent>
       </Card>
 
-      {planId === "essentials" && (
-        <div className="grid gap-6 md:grid-cols-2">
-          {plansToShow.map((plan) => {
-            const Icon = PLAN_ICONS[plan.id as keyof typeof PLAN_ICONS] ?? CreditCard;
-            const isCurrent = planId !== null && plan.id === planId;
-            const priceId = getPriceId(plan.id);
-            return (
-              <Card
-                key={plan.id}
-                className={`rounded-2xl border shadow-sm ${
-                  PLAN_POPULAR[plan.id] ? "border-blue-500" : "border-slate-200"
-                }`}
-              >
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <Icon className="h-8 w-8 text-blue-600" />
-                    {PLAN_POPULAR[plan.id] && <Badge className="font-sans">Popular</Badge>}
+      <div className="grid gap-6 md:grid-cols-2">
+        {plansToShow.map((plan) => {
+          const Icon = PLAN_ICONS[plan.id as keyof typeof PLAN_ICONS] ?? CreditCard;
+          const isCurrent = planId !== null && plan.id === planId;
+          const priceId = getPriceId(plan.id);
+          return (
+            <Card
+              key={plan.id}
+              className={`rounded-2xl border shadow-sm ${
+                PLAN_POPULAR[plan.id] ? "border-blue-500" : "border-slate-200"
+              }`}
+            >
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <Icon className="h-8 w-8 text-blue-600" />
+                  <div className="flex items-center gap-2">
+                    {isCurrent && (
+                      <Badge variant="secondary" className="font-sans">Current Plan</Badge>
+                    )}
+                    {PLAN_POPULAR[plan.id] && !isCurrent && <Badge className="font-sans">Popular</Badge>}
                   </div>
-                  <CardTitle className="font-display">{plan.name}</CardTitle>
-                  <p className="text-2xl font-display font-bold text-slate-900">
-                    {plan.price != null ? `$${plan.price}` : "Custom"}
-                    <span className="text-base font-normal text-slate-500 font-sans">/mo</span>
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-slate-500 font-sans">{plan.description}</p>
-                  <ul className="space-y-2 text-sm font-sans">
-                    {plan.features.slice(0, 5).map((f) => (
-                      <li key={f} className="flex items-center gap-2">
-                        <Check className="h-4 w-4 shrink-0 text-blue-600" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  {plan.id === "essentials" && (
-                    <p className="text-xs text-slate-500 font-sans">Current Plan</p>
-                  )}
-                  {plan.id === "pro" && (
-                    <Button
-                      className="w-full bg-blue-600 hover:bg-blue-700 font-sans"
-                      onClick={() => handleUpgrade(plan.id, priceId)}
-                      disabled={loading || isCurrent}
-                    >
-                      Upgrade to Pro →
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                </div>
+                <CardTitle className="font-display">{plan.name}</CardTitle>
+                <p className="text-2xl font-display font-bold text-slate-900">
+                  {plan.price != null ? `$${plan.price}` : "Custom"}
+                  <span className="text-base font-normal text-slate-500 font-sans">/mo</span>
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-slate-500 font-sans">{plan.description}</p>
+                <ul className="space-y-2 text-sm font-sans">
+                  {plan.features.slice(0, 5).map((f) => (
+                    <li key={f} className="flex items-center gap-2">
+                      <Check className="h-4 w-4 shrink-0 text-blue-600" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                {plan.id === "pro" && !isCurrent && (
+                  <Button
+                    className="w-full bg-blue-600 hover:bg-blue-700 font-sans"
+                    onClick={() => handleUpgrade(plan.id, priceId)}
+                    disabled={loading}
+                  >
+                    Upgrade to Pro →
+                  </Button>
+                )}
+                {plan.id === "essentials" && planId === "free" && (
+                  <Button
+                    className="w-full bg-blue-600 hover:bg-blue-700 font-sans"
+                    onClick={() => handleUpgrade(plan.id, priceId)}
+                    disabled={loading}
+                  >
+                    Get Essentials →
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
       <Card className="rounded-2xl border-slate-200 shadow-sm">
         <CardHeader>
@@ -181,13 +206,25 @@ export function BillingPageClient() {
           <p className="text-sm text-slate-500 font-sans">Card on file for subscription</p>
         </CardHeader>
         <CardContent>
-          <p className="text-sm font-sans text-slate-600">•••• •••• •••• 4242 — Expires 12/27</p>
-          <Button variant="outline" onClick={handlePortal} disabled={loading} className="mt-4 font-sans">
-            Update payment method
-          </Button>
-          <p className="text-xs text-slate-500 mt-2 font-sans">
-            Connect Stripe in Settings to manage billing.
-          </p>
+          {hasStripe && (planId === "essentials" || planId === "pro") ? (
+            <>
+              <p className="text-sm font-sans text-slate-600">
+                Payment method on file. Manage in Stripe portal.
+              </p>
+              <Button variant="outline" onClick={handlePortal} disabled={loading} className="mt-4 font-sans">
+                Manage billing
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-sans text-slate-600">No payment method on file</p>
+              {!hasStripe && (
+                <p className="text-xs text-slate-500 mt-2 font-sans">
+                  Connect Stripe in Settings to manage billing.
+                </p>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
 

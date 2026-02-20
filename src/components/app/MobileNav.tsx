@@ -38,6 +38,7 @@ export function MobileNav({ role, open, onOpenChange, demoEnabled = false, isOwn
         side="left"
         className="w-72 max-w-[calc(100vw-2rem)] pt-12 overflow-y-auto"
       >
+        {/* Nav items from getNavItemsForRole: Dashboard, Leads, Messages, Agents, Routing, Analytics, Billing, Settings, Account */}
         <nav className="flex flex-col gap-4" aria-label="App navigation">
           {isOwner && (
             <>

@@ -1,11 +1,19 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ColumnDef, Row } from "@tanstack/react-table";
-import { DataTable } from "@/components/app/DataTable";
+import { ResponsiveDataList } from "@/components/app/ResponsiveDataList";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -18,7 +26,7 @@ import { LeadStatusPill } from "@/components/app/LeadStatusPill";
 import { StatusBadge } from "@/components/app/Badge";
 import { LeadDetailPanel } from "./LeadDetailPanel";
 import { useUser } from "@/hooks/useUser";
-import { Search, MoreHorizontal, Download } from "lucide-react";
+import { Search, MoreHorizontal, Download, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -28,6 +36,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Lead, Agent } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+const SOURCE_OPTIONS = [
+  { value: "website", label: "Website" },
+  { value: "zillow", label: "Zillow" },
+  { value: "realtor", label: "Realtor.com" },
+  { value: "direct", label: "Direct" },
+  { value: "other", label: "Other" },
+];
 
 function qualificationColor(score: number): string {
   if (score <= 40) return "bg-red-100 text-red-800";
@@ -50,6 +66,7 @@ interface LeadsPageClientProps {
 }
 
 export function LeadsPageClient({ leads: initialLeads, agents, airtableError, demoEnabled = false }: LeadsPageClientProps) {
+  const router = useRouter();
   const { isOwner } = useUser();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -57,6 +74,15 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
   const [agentFilter, setAgentFilter] = useState<string>("all");
   const [dateRange, setDateRange] = useState<string>("all");
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const [newLeadOpen, setNewLeadOpen] = useState(false);
+  const [newLeadSubmitting, setNewLeadSubmitting] = useState(false);
+  const [newLeadForm, setNewLeadForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    source: "website",
+    assignedTo: "",
+  });
 
   const filteredLeads = useMemo(() => {
     let list = initialLeads;
@@ -231,6 +257,49 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
     toast.success("CSV downloaded");
   }
 
+  async function handleNewLeadSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const name = newLeadForm.name.trim();
+    if (!name) {
+      toast.error("Name is required");
+      return;
+    }
+    setNewLeadSubmitting(true);
+    try {
+      if (demoEnabled) {
+        toast.info("Demo: lead not saved.");
+        setNewLeadOpen(false);
+        setNewLeadForm({ name: "", email: "", phone: "", source: "website", assignedTo: "" });
+        return;
+      }
+      const res = await fetch("/api/airtable/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name,
+          email: newLeadForm.email.trim() || undefined,
+          phone: newLeadForm.phone.trim() || undefined,
+          source: newLeadForm.source || "website",
+          assignedTo: newLeadForm.assignedTo || undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(data?.error?.message ?? "Failed to create lead");
+        return;
+      }
+      toast.success("Lead created");
+      setNewLeadOpen(false);
+      setNewLeadForm({ name: "", email: "", phone: "", source: "website", assignedTo: "" });
+      router.refresh();
+    } catch {
+      toast.error("Failed to create lead");
+    } finally {
+      setNewLeadSubmitting(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -243,8 +312,12 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
                 <Download className="h-4 w-4" />
                 Export CSV
               </Button>
-              <Button asChild className="bg-blue-600 hover:bg-blue-700 font-sans">
-                <Link href="/app/leads?add=1">Add Lead</Link>
+              <Button
+                onClick={() => setNewLeadOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 font-sans gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                New Lead
               </Button>
             </div>
           ) : null
@@ -322,11 +395,58 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
         </Select>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto">
-        <DataTable
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <ResponsiveDataList<Lead>
           columns={columns}
           data={filteredLeads}
           onRowClick={(row) => setSelectedLeadId(row.original.id)}
+          emptyMessage="No leads match your filters."
+          mobileCard={(row) => {
+            const l = row.original;
+            const score = l.qualificationScore ?? fallbackQualificationScore(l.id);
+            return (
+              <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex items-start justify-between gap-2">
+                  <button
+                    type="button"
+                    className="font-semibold text-slate-900 hover:text-blue-600 text-left font-sans"
+                    onClick={(e) => { e.stopPropagation(); setSelectedLeadId(l.id); }}
+                  >
+                    {l.name}
+                  </button>
+                  <LeadStatusPill status={l.status} />
+                </div>
+                <p className="text-sm text-slate-600 font-sans mt-1">{l.phone ?? "—"}</p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <StatusBadge variant="contacted">{l.source ?? "—"}</StatusBadge>
+                  <span
+                    className={cn(
+                      "inline-flex rounded-full px-2 py-0.5 text-xs font-medium font-sans",
+                      qualificationColor(score)
+                    )}
+                  >
+                    Score {score}
+                  </span>
+                  {isOwner && l.assignedToName && (
+                    <span className="text-xs text-slate-500 font-sans">{l.assignedToName}</span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-400 font-sans mt-2">
+                  {l.updatedAt ?? l.createdAt
+                    ? (() => {
+                        const t = l.updatedAt ?? l.createdAt!;
+                        const d = new Date(t);
+                        const now = Date.now();
+                        const diff = now - d.getTime();
+                        if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+                        if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+                        return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+                      })()
+                    : "—"}
+                </p>
+              </div>
+            );
+          }}
         />
       </div>
 
@@ -337,6 +457,98 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
           isOwner={isOwner}
         />
       )}
+
+      <Dialog open={newLeadOpen} onOpenChange={setNewLeadOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>New Lead</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleNewLeadSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-lead-name">Name *</Label>
+              <Input
+                id="new-lead-name"
+                value={newLeadForm.name}
+                onChange={(e) => setNewLeadForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="Lead name"
+                className="font-sans"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-lead-email">Email</Label>
+              <Input
+                id="new-lead-email"
+                type="email"
+                value={newLeadForm.email}
+                onChange={(e) => setNewLeadForm((f) => ({ ...f, email: e.target.value }))}
+                placeholder="email@example.com"
+                className="font-sans"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-lead-phone">Phone</Label>
+              <Input
+                id="new-lead-phone"
+                value={newLeadForm.phone}
+                onChange={(e) => setNewLeadForm((f) => ({ ...f, phone: e.target.value }))}
+                placeholder="+1 234 567 8900"
+                className="font-sans"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Source</Label>
+              <Select
+                value={newLeadForm.source}
+                onValueChange={(v) => setNewLeadForm((f) => ({ ...f, source: v }))}
+              >
+                <SelectTrigger className="font-sans">
+                  <SelectValue placeholder="Source" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SOURCE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Assigned Agent</Label>
+              <Select
+                value={newLeadForm.assignedTo || "none"}
+                onValueChange={(v) => setNewLeadForm((f) => ({ ...f, assignedTo: v === "none" ? "" : v }))}
+              >
+                <SelectTrigger className="font-sans">
+                  <SelectValue placeholder="Select agent" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {agents.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setNewLeadOpen(false)}
+                disabled={newLeadSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={newLeadSubmitting}>
+                {newLeadSubmitting ? "Creating…" : "Create Lead"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -16,7 +16,7 @@ export function OnboardingGuard({ isOwner, children }: OnboardingGuardProps) {
 
   useEffect(() => {
     if (!isOwner || pathname === "/app/onboarding") {
-      setChecked(true);
+      queueMicrotask(() => setChecked(true));
       return;
     }
     fetch("/api/onboarding", { credentials: "include" })
@@ -27,7 +27,7 @@ export function OnboardingGuard({ isOwner, children }: OnboardingGuardProps) {
         }
       })
       .catch(() => {})
-      .finally(() => setChecked(true));
+      .finally(() => queueMicrotask(() => setChecked(true)));
   }, [isOwner, pathname, router]);
 
   if (!checked && isOwner && pathname !== "/app/onboarding") {

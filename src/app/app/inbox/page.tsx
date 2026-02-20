@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MessageSquare, Send, Search } from "lucide-react";
+import { MessageSquare, RefreshCw, Send, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { AirtableErrorFallback } from "@/components/app/AirtableErrorFallback";
@@ -35,6 +35,7 @@ interface Lead {
   status?: LeadStatus;
   assignedTo?: string;
   assignedToName?: string;
+  unreadCount?: number;
 }
 
 function formatRelative(time: string): string {
@@ -90,7 +91,7 @@ export default function InboxPage() {
     if (fromUrl && leads.some((l) => l.id === fromUrl)) setSelectedLeadId(fromUrl);
   }, [searchParams, leads]);
 
-  useEffect(() => {
+  const refetchMessages = useCallback(() => {
     if (!selectedLeadId) return;
     const params = new URLSearchParams({ leadId: selectedLeadId });
     fetch(`/api/airtable/messages?${params}`, { credentials: "include" })
@@ -102,19 +103,35 @@ export default function InboxPage() {
       .catch(() => setMessages([]));
   }, [selectedLeadId]);
 
+  useEffect(() => {
+    if (!selectedLeadId) return;
+    refetchMessages();
+    const interval = setInterval(refetchMessages, 30_000);
+    return () => clearInterval(interval);
+  }, [selectedLeadId, refetchMessages]);
+
+  useEffect(() => {
+    if (!selectedLeadId) return;
+    fetch(`/api/leads/${selectedLeadId}/messages/read`, { method: "PATCH", credentials: "include" }).then(() => {
+      setLeads((prev) =>
+        prev.map((l) => (l.id === selectedLeadId ? { ...l, unreadCount: 0 } : l))
+      );
+    });
+  }, [selectedLeadId]);
+
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     if (!body.trim() || !selectedLeadId) return;
-    if (demoEnabled) {
-      toast.info("SMS sending disabled in demo mode");
-      return;
-    }
     setSending(true);
     try {
       const res = await fetch("/api/messages/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: body.trim(), leadId: selectedLeadId }),
+        body: JSON.stringify({
+          to: selectedLead?.phone ?? "",
+          body: body.trim(),
+          leadId: selectedLeadId,
+        }),
       });
       const data = await res.json();
       if (data.success) {
@@ -222,6 +239,9 @@ export default function InboxPage() {
                   </p>
                   <p className="text-xs text-slate-500 truncate font-sans">Last message preview…</p>
                 </div>
+                {(lead.unreadCount ?? 0) > 0 && (
+                  <span className="shrink-0 h-2.5 min-w-2.5 rounded-full bg-blue-600" aria-label={`${lead.unreadCount} unread`} />
+                )}
                 <div className="shrink-0 text-xs text-slate-400 font-sans">
                   {formatRelative(new Date().toISOString())}
                 </div>
@@ -284,9 +304,21 @@ export default function InboxPage() {
                   )}
                 </p>
               </div>
-              <Button variant="outline" size="sm" asChild className="shrink-0 font-sans">
-                <Link href={`/app/leads?leadId=${selectedLead.id}`}>View Lead →</Link>
-              </Button>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="font-sans"
+                  onClick={() => refetchMessages()}
+                  aria-label="Refresh messages"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="sm" asChild className="font-sans">
+                  <Link href={`/app/leads?leadId=${selectedLead.id}`}>View Lead →</Link>
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
               {messages.map((m) => {
@@ -339,8 +371,8 @@ export default function InboxPage() {
             </CardContent>
             <div className="p-4 border-t border-slate-200">
               {demoEnabled && (
-                <p className="text-xs text-amber-600 mb-2 font-sans" title="SMS disabled in demo mode — connect Twilio to send real messages">
-                  SMS disabled in demo mode — connect Twilio to send real messages
+                <p className="text-xs text-amber-600 mb-2 font-sans" title="Demo: messages stored locally; connect Twilio for real SMS">
+                  Demo: messages stored locally. Connect Twilio to send real SMS.
                 </p>
               )}
               <form onSubmit={handleSend} className="flex gap-2">

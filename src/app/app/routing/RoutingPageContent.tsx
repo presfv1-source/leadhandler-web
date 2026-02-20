@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/app/PageHeader";
 import { UpgradeCard } from "@/components/app/UpgradeCard";
 import { AirtableErrorFallback } from "@/components/app/AirtableErrorFallback";
@@ -18,7 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Check, GripVertical } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
+import { Check, GripVertical, Info } from "lucide-react";
 import { toast } from "sonner";
 import type { Agent } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -46,7 +52,23 @@ export function RoutingPageContent({
     return init;
   });
   const [escalationMinutes, setEscalationMinutes] = useState("30");
+  const [escalationTarget, setEscalationTarget] = useState("");
   const [saving, setSaving] = useState(false);
+  const [savingEscalation, setSavingEscalation] = useState(false);
+
+  useEffect(() => {
+    if (!isPro || demoEnabled) return;
+    fetch("/api/settings/escalation")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.data) {
+          setEscalationTarget(data.data.escalationTarget ?? "");
+          if (typeof data.data.escalationMinutes === "number")
+            setEscalationMinutes(String(data.data.escalationMinutes));
+        }
+      })
+      .catch(() => {});
+  }, [isPro, demoEnabled]);
 
   async function handleSave() {
     setSaving(true);
@@ -71,6 +93,35 @@ export function RoutingPageContent({
     }
   }
 
+  async function handleSaveEscalation() {
+    setSavingEscalation(true);
+    try {
+      if (demoEnabled) {
+        toast.success("Demo mode: escalation settings not persisted.");
+        setSavingEscalation(false);
+        return;
+      }
+      const res = await fetch("/api/settings/escalation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          escalationTarget: escalationTarget.trim(),
+          escalationMinutes: parseInt(escalationMinutes, 10) || 30,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Escalation settings saved.");
+      } else {
+        toast.error(data.error?.message ?? "Could not save escalation settings");
+      }
+    } catch {
+      toast.error("Could not save escalation settings");
+    } finally {
+      setSavingEscalation(false);
+    }
+  }
+
   return (
     <div className="space-y-6 sm:space-y-8">
       <PageHeader
@@ -82,7 +133,16 @@ export function RoutingPageContent({
       {/* Section 1 — Routing Mode */}
       <Card className="rounded-2xl border-slate-200 shadow-sm">
         <CardHeader>
-          <h2 className="font-display font-semibold text-slate-900">Routing Mode</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-display font-semibold text-slate-900">Routing Mode</h2>
+            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-sm font-medium text-blue-800 font-sans">
+              Active: Round Robin
+            </span>
+          </div>
+          <p className="text-sm text-slate-500 font-sans mt-1 flex items-center gap-1.5">
+            <Info className="h-4 w-4 text-slate-400 shrink-0" aria-hidden />
+            Routing logic is managed via Make.com automation.
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
@@ -105,57 +165,40 @@ export function RoutingPageContent({
               </p>
             </button>
 
-            {isPro ? (
-              <button
-                type="button"
-                onClick={() => setMode("weighted")}
-                className={cn(
-                  "rounded-2xl border-2 p-4 text-left transition font-sans",
-                  mode === "weighted"
-                    ? "border-blue-600 bg-blue-50"
-                    : "border-slate-200 hover:border-slate-300"
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-slate-900">Weighted</span>
-                  {mode === "weighted" && <Check className="h-5 w-5 text-blue-600" />}
-                </div>
-                <p className="text-sm text-slate-500 mt-1">
-                  Assign leads based on custom agent weights.
-                </p>
-              </button>
-            ) : (
-              <div className="rounded-2xl border-2 border-dashed border-slate-200 p-4 opacity-80">
-                <p className="font-medium text-slate-700 font-sans">Weighted</p>
-                <p className="text-sm text-slate-500 mt-1 font-sans">Pro feature</p>
-              </div>
-            )}
-
-            {isPro ? (
-              <button
-                type="button"
-                onClick={() => setMode("performance")}
-                className={cn(
-                  "rounded-2xl border-2 p-4 text-left transition font-sans",
-                  mode === "performance"
-                    ? "border-blue-600 bg-blue-50"
-                    : "border-slate-200 hover:border-slate-300"
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-slate-900">Performance-based</span>
-                  {mode === "performance" && <Check className="h-5 w-5 text-blue-600" />}
-                </div>
-                <p className="text-sm text-slate-500 mt-1">
-                  Route to highest-performing agents automatically.
-                </p>
-              </button>
-            ) : (
-              <div className="rounded-2xl border-2 border-dashed border-slate-200 p-4 opacity-80">
-                <p className="font-medium text-slate-700 font-sans">Performance-based</p>
-                <p className="text-sm text-slate-500 mt-1 font-sans">Pro feature</p>
-              </div>
-            )}
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="rounded-2xl border-2 border-slate-200 p-4 opacity-80 cursor-not-allowed relative">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-slate-700 font-sans">Weighted</span>
+                      <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 font-sans">
+                        Coming soon
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-500 mt-1 font-sans">
+                      Assign leads based on custom agent weights.
+                    </p>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">Coming soon</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="rounded-2xl border-2 border-slate-200 p-4 opacity-80 cursor-not-allowed relative">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-slate-700 font-sans">Performance-based</span>
+                      <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 font-sans">
+                        Coming soon
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-500 mt-1 font-sans">
+                      Route to highest-performing agents automatically.
+                    </p>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">Coming soon</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </CardContent>
       </Card>
@@ -248,10 +291,27 @@ export function RoutingPageContent({
                 className="mt-1 max-w-[140px] font-sans"
               />
             </div>
-            <p className="text-sm text-slate-500 font-sans">
-              Escalate to: owner (configurable in Settings)
-            </p>
-            <Button variant="outline" className="font-sans">Add rule</Button>
+            <div>
+              <Label htmlFor="escalation-target" className="font-sans">
+                Escalate to (phone number or agent name)
+              </Label>
+              <Input
+                id="escalation-target"
+                type="text"
+                placeholder="e.g. +1234567890 or Agent name"
+                value={escalationTarget}
+                onChange={(e) => setEscalationTarget(e.target.value)}
+                className="mt-1 max-w-sm font-sans"
+              />
+            </div>
+            <Button
+              variant="outline"
+              className="font-sans"
+              onClick={handleSaveEscalation}
+              disabled={savingEscalation}
+            >
+              {savingEscalation ? "Saving…" : "Save escalation settings"}
+            </Button>
           </CardContent>
         </Card>
       ) : (

@@ -17,17 +17,11 @@ export class AirtableAuthError extends Error {
 
 type AirtableRecord<T> = { id: string; fields: T; createdTime?: string };
 
-let patLogged = false;
-
 function getHeaders(): HeadersInit {
   const key = env.server.AIRTABLE_API_KEY?.trim();
   const baseId = env.server.AIRTABLE_BASE_ID?.trim();
   if (!key || !baseId) {
     throw new Error("Missing Airtable env vars: AIRTABLE_API_KEY and AIRTABLE_BASE_ID required");
-  }
-  if (!patLogged) {
-    patLogged = true;
-    console.log("[airtable] PAT:", key ? key.slice(0, 10) + "..." : "MISSING");
   }
   return {
     Authorization: `Bearer ${env.server.AIRTABLE_API_KEY}`,
@@ -292,6 +286,82 @@ export const getAgents = hasAirtable
   ? unstable_cache(getAgentsUncached, ["airtable-agents"], { revalidate: 60, tags: ["agents"] })
   : getAgentsUncached;
 
+/** Create an agent in the Agents table. Returns created Agent or null if not configured / failed. */
+export async function createAgent(data: {
+  name: string;
+  email: string;
+  phone?: string;
+}): Promise<Agent | null> {
+  const table = env.server.AIRTABLE_TABLE_AGENTS;
+  if (!table || !hasAirtable) return null;
+  const name = (data.name ?? "").toString().trim();
+  const email = (data.email ?? "").toString().trim();
+  if (!email) return null;
+  const url = tableUrl(table);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({
+        fields: {
+          Name: name || email.split("@")[0] || "Agent",
+          Email: email,
+          ...(data.phone?.trim() && { Phone: data.phone.trim() }),
+          Active: true,
+          RoundRobinWeight: 5,
+        },
+      }),
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      if (res.status === 401) throw new AirtableAuthError(`Airtable Agents create: 401 ${err}`);
+      console.error("[airtable] createAgent failed:", res.status, err);
+      return null;
+    }
+    const created = (await res.json()) as AirtableRecord<AgentFields>;
+    return recordToAgent(created);
+  } catch (e) {
+    if (e instanceof AirtableAuthError) throw e;
+    console.error("[airtable] createAgent error:", e);
+    return null;
+  }
+}
+
+/** Update an agent (Name, Email, Phone, Active). Only provided fields are patched. Returns updated agent. */
+export async function updateAgent(
+  agentId: string,
+  data: Partial<Pick<Agent, "name" | "email" | "phone" | "active">>
+): Promise<Agent> {
+  if (!hasAirtable) {
+    throw new Error("Airtable not configured");
+  }
+  const table = env.server.AIRTABLE_TABLE_AGENTS;
+  const fields: Record<string, unknown> = {};
+  if (data.name !== undefined) fields.Name = data.name.trim();
+  if (data.email !== undefined) fields.Email = data.email.trim();
+  if (data.phone !== undefined) fields.Phone = data.phone.trim();
+  if (data.active !== undefined) fields.Active = data.active;
+  if (Object.keys(fields).length === 0) {
+    const all = await getAgentsUncached();
+    return all.find((a) => a.id === agentId) ?? { id: agentId, name: "", email: "", phone: "", active: false };
+  }
+  const url = `${tableUrl(table)}/${agentId}`;
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify({ fields }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    if (res.status === 401) throw new AirtableAuthError(`Airtable update agent: 401 ${err}`);
+    throw new Error(`Airtable update agent: ${res.status} ${err}`);
+  }
+  const updated = (await res.json()) as AirtableRecord<AgentFields>;
+  return recordToAgent(updated);
+}
+
 /** Update one agent's round-robin weight (1–10). Used by routing settings. */
 export async function updateAgentRoundRobinWeight(agentId: string, weight: number): Promise<void> {
   const table = env.server.AIRTABLE_TABLE_AGENTS;
@@ -504,7 +574,6 @@ export async function createWaitlistEntry(
   if (!trimmed) throw new Error("Email is required");
 
   if (!hasAirtable) {
-    console.log("[waitlist] (no Airtable)", { email: trimmed, name, source });
     return { id: `waitlist-mock-${Date.now()}` };
   }
 

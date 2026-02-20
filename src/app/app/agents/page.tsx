@@ -37,6 +37,7 @@ async function AgentsData() {
       agents={agents}
       airtableError={airtableError}
       showEmptyState={showEmpty}
+      isDemo={demoEnabled}
     />
   );
 }

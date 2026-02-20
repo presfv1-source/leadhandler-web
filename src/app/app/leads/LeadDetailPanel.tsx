@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { LeadStatusPill } from "@/components/app/LeadStatusPill";
 import { StatusBadge } from "@/components/app/Badge";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -29,8 +31,10 @@ interface LeadDetailPanelProps {
 
 export function LeadDetailPanel({ lead, onClose, isOwner }: LeadDetailPanelProps) {
   const [messages, setMessages] = useState<{ id: string; direction: "in" | "out"; body: string; createdAt: string }[]>([]);
+  const [body, setBody] = useState("");
+  const [sending, setSending] = useState(false);
 
-  useEffect(() => {
+  function refetchMessages() {
     const params = new URLSearchParams({ leadId: lead.id });
     fetch(`/api/airtable/messages?${params}`, { credentials: "include" })
       .then((r) => r.json())
@@ -39,7 +43,44 @@ export function LeadDetailPanel({ lead, onClose, isOwner }: LeadDetailPanelProps
         else setMessages([]);
       })
       .catch(() => setMessages([]));
+  }
+
+  useEffect(() => {
+    refetchMessages();
   }, [lead.id]);
+
+  async function handleSend(e: React.FormEvent) {
+    e.preventDefault();
+    if (!body.trim()) return;
+    setSending(true);
+    try {
+      const res = await fetch("/api/messages/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: lead.phone ?? "", body: body.trim(), leadId: lead.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Message sent");
+        setBody("");
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `msg-${Date.now()}`,
+            direction: "out",
+            body: body.trim(),
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+      } else {
+        toast.error(data.error?.message ?? "Failed to send");
+      }
+    } catch {
+      toast.error("Failed to send");
+    } finally {
+      setSending(false);
+    }
+  }
 
   const score = lead.qualificationScore ?? fallbackQualificationScore(lead.id);
 
@@ -128,6 +169,24 @@ export function LeadDetailPanel({ lead, onClose, isOwner }: LeadDetailPanelProps
                 <p className="text-sm text-slate-400 font-sans">No messages yet.</p>
               )}
             </div>
+            <form onSubmit={handleSend} className="flex gap-2 mt-3">
+              <Textarea
+                placeholder="Type your message..."
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                rows={2}
+                className="resize-none flex-1 rounded-xl border-slate-200 font-sans text-sm"
+              />
+              <Button
+                type="submit"
+                disabled={sending || !body.trim()}
+                size="icon"
+                className="shrink-0 min-h-[40px] min-w-[40px] bg-blue-600 hover:bg-blue-700"
+                aria-label="Send"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
           </div>
 
           <div>

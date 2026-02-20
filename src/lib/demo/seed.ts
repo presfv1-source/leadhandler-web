@@ -70,14 +70,14 @@ const LEAD_STATUSES = [
   "lost",
 ] as const;
 
-/** Houston-area lead sources (channels). */
+/** Houston-area lead sources (channels). Only real sources. */
 const SOURCES = [
   "Zillow",
   "Realtor.com",
-  "HAR",
-  "Website",
+  "HAR.com",
   "Referral",
-  "Open house",
+  "Website",
+  "Open House",
 ] as const;
 
 /** Houston neighborhoods/areas for property interest (used in messages/context). */
@@ -97,15 +97,14 @@ export const HOUSTON_NEIGHBORHOODS = [
 /** Texas area codes (Houston region). */
 const TEXAS_AREA_CODES = [713, 281, 832, 346];
 
+/** Realistic Texas / Houston-area agent names (4–6 used in demo). */
 const AGENT_NAMES = [
-  "Marcus Johnson",
-  "Sandra Williams",
-  "David Chen",
-  "Amanda Rodriguez",
-  "Kevin Martinez",
-  "Rachel Thompson",
-  "James Wilson",
-  "Michelle Brown",
+  "Marcus Webb",
+  "Diana Salinas",
+  "Kyle Patterson",
+  "Sarah Mitchell",
+  "Ashley Chen",
+  "Tyler Brooks",
 ];
 
 export function pick<T>(arr: readonly T[], seedKey: string): T {

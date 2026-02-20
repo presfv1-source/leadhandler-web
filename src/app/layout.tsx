@@ -19,8 +19,16 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "LeadHandler.ai — SMS lead response and routing for brokerages",
-  description: "Automatically engage, qualify, and route every new lead. Instant SMS follow-up and routing for real estate teams.",
+  title: "LeadHandler.ai",
+  description: "AI-powered SMS lead routing for real estate brokerages",
+  themeColor: "#2563eb",
+  openGraph: {
+    title: "LeadHandler.ai",
+    description: "AI-powered SMS lead routing for real estate brokerages",
+  },
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+  },
 };
 
 const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;

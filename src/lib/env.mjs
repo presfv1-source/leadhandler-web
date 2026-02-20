@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 const serverSchema = z.object({
+  /** Clerk secret — required in production at runtime; optional here so build never throws */
+  CLERK_SECRET_KEY: z.string().default(""),
   AIRTABLE_API_KEY: z.string().default(""),
   AIRTABLE_BASE_ID: z.string().default(""),
   AIRTABLE_TABLE_LEADS: z.string().default("Leads"),
@@ -12,13 +14,15 @@ const serverSchema = z.object({
   AIRTABLE_TABLE_WAITLIST: z.string().default("Waitlist"),
   STRIPE_SECRET_KEY: z.string().default(""),
   STRIPE_WEBHOOK_SECRET: z.string().default(""),
+  STRIPE_PRICE_ID_ESSENTIALS: z.string().default(""),
+  STRIPE_PRICE_ID_PRO: z.string().default(""),
   TWILIO_ACCOUNT_SID: z.string().default(""),
   TWILIO_AUTH_TOKEN: z.string().default(""),
   TWILIO_FROM_NUMBER: z.string().default(""),
   MAKE_WEBHOOK_URL: z.string().default(""),
   DEMO_MODE_DEFAULT: z
     .enum(["true", "false"])
-    .default("true")
+    .default("false")
     .transform((v) => v === "true"),
   SESSION_SECRET: z.string().min(16).default("super-secret-for-demo-only-change-in-prod"),
   /** Broker email allowed for dev/direct login (no real auth yet) */
@@ -46,6 +50,7 @@ const clientSchema = z.object({
     (v) => (v === "" ? undefined : v),
     z.string().url().default("http://localhost:3000")
   ),
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().default(""),
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().default(""),
   /** Pre-fill login email in dev (e.g. presfv1@gmail.com) */
   NEXT_PUBLIC_DEV_LOGIN_EMAIL: z.string().default(""),
@@ -61,6 +66,7 @@ const clientSchema = z.object({
 
 function parseEnv() {
   const server = serverSchema.safeParse({
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     AIRTABLE_API_KEY: process.env.AIRTABLE_API_KEY,
     AIRTABLE_BASE_ID: process.env.AIRTABLE_BASE_ID,
     AIRTABLE_TABLE_LEADS: process.env.AIRTABLE_TABLE_LEADS,
@@ -70,11 +76,13 @@ function parseEnv() {
     AIRTABLE_TABLE_WAITLIST: process.env.AIRTABLE_TABLE_WAITLIST ?? "Waitlist",
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    STRIPE_PRICE_ID_ESSENTIALS: process.env.STRIPE_PRICE_ID_ESSENTIALS,
+    STRIPE_PRICE_ID_PRO: process.env.STRIPE_PRICE_ID_PRO,
     TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
     TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
     TWILIO_FROM_NUMBER: process.env.TWILIO_FROM_NUMBER,
     MAKE_WEBHOOK_URL: process.env.MAKE_WEBHOOK_URL,
-    DEMO_MODE_DEFAULT: process.env.DEMO_MODE_DEFAULT ?? "true",
+    DEMO_MODE_DEFAULT: process.env.DEMO_MODE_DEFAULT ?? "false",
     SESSION_SECRET: process.env.SESSION_SECRET,
     DEV_ADMIN_EMAIL: process.env.DEV_ADMIN_EMAIL,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
@@ -91,6 +99,7 @@ function parseEnv() {
 
   const client = clientSchema.safeParse({
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     NEXT_PUBLIC_DEV_LOGIN_EMAIL: process.env.NEXT_PUBLIC_DEV_LOGIN_EMAIL,
     NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,

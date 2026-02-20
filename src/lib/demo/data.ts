@@ -38,8 +38,8 @@ let leadsCache: Lead[] | null = null;
 const messagesCache: Map<string, Message[]> = new Map();
 const insightsCache: Map<string, Insight[]> = new Map();
 
-/** First 4 agents use spec names (Houston); rest from seed. */
-const FIXED_AGENT_NAMES = ["Sarah Mitchell", "Marcus Johnson", "Ashley Chen", "Tyler Brooks"];
+/** First agents use realistic Texas names from seed (Marcus Webb, Diana Salinas, etc.). */
+const FIXED_AGENT_NAMES = ["Marcus Webb", "Diana Salinas", "Kyle Patterson", "Sarah Mitchell", "Ashley Chen", "Tyler Brooks"];
 
 function buildAgents(): Agent[] {
   if (agentsCache) return agentsCache;
@@ -151,29 +151,33 @@ function buildMessagesForLead(leadId: string): Message[] {
   const msgs: Message[] = [];
   const base = `msg-${leadId}-`;
   const area = randomHoustonNeighborhood(leadId + "area");
-  const bodies = [
-    `Hi ${lead.name}, I saw your inquiry about properties in ${area}.`,
-    "Thanks for reaching out! I'd love to schedule a call.",
-    "I'm available Tuesday or Wednesday afternoon. Which works?",
-    "Wednesday at 2pm works great. I'll send a calendar invite.",
-    "Here's the link to the listing — great area near downtown.",
-    "Let me know if you have any questions!",
-    "I'll follow up next week with more options.",
-    "Great speaking with you today!",
+  const source = lead.source || "Zillow";
+  const outBodies: string[] = [
+    "Hi! Thanks for reaching out. Are you pre-approved?",
+    `Hi ${lead.name.split(" ")[0]}! Saw your inquiry on ${source}. What are you looking for in ${area}?`,
+    "Tuesday or Wed afternoon work for a call?",
+    "Wed at 2pm works. I'll send a calendar link",
+    "Here's the listing link – great area",
+    "Let me know if you have questions",
+    "I'll follow up with more options",
+    "Talk soon!",
   ];
-  const inBodies = [
-    `Hi, I'm interested in homes in ${area}.`,
-    "When can we schedule a tour?",
-    "That works for me, thanks!",
-    "I have a few more questions about the neighborhood",
-    "What's the HOA situation?",
+  const inBodies: string[] = [
+    `Hey I saw your listing on ${source}`,
+    "Interested in something in " + area,
+    "Not yet but looking to start the process",
+    "When can we do a tour?",
+    "That works thanks!",
+    "Got a few more ?s about the area",
+    "Whats the HOA like?",
+    "Ok perfect",
   ];
   const count = 4 + Math.floor(seededRandom(leadId) * 6);
   const now = Date.now();
   const agentId = lead?.assignedTo ?? undefined;
   for (let i = 0; i < count; i++) {
     const dir: "in" | "out" = i % 2 === 0 ? "in" : "out";
-    const body = dir === "in" ? pick(inBodies, leadId + i) : pick(bodies, leadId + i);
+    const body = dir === "in" ? pick(inBodies, leadId + i) : pick(outBodies, leadId + i);
     const r = seededRandom(leadId + "msgT" + i);
     const offsetMs = 2 * 60 * 1000 + r * (36 * 60 * 60 * 1000);
     const senderType = dir === "in" ? ("lead" as const) : i === 1 ? ("ai" as const) : ("agent" as const);
@@ -185,11 +189,21 @@ function buildMessagesForLead(leadId: string): Message[] {
       leadId,
       senderType,
       agentId: dir === "out" && senderType === "agent" ? agentId : null,
+      read: dir === "out", // outbound always read; inbound unread until conversation opened
     });
   }
   msgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   messagesCache.set(leadId, msgs);
   return msgs;
+}
+
+/** Mark all messages for a lead as read (when conversation is opened). */
+export function markLeadMessagesAsRead(leadId: string): void {
+  const msgs = messagesCache.get(leadId) ?? buildMessagesForLead(leadId);
+  for (const m of msgs) {
+    if (m.direction === "in") (m as Message & { read?: boolean }).read = true;
+  }
+  messagesCache.set(leadId, msgs);
 }
 
 function pick<T>(arr: T[], key: string): T {
@@ -380,6 +394,7 @@ export function appendMessage(leadId: string, body: string, direction: "in" | "o
     body,
     createdAt: new Date().toISOString(),
     leadId,
+    read: direction === "out",
   };
   msgs.push(msg);
   messagesCache.set(leadId, msgs);

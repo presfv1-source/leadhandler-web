@@ -19,7 +19,9 @@ export function LeadActivityChart({
   data?: { date: string; label: string; leads: number }[];
 }) {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    queueMicrotask(() => setMounted(true));
+  }, []);
 
   const chartData =
     data?.map((d) => ({

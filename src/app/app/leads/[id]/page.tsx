@@ -7,7 +7,8 @@ import {
   getDemoInsights,
 } from "@/lib/demo/data";
 import { Breadcrumbs } from "@/components/app/Breadcrumbs";
-import { LeadStatusPill } from "@/components/app/LeadStatusPill";
+import { EmptyState } from "@/components/app/EmptyState";
+import { LeadStatusSelect } from "./LeadStatusSelect";
 import { Timeline } from "@/components/app/Timeline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageComposer } from "./MessageComposer";
@@ -18,6 +19,7 @@ async function LeadDetailContent({ id }: { id: string }) {
   const session = await getSession();
   const demoEnabled = await getDemoEnabled(session);
   let leads: Awaited<ReturnType<typeof getDemoLeads>> = [];
+  let leadsLoadFailed = false;
   if (demoEnabled) {
     leads = getDemoLeads();
   } else {
@@ -26,10 +28,33 @@ async function LeadDetailContent({ id }: { id: string }) {
       leads = await airtable.getLeads();
     } catch {
       leads = [];
+      leadsLoadFailed = true;
     }
   }
   const lead = leads.find((l) => l.id === id);
-  if (!lead) notFound();
+  if (!lead) {
+    if (leadsLoadFailed) {
+      return (
+        <div className="space-y-8">
+          <Breadcrumbs
+            segments={[
+              { label: "Home", href: "/app/dashboard" },
+              { label: "Leads", href: "/app/leads" },
+              { label: "Lead" },
+            ]}
+            className="mb-2"
+          />
+          <EmptyState
+            icon={User}
+            title="Couldn't load this lead"
+            description="There was a problem loading the lead. Check your connection and try again."
+            action={{ label: "Back to Leads", href: "/app/leads" }}
+          />
+        </div>
+      );
+    }
+    notFound();
+  }
 
   let messages: Awaited<ReturnType<typeof getDemoMessages>> = [];
   if (demoEnabled) {
@@ -71,7 +96,11 @@ async function LeadDetailContent({ id }: { id: string }) {
           <h1 className="text-2xl font-bold">{lead.name}</h1>
           <p className="text-muted-foreground mt-1">{lead.email}</p>
           <div className="mt-2">
-            <LeadStatusPill status={lead.status} />
+            <LeadStatusSelect
+              leadId={lead.id}
+              status={lead.status}
+              demoEnabled={demoEnabled}
+            />
           </div>
         </div>
       </div>

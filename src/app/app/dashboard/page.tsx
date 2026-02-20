@@ -124,7 +124,7 @@ export default function DashboardPage() {
       fallback={
         <div className="space-y-8">
           <Skeleton className="h-10 w-48" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
               <Skeleton key={i} className="h-24 rounded-2xl" />
             ))}

@@ -75,7 +75,10 @@ export function Topbar({
   function handleViewAs(role: Role) {
     if (typeof window !== "undefined") {
       sessionStorage.setItem(VIEW_AS_STORAGE, role);
-      document.cookie = `${VIEW_AS_COOKIE}=${role}; path=/; max-age=86400`;
+      const cookie = `${VIEW_AS_COOKIE}=${role}; path=/; max-age=86400`;
+      queueMicrotask(() => {
+        if (typeof document !== "undefined") document.cookie = cookie;
+      });
     }
     toast.success(`Switched to ${viewAsLabel(role)} view`);
     requestAnimationFrame(() => router.refresh());

@@ -65,7 +65,12 @@ export default function LoginPage() {
               LeadHandler<span className="text-blue-600">.ai</span>
             </Link>
           </div>
+          {/* App name "Sign in to My Application" is set in Clerk Dashboard → Customization → Branding */}
+          {/* "Development mode" badge shows when using Clerk dev keys (pk_test_*); it disappears in production when production keys are set in Vercel. */}
+          {/* To remove email verification code (OTP on every login): Clerk Dashboard → User & Authentication → Email, phone, username → disable "Email verification" or "One-time code" for sign-in. */}
           <SignIn
+            afterSignInUrl="/app/dashboard"
+            afterSignUpUrl="/app/dashboard"
             redirectUrl="/app/dashboard"
             signUpUrl="/signup"
             appearance={{
@@ -86,12 +91,6 @@ export default function LoginPage() {
               },
             }}
           />
-          <p className="text-center mt-6 font-sans text-sm text-gray-500">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-blue-600 hover:underline font-medium">
-              Start your free trial →
-            </Link>
-          </p>
         </div>
       </div>
     </div>

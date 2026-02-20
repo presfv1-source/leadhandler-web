@@ -19,12 +19,15 @@ export function DemoModeBanner({ demoEnabled, isOwner, hasBackendConnected = fal
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      const stored = sessionStorage.getItem(STORAGE_KEY);
-      setDismissed(stored === "1");
-    } catch {
-      setDismissed(false);
-    }
+    const run = () => {
+      try {
+        const stored = sessionStorage.getItem(STORAGE_KEY);
+        setDismissed(stored === "1");
+      } catch {
+        setDismissed(false);
+      }
+    };
+    queueMicrotask(run);
   }, []);
 
   function handleDismiss() {

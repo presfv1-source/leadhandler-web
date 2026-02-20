@@ -50,23 +50,23 @@ export function HeroSection() {
 
       <div className="relative container max-w-7xl mx-auto">
         <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-foreground">
+          <h1 className="text-[clamp(1.75rem,5vw,3rem)] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-foreground">
             {MARKETING_POSITIONING.headline}
           </h1>
-          <p className="text-xl text-muted-foreground mb-10">
+          <p className="text-base sm:text-xl text-muted-foreground mb-10">
             {MARKETING_POSITIONING.subheadline}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="text-base min-h-[44px] hover:ring-2 hover:ring-burnt-orange/40 hover:ring-offset-2">
+            <Button asChild size="lg" className="w-full sm:w-auto text-base min-h-[44px] hover:ring-2 hover:ring-burnt-orange/40 hover:ring-offset-2">
               <Link href="/demo">Try demo</Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="text-base min-h-[44px]">
+            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto text-base min-h-[44px]">
               <Link href="/#pricing">View pricing</Link>
             </Button>
           </div>
         </div>
 
-        <div className="relative mx-auto max-w-6xl min-w-0">
+        <div className="relative mx-auto max-w-6xl min-w-0 hidden sm:block">
           <div className="rounded-xl border border-border/80 bg-card/95 shadow-lg shadow-primary/10 overflow-hidden ring-1 ring-black/5 min-w-0">
             {USE_DASHBOARD_IMAGE ? (
               <Image
