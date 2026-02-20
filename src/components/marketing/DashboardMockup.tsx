@@ -4,7 +4,7 @@ const STATS = [
   { label: "New Leads", value: "24", sub: "+12%" },
   { label: "Avg Reply", value: "2.5m", sub: null },
   { label: "Active Convos", value: "8", sub: null },
-  { label: "Qual Rate", value: "68%", sub: null },
+  { label: "Reply rate", value: "68%", sub: null },
 ];
 
 const LEADS = [

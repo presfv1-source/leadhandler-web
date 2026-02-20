@@ -1,12 +1,12 @@
 "use client";
 
 import {
-  MessageSquare,
-  LayoutDashboard,
-  Route,
-  Bell,
-  Inbox,
   Zap,
+  Route,
+  MessageSquare,
+  Eye,
+  ShieldCheck,
+  Timer,
 } from "lucide-react";
 import { CONTAINER, PAGE_PADDING } from "@/lib/ui";
 import { cn } from "@/lib/utils";
@@ -16,38 +16,38 @@ const FEATURES = [
   {
     title: "Instant text-back",
     description:
-      "Every lead gets a reply in seconds, automatically.",
-    icon: MessageSquare,
+      "Every lead gets a reply in seconds. 24/7, no exceptions.",
+    icon: Zap,
   },
   {
     title: "Smart routing",
     description:
-      "Round-robin or rules-based. Right agent gets the right lead.",
+      "Round-robin or rules-based. The right agent gets the right lead, every time.",
     icon: Route,
-  },
-  {
-    title: "Missed-lead prevention",
-    description:
-      "No lead sits unanswered. Escalation alerts if no response.",
-    icon: Bell,
   },
   {
     title: "Shared inbox",
     description:
-      "Every SMS conversation in one place. Handoffs without the chaos.",
-    icon: Inbox,
+      "Every SMS conversation in one place. Clean handoffs, no dropped threads.",
+    icon: MessageSquare,
   },
   {
     title: "Owner visibility",
     description:
-      "See every lead, every response, every agent. Full accountability.",
-    icon: LayoutDashboard,
+      "See every lead, every response time, every agent. Full accountability.",
+    icon: Eye,
   },
   {
-    title: "Simple setup",
+    title: "Missed-lead prevention",
     description:
-      "One phone number. A few routing rules. Live in minutes.",
-    icon: Zap,
+      "If no agent responds, it escalates. No lead sits unanswered.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Setup in minutes",
+    description:
+      "One phone number. A few routing rules. Live the same day.",
+    icon: Timer,
   },
 ];
 

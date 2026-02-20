@@ -2,15 +2,15 @@ import { Navbar } from "@/components/marketing/Navbar";
 import { Hero } from "@/components/marketing/Hero";
 import { TrustBar } from "@/components/marketing/TrustBar";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
+import { WhyThisMatters } from "@/components/marketing/WhyThisMatters";
 import { Features } from "@/components/marketing/Features";
-import { Testimonials } from "@/components/marketing/Testimonials";
-import { Pricing } from "@/components/marketing/Pricing";
-import { CtaBanner } from "@/components/marketing/CtaBanner";
+import { BetaProofFaq } from "@/components/marketing/BetaProofFaq";
+import { BetaAccessForm } from "@/components/marketing/BetaAccessForm";
 import { Footer } from "@/components/marketing/Footer";
 import { FadeUp } from "@/components/marketing/FadeUp";
 
 export const metadata = {
-  title: "LeadHandler.ai — Respond first. Close more.",
+  title: "LeadHandler.ai — Every text lead answered in seconds, routed to the right agent.",
   description:
     "SMS lead response and routing for real estate brokerages. Request beta access.",
 };
@@ -30,16 +30,16 @@ export default function MarketingHomePage() {
           <HowItWorks />
         </FadeUp>
         <FadeUp>
+          <WhyThisMatters />
+        </FadeUp>
+        <FadeUp>
           <Features />
         </FadeUp>
         <FadeUp>
-          <Testimonials />
+          <BetaProofFaq />
         </FadeUp>
         <FadeUp>
-          <Pricing />
-        </FadeUp>
-        <FadeUp>
-          <CtaBanner />
+          <BetaAccessForm />
         </FadeUp>
         <Footer />
       </main>
