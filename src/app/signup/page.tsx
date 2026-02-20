@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "LeadHandler.ai — Start your free trial",
+  title: "LeadHandler.ai — Request beta access",
   description:
-    "AI-powered SMS lead qualification and routing for real estate brokerages. 14 days free.",
+    "Automated SMS lead routing for real estate brokerages. Request beta access.",
 };
 
 export default function SignUpPage() {

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "LeadHandler.ai — Sign in",
   description:
-    "AI-powered SMS lead qualification and routing for real estate brokerages.",
+    "Automated SMS lead routing for real estate brokerages.",
 };
 
 export default function LoginPage() {

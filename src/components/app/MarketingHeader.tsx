@@ -11,7 +11,6 @@ const navLinks = [
   { href: "/", label: "Home" },
   { href: "/#features", label: "Features" },
   { href: "/#pricing", label: "Pricing" },
-  { href: "/demo", label: "Demo" },
   { href: "/login", label: "Login" },
 ] as const;
 
@@ -44,7 +43,7 @@ export function MarketingHeader({ className }: { className?: string }) {
             </Link>
           ))}
           <Button asChild size="sm" className="shrink-0">
-            <Link href="/signup">Start free trial</Link>
+            <Link href="/signup">Request beta access</Link>
           </Button>
         </nav>
 
@@ -71,7 +70,7 @@ export function MarketingHeader({ className }: { className?: string }) {
                   href="/signup"
                   className="mt-4 inline-flex items-center justify-center min-h-[44px] rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                 >
-                  Start free trial
+                  Request beta access
                 </Link>
               </nav>
             </SheetContent>

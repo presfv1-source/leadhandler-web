@@ -56,7 +56,7 @@ export default function AboutPage() {
                 <p>
                   Real estate brokerages lose deals every day — not because of bad agents,
                   but because of slow response times, unclear routing, and zero visibility.
-                  LeadHandler.ai exists to solve exactly that. We&apos;re an AI-powered SMS
+                  LeadHandler.ai exists to solve exactly that. We&apos;re an automated SMS intake and routing
                   platform built specifically for broker-owners who are tired of watching
                   leads go cold.
                 </p>
@@ -113,8 +113,7 @@ export default function AboutPage() {
                   Houston built. Texas focused. Nationally ambitious.
                 </h2>
                 <p className="font-sans text-white/90 text-lg">
-                  Phase 1 is dominating Houston brokerages. Phase 2 is Texas. Phase 3 is
-                  everywhere.
+                  We&apos;re starting in Houston and expanding across Texas.
                 </p>
               </div>
             </div>

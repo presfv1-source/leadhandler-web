@@ -20,11 +20,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "LeadHandler.ai",
-  description: "AI-powered SMS lead routing for real estate brokerages",
+  description: "Automated SMS lead routing for real estate brokerages",
   themeColor: "#2563eb",
   openGraph: {
     title: "LeadHandler.ai",
-    description: "AI-powered SMS lead routing for real estate brokerages",
+    description: "Automated SMS lead routing for real estate brokerages",
   },
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],

@@ -50,8 +50,8 @@ export const FEATURES: FeatureCard[] = [
   },
   {
     id: "qualification",
-    title: "Automated lead qualification",
-    bullets: ["Asks key questions", "Filters low-intent"],
+    title: "Automated intake — collects name, interest, and timing instantly",
+    bullets: ["Asks key questions", "Captures intent"],
   },
   {
     id: "routing",
@@ -70,27 +70,19 @@ export const FEATURES: FeatureCard[] = [
     ],
   },
   {
-    id: "pipeline",
-    title: "Lead pipeline + filtering",
-    bullets: [
-      "Track status",
-      "Filter by source, agent, and stage",
-    ],
+    id: "tracking",
+    title: "Every lead tracked — nothing falls through",
+    bullets: ["Full conversation history", "Status and source visible"],
   },
   {
-    id: "roles",
-    title: "Owner + agent roles",
-    bullets: [
-      "Owners control routing and visibility",
-      "Agents see assigned leads",
-    ],
+    id: "visibility",
+    title: "Full visibility for broker-owners",
+    bullets: ["See every lead and response", "Agent accountability"],
   },
 ];
 
 /** Show only under a small "Coming soon" label; do not present as a core feature. */
-export const COMING_SOON_FEATURES = [
-  { title: "AI-assisted qualification", note: "Coming soon" },
-] as const;
+export const COMING_SOON_FEATURES = [] as const;
 
 export type PricingVariant = "beta" | "standard";
 

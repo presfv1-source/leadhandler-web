@@ -72,12 +72,12 @@ function SmsMockup() {
         </div>
         <div className="flex justify-end">
           <div className="rounded-2xl rounded-tr-sm bg-blue-600 px-4 py-2 text-sm font-sans text-white max-w-[80%]">
-            Yes! When would you like to schedule a showing?
+            Are you looking to buy or sell?
           </div>
         </div>
         <div className="flex justify-start">
           <div className="rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-2 text-sm font-sans text-gray-700 max-w-[80%]">
-            How about tomorrow at 2pm?
+            Looking to buy
           </div>
         </div>
       </div>
@@ -197,7 +197,7 @@ export default function FeaturesPage() {
                 </h1>
                 <p className="font-sans text-gray-500 text-lg leading-relaxed mb-8">
                   Every feature is designed around one goal — making sure your leads get
-                  responded to, qualified, and routed before your competition even wakes up.
+                  responded to, routed, and handed to the right agent before your competition even wakes up.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button href="/signup" variant="primary">

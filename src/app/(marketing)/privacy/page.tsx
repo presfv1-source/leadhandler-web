@@ -20,7 +20,7 @@ export default function PrivacyPage() {
             LeadHandler.ai (&quot;we&quot;) processes data you provide when using our service, including brokerage and agent information, lead and contact data, and messages. We use this to deliver SMS lead response and routing, dashboard visibility, and billing.
           </p>
           <p>
-            We do not sell your data to third parties for marketing. We use: <strong>Twilio</strong> for SMS delivery and receipt; <strong>Airtable</strong> for storing brokerages, agents, leads, and messages; <strong>Clerk</strong> for authentication; <strong>Stripe</strong> for billing. Data is used solely to provide lead qualification and routing, dashboard visibility, and subscription management. These vendors&apos; privacy policies apply to their processing.
+            We do not sell your data to third parties for marketing. We use: <strong>Twilio</strong> for SMS delivery and receipt; <strong>Airtable</strong> for storing brokerages, agents, leads, and messages; <strong>Clerk</strong> for authentication; <strong>Stripe</strong> for billing. Data is used solely to provide lead intake and routing, dashboard visibility, and subscription management. These vendors&apos; privacy policies apply to their processing.
           </p>
           <p>
             You can request access to or deletion of your data by contacting us. For security and data handling details, see our <Link href="/security" className="font-medium text-primary hover:underline">Security & data</Link> page.

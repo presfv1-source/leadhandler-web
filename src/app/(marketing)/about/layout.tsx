@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "LeadHandler.ai — About",
   description:
-    "AI-powered SMS lead qualification and routing for real estate brokerages. Built in Houston by someone who gets it.",
+    "LeadHandler.ai — automated SMS lead routing built for Texas real estate brokerages.",
 };
 
 export default function AboutLayout({

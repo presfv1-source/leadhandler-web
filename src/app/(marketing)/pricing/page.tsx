@@ -32,7 +32,7 @@ const PLANS = PRICING_PLANS_BETA.map((p) => {
 
 const COMPARISON = [
   { feature: "Agents", essentials: "Up to 15", pro: "Up to 40+" },
-  { feature: "AI SMS", essentials: "✓", pro: "✓" },
+  { feature: "Automated SMS", essentials: "✓", pro: "✓" },
   { feature: "Round-robin routing", essentials: "✓", pro: "✓" },
   { feature: "Shared inbox", essentials: "✓", pro: "✓" },
   { feature: "Basic dashboard", essentials: "✓", pro: "✓" },
