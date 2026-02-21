@@ -89,7 +89,7 @@ export function EarlyBirdBanner({ className }: EarlyBirdBannerProps) {
         <p className="font-bold">
           <strong>Limited Beta Launch:</strong> <strong>{SPOTS_LEFT} spots left</strong> — Lock in{" "}
           <strong>$99/mo Essentials</strong> (up to 15 agents) or <strong>$249/mo Pro</strong> (up to 40+, advanced
-          routing & analytics) before $349/$749. <strong>14-day trial, no card needed.</strong>{" "}
+          routing & analytics) before $349/$749. <strong>Limited beta spots.</strong>{" "}
           <button
             type="button"
             onClick={() => setModalOpen(true)}

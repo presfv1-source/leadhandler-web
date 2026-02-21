@@ -113,20 +113,20 @@ export interface PricingPlan {
   priceIdEnvKey?: string;
 }
 
-/** Beta pricing: used by marketing Beta tab and in-app billing. */
+/** Beta pricing: used by marketing Beta tab and in-app billing. IDs essentials/pro match Stripe. */
 export const PRICING_PLANS_BETA: PricingPlan[] = [
   {
     id: "essentials",
-    name: "Essentials",
+    name: "Starter",
     price: 99,
     priceAnnual: 990,
     period: "/mo",
-    description: "Automated follow-up, round-robin, inbox, basic dashboard.",
+    description: "Up to 5 agents, 1 shared number, round-robin routing, shared inbox, basic dashboard.",
     features: [
-      "Up to 15 agents",
-      "Automated SMS follow-up",
+      "Up to 5 agents",
+      "1 shared number",
       "Round-robin routing",
-      "SMS inbox",
+      "Shared inbox",
       "Basic dashboard",
     ],
     cta: "Request beta access",
@@ -136,26 +136,36 @@ export const PRICING_PLANS_BETA: PricingPlan[] = [
   },
   {
     id: "pro",
-    name: "Pro",
+    name: "Growth",
     badge: "Popular",
     price: 249,
     priceAnnual: 2490,
     period: "/mo",
     description:
-      "Everything in Essentials, plus weighted routing, escalation, analytics dashboard, priority support. Up to 40+ agents.",
-    footnote: "Spots limited before standard $349/$749.",
+      "Up to 15 agents, 1 shared + personal lines available, all routing modes, full conversation history, performance metrics, priority support.",
     features: [
-      "Up to 40+ agents",
-      "Everything in Essentials",
-      "Weighted & performance-based routing",
-      "Escalation targets",
-      "Analytics dashboard",
+      "Up to 15 agents",
+      "1 shared number + personal lines",
+      "All routing modes",
+      "Full conversation history",
+      "Performance metrics",
       "Priority support",
     ],
     cta: "Request beta access",
     href: "/signup",
     primary: true,
     priceIdEnvKey: "NEXT_PUBLIC_STRIPE_PRICE_ID_PRO",
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    price: null,
+    period: "Custom",
+    description: "Unlimited agents, multiple numbers, custom routing, dedicated support.",
+    features: ["Unlimited agents", "Multiple numbers", "Custom routing", "Dedicated support"],
+    cta: "Contact sales",
+    href: "/contact",
+    primary: false,
   },
 ];
 
@@ -209,17 +219,14 @@ export const PRICING_PLANS_STANDARD: PricingPlan[] = [
 ];
 
 export const PRICING_COMPARISON_BETA = [
-  { feature: "Agents", essentials: "Up to 15", pro: "Up to 40+" },
-  { feature: "Automated SMS follow-up", essentials: "✓", pro: "✓" },
-  { feature: "Round-robin routing", essentials: "✓", pro: "✓" },
-  { feature: "SMS inbox", essentials: "✓", pro: "✓" },
-  { feature: "Basic dashboard", essentials: "✓", pro: "✓" },
-  { feature: "Analytics dashboard", essentials: "—", pro: "✓" },
-  { feature: "Escalation", essentials: "—", pro: "✓" },
-  { feature: "Priority support", essentials: "—", pro: "✓" },
+  { feature: "Agents", essentials: "Up to 5", pro: "Up to 15", enterprise: "Unlimited" },
+  { feature: "Shared number", essentials: "✓", pro: "✓", enterprise: "✓" },
+  { feature: "Personal lines", essentials: "—", pro: "✓", enterprise: "✓" },
+  { feature: "Round-robin routing", essentials: "✓", pro: "✓", enterprise: "✓" },
+  { feature: "All routing modes", essentials: "—", pro: "✓", enterprise: "✓" },
+  { feature: "Shared inbox", essentials: "✓", pro: "✓", enterprise: "✓" },
+  { feature: "Performance metrics", essentials: "—", pro: "✓", enterprise: "✓" },
+  { feature: "Priority support", essentials: "—", pro: "✓", enterprise: "✓" },
 ] as const;
 
-export const BILLING_PLANS: PricingPlan[] = [
-  ...PRICING_PLANS_BETA,
-  PRICING_PLANS_STANDARD.find((p) => p.id === "enterprise")!,
-];
+export const BILLING_PLANS: PricingPlan[] = [...PRICING_PLANS_BETA];

@@ -34,7 +34,6 @@ export function BetaAccessForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (
-      !name.trim() ||
       !email.trim() ||
       !brokerage.trim() ||
       !city.trim() ||
@@ -46,19 +45,13 @@ export function BetaAccessForm() {
     }
     setStatus("loading");
     try {
-      const source = [
-        `Brokerage: ${brokerage.trim()}`,
-        `City: ${city.trim()}`,
-        `Agents: ${agents}`,
-        `Phone: ${phone.trim()}`,
-        `Best time: ${bestTime}`,
-      ].join("; ");
+      const source = `beta|brokerage=${brokerage.trim()}|city=${city.trim()}|agents=${agents}|phone=${phone.trim()}|best=${bestTime}`;
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
-          name: name.trim(),
+          name: name.trim() || undefined,
           source,
         }),
       });
@@ -82,7 +75,7 @@ export function BetaAccessForm() {
   }
 
   return (
-    <section id="form" className="py-24 px-4 sm:px-8 bg-[var(--off)]">
+    <section id="beta-form" className="py-24 px-4 sm:px-8 bg-[var(--off)]" aria-label="Request beta access">
       <div className="mx-auto max-w-[1100px]">
         <div className="mx-auto max-w-[520px] rounded-[20px] border border-[var(--border)] bg-[var(--white)] p-11">
           <h2 className="text-[22px] font-black tracking-[-0.5px] text-[var(--ink)] mb-1.5">
@@ -98,9 +91,8 @@ export function BetaAccessForm() {
                 className="mx-auto mb-4 h-12 w-12 text-[var(--muted)]"
                 aria-hidden
               />
-              <h3 className="text-lg font-bold text-[var(--ink)] mb-2">You&apos;re on the list.</h3>
-              <p className="text-sm text-[var(--muted)]">
-                We&apos;ll reach out within 24 hours.
+              <p className="text-[15px] font-medium text-[var(--ink)]">
+                You&apos;re on the list. We&apos;ll reach out within 24 hours.
               </p>
             </div>
           ) : status === "error" ? (
@@ -119,7 +111,7 @@ export function BetaAccessForm() {
             <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="beta-name" className="text-[12px] font-bold text-[var(--ink2)] tracking-[-0.1px]">
-                  Full name
+                  Full name <span className="text-[var(--subtle)] font-normal">(optional)</span>
                 </label>
                 <input
                   id="beta-name"
@@ -127,7 +119,6 @@ export function BetaAccessForm() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your name"
-                  required
                   disabled={status === "loading"}
                   className={inputClass}
                 />
@@ -234,7 +225,6 @@ export function BetaAccessForm() {
                 type="submit"
                 disabled={
                   status === "loading" ||
-                  !name.trim() ||
                   !email.trim() ||
                   !brokerage.trim() ||
                   !city.trim() ||

@@ -5,23 +5,27 @@ import { useState } from "react";
 const FAQ_ITEMS = [
   {
     q: "Does this replace my agents?",
-    a: "No. LeadHandler routes leads to your agents faster. They handle the relationship — we handle the first reply and the handoff so no lead sits unanswered.",
+    a: "No. LeadHandler routes leads TO your agents faster. They handle the relationship — we handle the first reply and the handoff.",
   },
   {
-    q: "Can we use a separate number per listing?",
-    a: "Yes. Each listing can have its own number so leads come in with context already attached, or use one team number for all inbound leads. Your choice.",
+    q: "Can we use it per listing?",
+    a: "Yes. Each listing can have its own number, or you can use one team number for all inbound leads.",
   },
   {
-    q: "How long does setup take?",
-    a: "Most brokerages are live in under an hour. One number, your routing rules, done. We walk you through every step personally during beta.",
+    q: "How fast is setup?",
+    a: "Most brokerages are live in under an hour. One number, your routing rules, done.",
   },
   {
     q: "Is this available outside Texas?",
-    a: "Beta is Texas-first. We're expanding based on demand — request access now and you'll be first in your market when we open up.",
+    a: "Beta is Texas-first. We're expanding based on demand.",
   },
   {
     q: "What does it cost?",
-    a: "Beta pricing starts at $99/mo. That rate is locked in for the life of your subscription as long as you stay subscribed. See pricing for full plan details.",
+    a: "Beta pricing starts at $99/mo. See /pricing for full details.",
+  },
+  {
+    q: "Does the lead know it's automated?",
+    a: "The first message is fast and helpful — most leads don't notice. You can customize the tone in your settings.",
   },
 ];
 
@@ -29,7 +33,7 @@ export function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="py-24 px-4 sm:px-8 bg-[var(--white)]" aria-labelledby="faq-heading">
+    <section id="faq" className="py-12 md:py-20 px-4 sm:px-8 bg-[var(--white)]" aria-labelledby="faq-heading">
       <div className="mx-auto max-w-[1100px]">
         <div className="text-center mb-12">
           <div className="mb-3.5 inline-block text-[11px] font-bold uppercase tracking-widest text-[var(--subtle)]">
@@ -37,7 +41,7 @@ export function FaqSection() {
           </div>
           <h2
             id="faq-heading"
-            className="text-[clamp(28px,3.5vw,42px)] font-black leading-[1.08] text-[var(--ink)]"
+            className="text-3xl md:text-4xl font-bold leading-[1.08] text-[var(--ink)]"
             style={{ letterSpacing: "-1.2px" }}
           >
             In case you missed anything.

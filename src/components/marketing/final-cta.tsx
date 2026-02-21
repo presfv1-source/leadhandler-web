@@ -16,7 +16,7 @@ export function FinalCta() {
         Request access today — limited beta spots for Texas brokerages.
       </p>
       <Link
-        href="#form"
+        href="#beta-form"
         className="inline-flex items-center rounded-[10px] bg-white px-7 py-3.5 text-sm font-bold text-[var(--ink)] no-underline tracking-[-0.1px] transition-opacity duration-[0.14s] hover:opacity-90"
       >
         Request beta access

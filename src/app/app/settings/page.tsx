@@ -51,14 +51,21 @@ async function SettingsContent() {
     !!(env.server.TWILIO_ACCOUNT_SID && env.server.TWILIO_AUTH_TOKEN && env.server.TWILIO_FROM_NUMBER);
   const airtableConfigured = !!(env.server.AIRTABLE_API_KEY && env.server.AIRTABLE_BASE_ID);
   const makeConfigured = !!env.server.MAKE_WEBHOOK_URL?.trim();
+  const stripeConfigured = !!env.server.STRIPE_SECRET_KEY?.trim();
 
   return (
     <SettingsPageContent
       session={session ? { name: session.name, email: session.email, role: session.role } : null}
       brokerage={brokerage}
       agents={agents}
+      demoEnabled={!!demoEnabled}
       devToolsPhone={process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_FROM_NUMBER || "+1-XXX-XXX-XXXX"}
-      integrationStatus={{ twilio: twilioConfigured, airtable: airtableConfigured, make: makeConfigured }}
+      integrationStatus={{
+        twilio: twilioConfigured,
+        airtable: airtableConfigured,
+        make: makeConfigured,
+        stripe: stripeConfigured,
+      }}
     />
   );
 }

@@ -3,8 +3,6 @@ import { getSession, getDemoEnabled } from "@/lib/auth";
 import { getAgents } from "@/lib/airtable";
 import { getDemoAgentsAsAppType } from "@/lib/demoData";
 import type { Agent } from "@/lib/types";
-import { AirtableAuthError } from "@/lib/airtable";
-import { AirtableErrorFallback } from "@/components/app/AirtableErrorFallback";
 import { RoutingPageContent } from "./RoutingPageContent";
 
 export const dynamic = "force-dynamic";

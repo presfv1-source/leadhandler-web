@@ -14,7 +14,6 @@ import { AirtableErrorFallback } from "@/components/app/AirtableErrorFallback";
 import { EmptyState } from "@/components/app/EmptyState";
 import { PageHeader } from "@/components/app/PageHeader";
 import { StatusBadge } from "@/components/app/Badge";
-import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
 import type { LeadStatus } from "@/lib/types";
 
@@ -50,7 +49,6 @@ function formatRelative(time: string): string {
 
 export default function InboxPage() {
   const searchParams = useSearchParams();
-  const { isOwner } = useUser();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
@@ -80,10 +78,15 @@ export default function InboxPage() {
           const toSelect = fromUrl && l.some((x) => x.id === fromUrl) ? fromUrl : l[0].id;
           setSelectedLeadId(toSelect);
         }
-        setLoadError(leadsRes.error?.code === "AUTHENTICATION_REQUIRED");
+        setLoadError(false);
+      } else {
+        setLoadError(true);
       }
       setLoading(false);
-    }).catch(() => setLoading(false));
+    }).catch(() => {
+      setLoadError(true);
+      setLoading(false);
+    });
   }, [searchParams]);
 
   useEffect(() => {
@@ -166,7 +169,15 @@ export default function InboxPage() {
     );
   }
 
-  if (leads.length === 0 && !loadError) {
+  if (loadError) {
+    return (
+      <div className="space-y-6 w-full">
+        <AirtableErrorFallback showSettingsLink />
+      </div>
+    );
+  }
+
+  if (leads.length === 0) {
     return (
       <div className="space-y-6 w-full">
         <EmptyState

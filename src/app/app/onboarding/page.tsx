@@ -14,14 +14,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Building2, Link2, UserPlus, CheckCircle } from "lucide-react";
+import { Building2, UserPlus, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const STEPS = [
-  { id: 1, title: "Set up your brokerage", icon: Building2 },
-  { id: 2, title: "Connect your first integration", icon: Link2 },
-  { id: 3, title: "Invite your first agent", icon: UserPlus },
-  { id: 4, title: "You're ready!", icon: CheckCircle },
+  { id: 1, title: "Account created", icon: CheckCircle },
+  { id: 2, title: "Add your first agent", icon: UserPlus },
+  { id: 3, title: "Choose routing mode", icon: Building2 },
+  { id: 4, title: "You're ready", icon: CheckCircle },
 ];
 
 export default function OnboardingPage() {
@@ -29,7 +29,8 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [brokerage, setBrokerage] = useState({ name: "", phone: "", timezone: "America/Chicago" });
-  const [agent, setAgent] = useState({ name: "", email: "" });
+  const [agent, setAgent] = useState({ name: "", email: "", phone: "" });
+  const [routingMode, setRoutingMode] = useState<"round_robin" | "manual">("round_robin");
 
   async function handleStep1() {
     if (!brokerage.name.trim()) {
@@ -55,11 +56,7 @@ export default function OnboardingPage() {
     }
   }
 
-  function handleStep2Next() {
-    setStep(3);
-  }
-
-  async function handleStep3Submit() {
+  async function handleStep2Submit() {
     const hasEmail = agent.email.trim();
     if (hasEmail) {
       setLoading(true);
@@ -67,7 +64,11 @@ export default function OnboardingPage() {
         const res = await fetch("/api/airtable/agents", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: agent.name.trim(), email: agent.email.trim() }),
+          body: JSON.stringify({
+            name: agent.name.trim(),
+            email: agent.email.trim(),
+            phone: agent.phone.trim() || undefined,
+          }),
         });
         const data = await res.json();
         if (data.success) {
@@ -82,14 +83,18 @@ export default function OnboardingPage() {
       } finally {
         setLoading(false);
       }
-    } else if (agent.name.trim() && !hasEmail) {
+    } else if ((agent.name.trim() || agent.phone.trim()) && !hasEmail) {
       toast.error("Email is required to add an agent");
       return;
     }
-    setStep(4);
+    setStep(3);
   }
 
-  function handleStep3Skip() {
+  function handleStep2Skip() {
+    setStep(3);
+  }
+
+  function handleStep3Next() {
     setStep(4);
   }
 
@@ -136,6 +141,9 @@ export default function OnboardingPage() {
         <Card>
           <CardHeader>
             <CardTitle className="font-display text-slate-900">Set up your brokerage</CardTitle>
+            <CardDescription className="font-sans">
+              Your account is created. Add your brokerage details to get started.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -185,28 +193,9 @@ export default function OnboardingPage() {
       {step === 2 && (
         <Card>
           <CardHeader>
-            <CardTitle className="font-display text-slate-900">Connect your integrations later</CardTitle>
-            <CardDescription className="font-sans">
-              You can connect Twilio for SMS and add your Make.com webhook URL in Settings when you&apos;re ready to receive and qualify leads.
-            </CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button
-              onClick={handleStep2Next}
-              className="bg-blue-600 hover:bg-blue-700 font-sans"
-            >
-              Skip for now
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
-
-      {step === 3 && (
-        <Card>
-          <CardHeader>
             <CardTitle className="font-display text-slate-900">Add your first agent</CardTitle>
             <CardDescription className="font-sans">
-              Add an agent to receive leads. You can add more later in Settings.
+              Name, email, and phone. You can add more later in Agents.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -231,17 +220,73 @@ export default function OnboardingPage() {
                 className="font-sans"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="agent-phone" className="font-sans">Phone</Label>
+              <Input
+                id="agent-phone"
+                type="tel"
+                value={agent.phone}
+                onChange={(e) => setAgent((p) => ({ ...p, phone: e.target.value }))}
+                placeholder="+1 713 555 0000"
+                className="font-sans"
+              />
+            </div>
           </CardContent>
           <CardFooter className="flex gap-2">
             <Button
-              onClick={handleStep3Submit}
+              onClick={handleStep2Submit}
               disabled={loading}
               className="bg-blue-600 hover:bg-blue-700 font-sans"
             >
               Continue
             </Button>
-            <Button variant="ghost" onClick={handleStep3Skip} className="font-sans" disabled={loading}>
+            <Button variant="ghost" onClick={handleStep2Skip} className="font-sans" disabled={loading}>
               Skip for now
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+
+      {step === 3 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display text-slate-900">Choose routing mode</CardTitle>
+            <CardDescription className="font-sans">
+              How leads are assigned to agents. You can change this later in Routing.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <button
+              type="button"
+              onClick={() => setRoutingMode("round_robin")}
+              className={`w-full rounded-xl border-2 p-4 text-left font-sans transition-colors ${
+                routingMode === "round_robin"
+                  ? "border-blue-600 bg-blue-50"
+                  : "border-slate-200 hover:border-slate-300"
+              }`}
+            >
+              <span className="font-semibold text-slate-900">Round Robin</span>
+              <p className="text-sm text-slate-500 mt-1">Leads are distributed in rotation.</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRoutingMode("manual")}
+              className={`w-full rounded-xl border-2 p-4 text-left font-sans transition-colors ${
+                routingMode === "manual"
+                  ? "border-blue-600 bg-blue-50"
+                  : "border-slate-200 hover:border-slate-300"
+              }`}
+            >
+              <span className="font-semibold text-slate-900">Manual</span>
+              <p className="text-sm text-slate-500 mt-1">You assign leads to agents yourself.</p>
+            </button>
+          </CardContent>
+          <CardFooter>
+            <Button
+              onClick={handleStep3Next}
+              className="bg-blue-600 hover:bg-blue-700 font-sans"
+            >
+              Continue
             </Button>
           </CardFooter>
         </Card>
@@ -252,7 +297,7 @@ export default function OnboardingPage() {
           <CardHeader>
             <CardTitle className="font-display text-slate-900">You&apos;re all set</CardTitle>
             <CardDescription className="font-sans">
-              Turn on Demo Mode to explore with sample data, or connect your integrations in Settings and start receiving real leads.
+              Your SMS number will be assigned by our team — we&apos;ll email you within 24 hours. No technical setup required from you.
             </CardDescription>
           </CardHeader>
           <CardFooter>
@@ -261,7 +306,7 @@ export default function OnboardingPage() {
               disabled={loading}
               className="bg-blue-600 hover:bg-blue-700 font-sans"
             >
-              Go to Dashboard
+              Go to Dashboard →
             </Button>
           </CardFooter>
         </Card>

@@ -2,7 +2,6 @@
 
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
-import { DemoModeBanner } from "./DemoModeBanner";
 import { OnboardingGuard } from "./OnboardingGuard";
 import type { Role } from "@/lib/types";
 
@@ -26,7 +25,6 @@ export function AppShell({ children, session, demoEnabled, hasBackendConnected =
           demoEnabled={demoEnabled}
           isOwner={isOwner}
         />
-        <DemoModeBanner demoEnabled={demoEnabled} isOwner={isOwner} hasBackendConnected={hasBackendConnected} />
         <main className="flex-1 p-6 lg:p-8 min-w-0 overflow-auto">
           <OnboardingGuard isOwner={isOwner}>{children}</OnboardingGuard>
         </main>

@@ -62,10 +62,10 @@ export function Navbar() {
             Log in
           </Link>
           <Link
-            href="#form"
+            href="#beta-form"
             className="inline-flex items-center rounded-lg bg-[var(--ink)] px-4 py-2 text-[13.5px] font-semibold text-white no-underline tracking-[-0.1px] transition-opacity duration-[0.14s] hover:opacity-80"
           >
-            Request access
+            Request beta access
           </Link>
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
@@ -91,10 +91,10 @@ export function Navbar() {
                   Log in
                 </Link>
                 <Link
-                  href="#form"
+                  href="#beta-form"
                   className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-[var(--ink)] px-4 py-3 text-sm font-semibold text-white no-underline"
                 >
-                  Request access
+                  Request beta access
                 </Link>
               </nav>
             </SheetContent>

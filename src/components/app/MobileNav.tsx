@@ -8,18 +8,15 @@ import { Separator } from "@/components/ui/separator";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getNavItemsForRole } from "@/lib/nav";
-import { DemoToggle } from "./DemoToggle";
 import type { Role } from "@/lib/types";
 
 interface MobileNavProps {
   role: Role;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  demoEnabled?: boolean;
-  isOwner?: boolean;
 }
 
-export function MobileNav({ role, open, onOpenChange, demoEnabled = false, isOwner = false }: MobileNavProps) {
+export function MobileNav({ role, open, onOpenChange }: MobileNavProps) {
   const pathname = usePathname();
   const groups = getNavItemsForRole(role);
 
@@ -38,14 +35,7 @@ export function MobileNav({ role, open, onOpenChange, demoEnabled = false, isOwn
         side="left"
         className="w-72 max-w-[calc(100vw-2rem)] pt-12 overflow-y-auto"
       >
-        {/* Nav items from getNavItemsForRole: Dashboard, Leads, Messages, Agents, Routing, Analytics, Billing, Settings, Account */}
         <nav className="flex flex-col gap-4" aria-label="App navigation">
-          {isOwner && (
-            <>
-              <DemoToggle demoEnabled={demoEnabled} disabled={false} className="mb-2" />
-              <Separator className="mb-4" />
-            </>
-          )}
           {groups.map((group, gi) => (
             <div key={group.label}>
               {gi > 0 && <Separator className="mb-4" />}

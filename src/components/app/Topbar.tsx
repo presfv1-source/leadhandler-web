@@ -15,8 +15,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { DemoToggle } from "./DemoToggle";
 import { SidebarNavContent } from "./Sidebar";
+import { DemoModeBanner } from "./DemoModeBanner";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Role } from "@/lib/types";
@@ -31,10 +31,10 @@ function viewAsLabel(r: Role) {
 const PATH_TITLES: Record<string, string> = {
   "/app/dashboard": "Dashboard",
   "/app/leads": "Leads",
-  "/app/inbox": "Inbox",
+  "/app/inbox": "Conversations",
   "/app/routing": "Lead Routing",
   "/app/agents": "Agents",
-  "/app/analytics": "Analytics",
+  "/app/analytics": "Performance",
   "/app/billing": "Billing & Plan",
   "/app/settings": "Settings",
   "/app/account": "Account",
@@ -52,7 +52,6 @@ interface TopbarProps {
   session: { name?: string; role: Role; effectiveRole?: Role } | null;
   demoEnabled: boolean;
   isOwner: boolean;
-  onDemoToggle?: (enabled: boolean) => void;
   className?: string;
 }
 
@@ -60,7 +59,6 @@ export function Topbar({
   session,
   demoEnabled,
   isOwner,
-  onDemoToggle,
   className,
 }: TopbarProps) {
   const router = useRouter();
@@ -136,17 +134,8 @@ export function Topbar({
           <h1 className="font-display font-semibold text-lg text-slate-900 truncate">
             {pageTitle}
           </h1>
+          <DemoModeBanner demoEnabled={demoEnabled} />
         </div>
-
-        {isOwner && (
-          <div className="hidden sm:flex items-center">
-            <DemoToggle
-              demoEnabled={demoEnabled}
-              onToggle={onDemoToggle}
-              disabled={false}
-            />
-          </div>
-        )}
 
         <div className="flex items-center gap-2 shrink-0">
           <Button

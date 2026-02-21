@@ -21,18 +21,18 @@ import type { Role } from "@/lib/types";
 
 const ownerNav = [
   { href: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/app/inbox", label: "Conversations", icon: MessageSquare },
   { href: "/app/leads", label: "Leads", icon: Users },
-  { href: "/app/inbox", label: "Inbox", icon: MessageSquare },
-  { href: "/app/routing", label: "Routing", icon: GitBranch },
   { href: "/app/agents", label: "Agents", icon: UserCog },
-  { href: "/app/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/app/billing", label: "Billing", icon: CreditCard },
+  { href: "/app/routing", label: "Routing", icon: GitBranch },
+  { href: "/app/analytics", label: "Performance", icon: BarChart3 },
   { href: "/app/settings", label: "Settings", icon: Settings },
+  { href: "/app/billing", label: "Billing", icon: CreditCard },
 ];
 
 const agentNav = [
   { href: "/app/leads", label: "My Leads", icon: Users },
-  { href: "/app/inbox", label: "Inbox", icon: MessageSquare },
+  { href: "/app/inbox", label: "Conversations", icon: MessageSquare },
 ];
 
 interface SidebarProps {

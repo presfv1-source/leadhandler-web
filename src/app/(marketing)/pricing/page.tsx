@@ -10,37 +10,31 @@ import { FadeUp } from "@/components/marketing/FadeUp";
 import { SectionLabel } from "@/components/marketing/SectionLabel";
 import { CONTAINER, PAGE_PADDING } from "@/lib/ui";
 import { cn } from "@/lib/utils";
-import { PRICING_PLANS_BETA, PRICING_PLANS_STANDARD } from "@/lib/marketingContent";
+import { PRICING_PLANS_BETA } from "@/lib/marketingContent";
 
 type BillingInterval = "monthly" | "annual";
 
-/** Single source of truth: beta plans with standard price for strikethrough. */
-const PLANS = PRICING_PLANS_BETA.map((p) => {
-  const standard = PRICING_PLANS_STANDARD.find((s) => s.id === p.id);
-  return {
-    id: p.id,
-    name: p.name,
-    priceMonthly: p.price ?? 0,
-    priceAnnual: p.priceAnnual ?? 0,
-    standardPrice: standard?.price ?? 0,
-    description: p.description,
-    features: p.features,
-    featured: p.primary ?? false,
-    urgency: p.id === "pro" ? "Only 7 beta spots left" : undefined,
-  };
-});
+/** Beta plans: Starter, Growth, Enterprise. */
+const PLANS = PRICING_PLANS_BETA.map((p) => ({
+  id: p.id,
+  name: p.name,
+  price: p.price,
+  priceAnnual: p.priceAnnual ?? 0,
+  period: p.period,
+  description: p.description,
+  features: p.features,
+  featured: p.primary ?? false,
+  cta: p.cta,
+  href: p.href,
+}));
 
 const COMPARISON = [
-  { feature: "Agents", essentials: "Up to 15", pro: "Up to 40+" },
-  { feature: "Automated SMS", essentials: "✓", pro: "✓" },
-  { feature: "Round-robin routing", essentials: "✓", pro: "✓" },
-  { feature: "Shared inbox", essentials: "✓", pro: "✓" },
-  { feature: "Basic dashboard", essentials: "✓", pro: "✓" },
-  { feature: "Analytics", essentials: "—", pro: "✓" },
-  { feature: "Weighted routing", essentials: "—", pro: "✓" },
-  { feature: "Escalation", essentials: "—", pro: "✓" },
-  { feature: "Priority support", essentials: "—", pro: "✓" },
-  { feature: "Onboarding", essentials: "—", pro: "✓" },
+  { feature: "Agents", essentials: "Up to 5", pro: "Up to 15", enterprise: "Unlimited" },
+  { feature: "Shared inbox", essentials: "✓", pro: "✓", enterprise: "✓" },
+  { feature: "Round-robin routing", essentials: "✓", pro: "✓", enterprise: "✓" },
+  { feature: "All routing modes", essentials: "—", pro: "✓", enterprise: "✓" },
+  { feature: "Performance metrics", essentials: "—", pro: "✓", enterprise: "✓" },
+  { feature: "Priority support", essentials: "—", pro: "✓", enterprise: "✓" },
 ];
 
 const FAQ_ITEMS = [
@@ -157,9 +151,10 @@ export default function PricingPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mt-12">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mt-12">
                 {PLANS.map((plan) => {
-                  const price = interval === "annual" ? plan.priceAnnual : plan.priceMonthly;
+                  const isEnterprise = plan.price == null;
+                  const price = isEnterprise ? null : interval === "annual" ? plan.priceAnnual : plan.price;
                   return (
                     <div
                       key={plan.id}
@@ -170,29 +165,32 @@ export default function PricingPage() {
                     >
                       {plan.featured && (
                         <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 text-white text-xs font-semibold px-3 py-1">
-                          Most Popular
+                          Popular
                         </span>
                       )}
-                      <span className="inline-flex w-fit rounded-full bg-orange-100 px-2.5 py-1 text-xs font-sans font-medium text-orange-800 mb-4">
-                        Beta pricing
-                      </span>
+                      {!isEnterprise && (
+                        <span className="inline-flex w-fit rounded-full bg-orange-100 px-2.5 py-1 text-xs font-sans font-medium text-orange-800 mb-4">
+                          Beta pricing
+                        </span>
+                      )}
                       <h2 className="font-display font-semibold text-xl text-[#0A0A0A] mb-1">
                         {plan.name}
                       </h2>
                       <div className="flex items-baseline gap-2 mb-4 flex-wrap">
-                        <span className="font-display text-4xl font-bold text-[#0A0A0A]">
-                          ${price}
-                        </span>
-                        <span className="font-sans text-gray-500">/mo</span>
-                        {interval === "annual" && (
-                          <span className="text-sm font-sans text-gray-400">
-                            (billed annually)
-                          </span>
-                        )}
-                        {plan.standardPrice > 0 && (
-                          <span className="text-sm font-sans text-gray-400 line-through w-full">
-                            normally ${plan.standardPrice}/mo
-                          </span>
+                        {isEnterprise ? (
+                          <span className="font-display text-2xl font-bold text-[#0A0A0A]">Custom</span>
+                        ) : (
+                          <>
+                            <span className="font-display text-4xl font-bold text-[#0A0A0A]">
+                              ${price}
+                            </span>
+                            <span className="font-sans text-gray-500">/mo</span>
+                            {interval === "annual" && (
+                              <span className="text-sm font-sans text-gray-400">
+                                (billed annually)
+                              </span>
+                            )}
+                          </>
                         )}
                       </div>
                       <p className="font-sans text-gray-500 text-sm mb-6 leading-relaxed">
@@ -206,14 +204,16 @@ export default function PricingPage() {
                           </li>
                         ))}
                       </ul>
-                      {plan.urgency && (
-                        <p className="text-sm font-sans text-amber-700 mb-4">🔥 {plan.urgency}</p>
-                      )}
                       <Link
-                        href="/signup"
-                        className="inline-flex items-center justify-center rounded-full px-6 py-3 font-sans font-semibold bg-blue-600 text-white hover:bg-blue-500 min-h-[48px] w-full transition-all"
+                        href={plan.href}
+                        className={cn(
+                          "inline-flex items-center justify-center rounded-full px-6 py-3 font-sans font-semibold min-h-[48px] w-full transition-all",
+                          plan.id === "enterprise"
+                            ? "border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+                            : "bg-blue-600 text-white hover:bg-blue-500"
+                        )}
                       >
-                        Request beta access
+                        {plan.cta}
                       </Link>
                     </div>
                   );
@@ -229,13 +229,14 @@ export default function PricingPage() {
               <h2 className="font-display font-bold text-[#0A0A0A] text-2xl mb-8 text-center">
                 Feature comparison
               </h2>
-              <div className="max-w-2xl mx-auto overflow-hidden rounded-2xl border border-gray-200 bg-white">
+              <div className="max-w-3xl mx-auto overflow-x-auto overflow-hidden rounded-2xl border border-gray-200 bg-white">
                 <table className="w-full text-left font-sans text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 bg-gray-50">
                       <th className="px-4 py-3 font-semibold text-[#0A0A0A]">Feature</th>
-                      <th className="px-4 py-3 font-semibold text-[#0A0A0A]">Essentials</th>
-                      <th className="px-4 py-3 font-semibold text-[#0A0A0A]">Pro</th>
+                      <th className="px-4 py-3 font-semibold text-[#0A0A0A]">Starter</th>
+                      <th className="px-4 py-3 font-semibold text-[#0A0A0A]">Growth</th>
+                      <th className="px-4 py-3 font-semibold text-[#0A0A0A]">Enterprise</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -249,18 +250,13 @@ export default function PricingPage() {
                       >
                         <td className="px-4 py-3 text-gray-600">{row.feature}</td>
                         <td className="px-4 py-3">
-                          {row.essentials === "✓" ? (
-                            <span className="text-blue-600">✓</span>
-                          ) : (
-                            <span className="text-gray-300">—</span>
-                          )}
+                          {row.essentials === "✓" ? <span className="text-blue-600">✓</span> : <span className="text-gray-300">—</span>}
                         </td>
                         <td className="px-4 py-3">
-                          {row.pro === "✓" ? (
-                            <span className="text-blue-600">✓</span>
-                          ) : (
-                            <span className="text-gray-300">—</span>
-                          )}
+                          {row.pro === "✓" ? <span className="text-blue-600">✓</span> : <span className="text-gray-300">—</span>}
+                        </td>
+                        <td className="px-4 py-3">
+                          {row.enterprise === "✓" ? <span className="text-blue-600">✓</span> : (row.enterprise as string)}
                         </td>
                       </tr>
                     ))}

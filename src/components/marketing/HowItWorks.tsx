@@ -3,38 +3,38 @@
 const STEPS = [
   {
     num: "01 —",
-    title: "Lead texts your listing number",
-    body: "Someone sees your yard sign or listing ad and sends a text. That's the trigger — no app, no form, just a simple text message.",
+    title: "Lead texts your number",
+    body: "Someone sees your sign or ad and texts. That's the trigger.",
   },
   {
     num: "02 —",
-    title: "Instant auto-reply collects the details",
-    body: "LeadHandler responds in seconds — collecting name, intent, timeline, and budget. No agent needs to be available.",
+    title: "Instant reply collects the details",
+    body: "LeadHandler texts back in seconds — name, buying or selling, timeline, budget. No agent needed.",
   },
   {
     num: "03 —",
     title: "Routed to the right agent, tracked in one inbox",
-    body: "The conversation routes to the right agent based on your rules. Every thread is logged and visible. Nothing falls through the cracks.",
+    body: "The right agent gets the lead based on your routing rules. Every conversation is logged. You see everything.",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-24 px-4 sm:px-8 bg-[var(--off)]">
+    <section id="how-it-works" className="py-12 md:py-20 px-4 sm:px-8 bg-[var(--off)]">
       <div className="mx-auto max-w-[1100px]">
         <div className="text-center mb-12">
           <div className="mb-3.5 inline-block text-[11px] font-bold uppercase tracking-widest text-[var(--subtle)]">
             How it works
           </div>
           <h2
-            className="text-[clamp(28px,3.5vw,42px)] font-black leading-[1.08] text-[var(--ink)] mb-3.5"
+            className="text-3xl md:text-4xl font-bold leading-[1.08] text-[var(--ink)] mb-3.5"
             style={{ letterSpacing: "-1.2px" }}
           >
             Lead texts. Handler replies.
             <br />
             Agent gets the deal.
           </h2>
-          <p className="text-[15px] text-[var(--muted)] max-w-[420px] mx-auto leading-[1.65]">
+          <p className="text-base text-gray-600 max-w-[420px] mx-auto leading-relaxed">
             No downloads. No manual forwarding. One number, your rules, done in minutes.
           </p>
         </div>

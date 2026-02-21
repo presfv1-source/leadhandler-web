@@ -15,28 +15,28 @@ export function HeroSection() {
         <span className="rounded-full bg-[var(--ink)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
           Beta
         </span>
-        Texas brokerages · Limited spots open
+        Built for Texas brokerages · Beta · Setup in minutes · Limited spots
       </div>
       <h1
         id="hero-heading"
         className="text-[clamp(40px,5.8vw,72px)] font-black leading-[1.03] text-[var(--ink)] max-w-[800px] mb-5"
         style={{ letterSpacing: "-2.5px" }}
       >
-        Every text lead answered in seconds.
+        Every text lead answered in seconds — routed to the right agent.
       </h1>
-      <p className="text-base text-[var(--muted)] font-normal max-w-[460px] leading-[1.65] mb-8">
-        Leads text your listing number. LeadHandler replies instantly, collects their info, and routes the conversation to the right agent — automatically.
+      <p className="text-base text-[var(--muted)] font-normal max-w-[520px] leading-[1.65] mb-8">
+        Leads text your listing number. LeadHandler replies instantly, collects their info, and routes the conversation to the right agent — automatically. Every thread logged. Nothing falls through.
       </p>
-      <div className="flex flex-wrap justify-center gap-2.5 mb-14">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 mb-14 w-full sm:w-auto">
         <Link
-          href="#form"
-          className="inline-flex items-center rounded-[10px] bg-[var(--ink)] px-6 py-3 text-sm font-bold text-white no-underline tracking-[-0.1px] transition-all duration-[0.14s] hover:opacity-80 hover:-translate-y-px"
+          href="#beta-form"
+          className="inline-flex items-center justify-center rounded-[10px] bg-[var(--ink)] px-6 py-3 text-sm font-bold text-white no-underline tracking-[-0.1px] transition-all duration-[0.14s] hover:opacity-80 hover:-translate-y-px w-full sm:w-auto min-h-[44px]"
         >
           Request beta access
         </Link>
         <Link
           href="#how-it-works"
-          className="inline-flex items-center rounded-[10px] border-[1.5px] border-[var(--border2)] bg-[var(--white)] px-6 py-3 text-sm font-medium text-[var(--ink)] no-underline tracking-[-0.1px] transition-all duration-[0.14s] hover:border-[var(--ink)]"
+          className="inline-flex items-center justify-center rounded-[10px] border-[1.5px] border-[var(--border2)] bg-[var(--white)] px-6 py-3 text-sm font-medium text-[var(--ink)] no-underline tracking-[-0.1px] transition-all duration-[0.14s] hover:border-[var(--ink)] w-full sm:w-auto min-h-[44px]"
         >
           See how it works
         </Link>
