@@ -17,9 +17,9 @@ export function AppShell({ children, session, demoEnabled, hasBackendConnected =
   const effectiveRole = session?.effectiveRole ?? session?.role ?? "agent";
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-[#fafafa]">
       <Sidebar role={effectiveRole} />
-      <div className="flex flex-1 flex-col min-w-0 md:ml-16">
+      <div className="flex flex-1 flex-col min-w-0 md:ml-[220px]">
         <Topbar
           session={session ? { name: session.name, role: session.role, effectiveRole } : null}
           demoEnabled={demoEnabled}

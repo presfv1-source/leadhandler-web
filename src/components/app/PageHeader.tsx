@@ -29,11 +29,11 @@ export function PageHeader({
         {breadcrumbs != null && breadcrumbs.length > 0 && (
           <Breadcrumbs segments={breadcrumbs} className="mb-2" />
         )}
-        <h1 className="font-display font-bold text-2xl text-slate-900">
+        <h1 className="font-display font-bold text-2xl text-[#111111]">
           {title}
         </h1>
         {subtitle && (
-          <p className="text-slate-500 text-sm mt-1 font-sans">{subtitle}</p>
+          <p className="text-[#6a6a6a] text-sm mt-1 font-sans">{subtitle}</p>
         )}
       </div>
       {actions != null && (

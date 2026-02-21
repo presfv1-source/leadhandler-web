@@ -67,14 +67,14 @@ export function Sidebar({ role: roleProp, className }: SidebarProps) {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-3 mx-2 px-3 py-3 rounded-xl transition-colors duration-150 border-l-2",
+              "flex items-center gap-3 mx-2 px-3 py-3 rounded-xl transition-colors duration-150",
               isActive
-                ? "bg-blue-600/10 text-white border-blue-500 pl-2.5"
-                : "border-transparent text-slate-400 hover:bg-slate-800 hover:text-white"
+                ? "bg-[#f5f5f5] text-[#111111] font-semibold"
+                : "text-[#6a6a6a] hover:bg-[#f5f5f5] hover:text-[#111111]"
             )}
           >
             <Icon className="w-5 h-5 flex-shrink-0" />
-            <span className="text-sm font-medium font-sans whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-75">
+            <span className="text-sm font-medium font-sans whitespace-nowrap truncate">
               {item.label}
             </span>
           </Link>
@@ -84,28 +84,28 @@ export function Sidebar({ role: roleProp, className }: SidebarProps) {
   );
 
   const bottomSection = (
-    <div className="border-t border-slate-800 p-2 mt-auto shrink-0">
+    <div className="border-t border-[#e2e2e2] p-2 mt-auto shrink-0">
       <Link
         href="/app/account"
         className={cn(
-          "flex items-center gap-3 mx-2 px-3 py-3 rounded-xl transition-colors duration-150 border-l-2",
+          "flex items-center gap-3 mx-2 px-3 py-3 rounded-xl transition-colors duration-150",
           pathname === "/app/account" || pathname.startsWith("/app/account/")
-            ? "bg-blue-600/10 text-white border-blue-500 pl-2.5"
-            : "border-transparent text-slate-400 hover:bg-slate-800 hover:text-white"
+            ? "bg-[#f5f5f5] text-[#111111] font-semibold"
+            : "text-[#6a6a6a] hover:bg-[#f5f5f5] hover:text-[#111111]"
         )}
       >
         <UserCircle className="w-5 h-5 flex-shrink-0" />
-        <span className="text-sm font-medium font-sans whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-75">
+        <span className="text-sm font-medium font-sans whitespace-nowrap truncate">
           Account
         </span>
       </Link>
-      <div className="flex items-center gap-3 px-3 py-3 mx-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-75">
-        <div className="h-8 w-8 rounded-full bg-slate-600 flex items-center justify-center text-xs font-medium text-white flex-shrink-0">
+      <div className="flex items-center gap-3 px-3 py-3 mx-2">
+        <div className="h-8 w-8 rounded-full bg-[#f0f0f0] flex items-center justify-center text-xs font-medium text-[#111111] flex-shrink-0">
           {initials}
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-slate-300 truncate">{firstName}</p>
-          <p className="text-xs text-slate-500 font-sans">
+          <p className="text-sm font-medium text-[#111111] truncate">{firstName}</p>
+          <p className="text-xs text-[#a0a0a0] font-sans">
             {isOwnerRole ? "Owner" : "Agent"}
           </p>
         </div>
@@ -113,7 +113,7 @@ export function Sidebar({ role: roleProp, className }: SidebarProps) {
       <button
         type="button"
         onClick={() => signOut({ redirectUrl: "/login" })}
-        className="flex items-center gap-3 w-full mx-2 px-3 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-sans transition-colors opacity-0 group-hover:opacity-100"
+        className="flex items-center gap-3 w-full mx-2 px-3 py-2 rounded-lg text-[#a0a0a0] hover:bg-[#f5f5f5] hover:text-[#111111] text-sm font-sans transition-colors"
       >
         <LogOut className="w-4 h-4 flex-shrink-0" />
         <span>Sign out</span>
@@ -124,19 +124,19 @@ export function Sidebar({ role: roleProp, className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "group hidden md:flex flex-col fixed left-0 top-0 z-40 h-full w-16 hover:w-56 transition-all duration-200 ease-in-out bg-slate-900",
+        "hidden md:flex flex-col fixed left-0 top-0 z-40 h-full w-[220px] bg-white border-r border-[#e2e2e2]",
         className
       )}
     >
-      <div className="p-4 border-b border-slate-800 shrink-0">
+      <div className="p-4 border-b border-[#e2e2e2] shrink-0">
         <Link
           href={isOwnerRole ? "/app/dashboard" : "/app/leads"}
-          className="flex items-center gap-3 rounded-xl px-2 py-2 min-h-[44px] text-slate-300 hover:text-white transition-colors"
+          className="flex items-center gap-3 rounded-xl px-2 py-2 min-h-[44px] text-[#111111] transition-colors"
         >
-          <span className="font-display font-bold text-lg text-white flex-shrink-0 w-8 text-center">
+          <span className="font-display font-bold text-lg text-[#111111] flex-shrink-0 w-8 text-center">
             LH
           </span>
-          <span className="text-sm font-display font-semibold whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-75">
+          <span className="text-sm font-display font-semibold whitespace-nowrap truncate">
             LeadHandler
           </span>
         </Link>
@@ -172,8 +172,8 @@ export function SidebarNavContent({
             className={cn(
               "flex items-center gap-3 rounded-xl px-4 py-3 mx-2 transition-colors",
               isActive
-                ? "bg-blue-600/10 text-white border-l-2 border-blue-500"
-                : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                ? "bg-[#f5f5f5] text-[#111111] font-semibold"
+                : "text-[#6a6a6a] hover:bg-[#f5f5f5] hover:text-[#111111]"
             )}
           >
             <Icon className="h-5 w-5 flex-shrink-0" />
@@ -185,10 +185,10 @@ export function SidebarNavContent({
         href="/app/account"
         onClick={onLinkClick}
         className={cn(
-          "flex items-center gap-3 rounded-xl px-4 py-3 mx-2 mt-4 border-t border-slate-800 pt-4 transition-colors",
+          "flex items-center gap-3 rounded-xl px-4 py-3 mx-2 mt-4 border-t border-[#e2e2e2] pt-4 transition-colors",
           pathname === "/app/account"
-            ? "bg-blue-600/10 text-white border-l-2 border-blue-500"
-            : "text-slate-400 hover:bg-slate-800 hover:text-white"
+            ? "bg-[#f5f5f5] text-[#111111] font-semibold"
+            : "text-[#6a6a6a] hover:bg-[#f5f5f5] hover:text-[#111111]"
         )}
       >
         <UserCircle className="h-5 w-5 flex-shrink-0" />

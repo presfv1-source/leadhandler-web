@@ -130,7 +130,7 @@ export default function OnboardingPage() {
           <div
             key={s.id}
             className={`h-1 flex-1 rounded-full ${
-              s.id <= step ? "bg-blue-600" : "bg-slate-200"
+              s.id <= step ? "bg-[#111111]" : "bg-[#e2e2e2]"
             }`}
             aria-hidden
           />
@@ -140,7 +140,7 @@ export default function OnboardingPage() {
       {step === 1 && (
         <Card>
           <CardHeader>
-            <CardTitle className="font-display text-slate-900">Set up your brokerage</CardTitle>
+            <CardTitle className="font-display text-[#111111]">Set up your brokerage</CardTitle>
             <CardDescription className="font-sans">
               Your account is created. Add your brokerage details to get started.
             </CardDescription>
@@ -182,7 +182,7 @@ export default function OnboardingPage() {
             <Button
               onClick={handleStep1}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 font-sans"
+              className="bg-[#111111] hover:opacity-90 font-sans"
             >
               Continue
             </Button>
@@ -193,7 +193,7 @@ export default function OnboardingPage() {
       {step === 2 && (
         <Card>
           <CardHeader>
-            <CardTitle className="font-display text-slate-900">Add your first agent</CardTitle>
+            <CardTitle className="font-display text-[#111111]">Add your first agent</CardTitle>
             <CardDescription className="font-sans">
               Name, email, and phone. You can add more later in Agents.
             </CardDescription>
@@ -236,7 +236,7 @@ export default function OnboardingPage() {
             <Button
               onClick={handleStep2Submit}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 font-sans"
+              className="bg-[#111111] hover:opacity-90 font-sans"
             >
               Continue
             </Button>
@@ -250,7 +250,7 @@ export default function OnboardingPage() {
       {step === 3 && (
         <Card>
           <CardHeader>
-            <CardTitle className="font-display text-slate-900">Choose routing mode</CardTitle>
+            <CardTitle className="font-display text-[#111111]">Choose routing mode</CardTitle>
             <CardDescription className="font-sans">
               How leads are assigned to agents. You can change this later in Routing.
             </CardDescription>
@@ -261,30 +261,30 @@ export default function OnboardingPage() {
               onClick={() => setRoutingMode("round_robin")}
               className={`w-full rounded-xl border-2 p-4 text-left font-sans transition-colors ${
                 routingMode === "round_robin"
-                  ? "border-blue-600 bg-blue-50"
-                  : "border-slate-200 hover:border-slate-300"
+                  ? "border-[#111111] bg-[#f5f5f5]"
+                  : "border-[#e2e2e2] hover:border-[#d4d4d4]"
               }`}
             >
-              <span className="font-semibold text-slate-900">Round Robin</span>
-              <p className="text-sm text-slate-500 mt-1">Leads are distributed in rotation.</p>
+              <span className="font-semibold text-[#111111]">Round Robin</span>
+              <p className="text-sm text-[#a0a0a0] mt-1">Leads are distributed in rotation.</p>
             </button>
             <button
               type="button"
               onClick={() => setRoutingMode("manual")}
               className={`w-full rounded-xl border-2 p-4 text-left font-sans transition-colors ${
                 routingMode === "manual"
-                  ? "border-blue-600 bg-blue-50"
-                  : "border-slate-200 hover:border-slate-300"
+                  ? "border-[#111111] bg-[#f5f5f5]"
+                  : "border-[#e2e2e2] hover:border-[#d4d4d4]"
               }`}
             >
-              <span className="font-semibold text-slate-900">Manual</span>
-              <p className="text-sm text-slate-500 mt-1">You assign leads to agents yourself.</p>
+              <span className="font-semibold text-[#111111]">Manual</span>
+              <p className="text-sm text-[#a0a0a0] mt-1">You assign leads to agents yourself.</p>
             </button>
           </CardContent>
           <CardFooter>
             <Button
               onClick={handleStep3Next}
-              className="bg-blue-600 hover:bg-blue-700 font-sans"
+              className="bg-[#111111] hover:opacity-90 font-sans"
             >
               Continue
             </Button>
@@ -295,7 +295,7 @@ export default function OnboardingPage() {
       {step === 4 && (
         <Card>
           <CardHeader>
-            <CardTitle className="font-display text-slate-900">You&apos;re all set</CardTitle>
+            <CardTitle className="font-display text-[#111111]">You&apos;re all set</CardTitle>
             <CardDescription className="font-sans">
               Your SMS number will be assigned by our team — we&apos;ll email you within 24 hours. No technical setup required from you.
             </CardDescription>
@@ -304,7 +304,7 @@ export default function OnboardingPage() {
             <Button
               onClick={handleComplete}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 font-sans"
+              className="bg-[#111111] hover:opacity-90 font-sans"
             >
               Go to Dashboard →
             </Button>

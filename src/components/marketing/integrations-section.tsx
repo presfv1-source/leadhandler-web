@@ -16,11 +16,11 @@ export function IntegrationsSection() {
         <div className="text-center mb-12">
           <h2
             id="integrations-heading"
-            className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-foreground max-w-2xl mx-auto"
+            className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-[var(--ink)] max-w-2xl mx-auto"
           >
             Integrates with your favorite tools
           </h2>
-          <p className="text-muted-foreground text-base sm:text-lg mt-4 max-w-xl mx-auto">
+          <p className="text-[var(--muted)] text-base sm:text-lg mt-4 max-w-xl mx-auto">
             Connect lead sources and CRMs. One number, one inbox.
           </p>
         </div>
@@ -28,7 +28,7 @@ export function IntegrationsSection() {
           {INTEGRATIONS.map(({ name, slug }) => (
             <div
               key={slug}
-              className="flex items-center justify-center min-w-[120px] h-12 rounded-xl border bg-background px-6 text-sm font-medium text-muted-foreground transition-all duration-200 hover:border-primary/30 hover:text-foreground"
+              className="flex items-center justify-center min-w-[120px] h-12 rounded-xl border border-[var(--border)] bg-[var(--white)] px-6 text-sm font-medium text-[var(--muted)] transition-all duration-200 hover:border-[var(--border2)] hover:text-[var(--ink)]"
             >
               {name}
             </div>

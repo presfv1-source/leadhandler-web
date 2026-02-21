@@ -96,14 +96,14 @@ export function BillingPageClient() {
         🔒 You&apos;re on beta pricing. Your rate is locked as long as you stay subscribed.
       </div>
 
-      <Card className="rounded-2xl border-slate-200 shadow-sm overflow-hidden">
+      <Card className="rounded-2xl border-[#e2e2e2] overflow-hidden">
         <CardContent className="py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <Badge className="bg-blue-600 text-white font-sans">
+              <Badge className="bg-[#111111] text-white font-sans">
                 {planId === null ? "…" : planId === "free" ? "Free" : planId.charAt(0).toUpperCase() + planId.slice(1)}
               </Badge>
-              <p className="text-2xl font-display font-bold text-slate-900 mt-2">
+              <p className="text-2xl font-display font-bold text-[#111111] mt-2">
                 {planId === null
                   ? ""
                   : currentPlanFromPlans?.price != null
@@ -114,7 +114,7 @@ export function BillingPageClient() {
                         ? "Custom"
                         : "/mo"}
               </p>
-              <p className="text-sm text-slate-500 font-sans mt-1">
+              <p className="text-sm text-[#a0a0a0] font-sans mt-1">
                 Renews next billing cycle. Agents: 3/15 used (usage bar in Settings).
               </p>
             </div>
@@ -123,7 +123,7 @@ export function BillingPageClient() {
                 <Button
                   onClick={() => handleUpgrade("pro", getPriceId("pro"))}
                   disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700 font-sans"
+                  className="bg-[#111111] hover:opacity-90 font-sans"
                 >
                   Upgrade to Pro →
                 </Button>
@@ -146,13 +146,13 @@ export function BillingPageClient() {
           return (
             <Card
               key={plan.id}
-              className={`rounded-2xl border shadow-sm ${
-                PLAN_POPULAR[plan.id] ? "border-blue-500" : "border-slate-200"
+              className={`rounded-2xl border ${
+                PLAN_POPULAR[plan.id] ? "border-[#111111]" : "border-[#e2e2e2]"
               }`}
             >
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <Icon className="h-8 w-8 text-blue-600" />
+                  <Icon className="h-8 w-8 text-[#111111]" />
                   <div className="flex items-center gap-2">
                     {isCurrent && (
                       <Badge variant="secondary" className="font-sans">Current Plan</Badge>
@@ -161,24 +161,24 @@ export function BillingPageClient() {
                   </div>
                 </div>
                 <CardTitle className="font-display">{plan.name}</CardTitle>
-                <p className="text-2xl font-display font-bold text-slate-900">
+                <p className="text-2xl font-display font-bold text-[#111111]">
                   {plan.price != null ? `$${plan.price}` : "Custom"}
-                  <span className="text-base font-normal text-slate-500 font-sans">/mo</span>
+                  <span className="text-base font-normal text-[#a0a0a0] font-sans">/mo</span>
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm text-slate-500 font-sans">{plan.description}</p>
+                <p className="text-sm text-[#a0a0a0] font-sans">{plan.description}</p>
                 <ul className="space-y-2 text-sm font-sans">
                   {plan.features.slice(0, 5).map((f) => (
                     <li key={f} className="flex items-center gap-2">
-                      <Check className="h-4 w-4 shrink-0 text-blue-600" />
+                      <Check className="h-4 w-4 shrink-0 text-[#111111]" />
                       {f}
                     </li>
                   ))}
                 </ul>
                 {plan.id === "pro" && !isCurrent && (
                   <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700 font-sans"
+                    className="w-full bg-[#111111] hover:opacity-90 font-sans"
                     onClick={() => handleUpgrade(plan.id, priceId)}
                     disabled={loading}
                   >
@@ -187,7 +187,7 @@ export function BillingPageClient() {
                 )}
                 {plan.id === "essentials" && planId === "free" && (
                   <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700 font-sans"
+                    className="w-full bg-[#111111] hover:opacity-90 font-sans"
                     onClick={() => handleUpgrade(plan.id, priceId)}
                     disabled={loading}
                   >
@@ -200,15 +200,15 @@ export function BillingPageClient() {
         })}
       </div>
 
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
+      <Card className="rounded-2xl border-[#e2e2e2]">
         <CardHeader>
           <CardTitle className="font-display">Payment Method</CardTitle>
-          <p className="text-sm text-slate-500 font-sans">Card on file for subscription</p>
+          <p className="text-sm text-[#a0a0a0] font-sans">Card on file for subscription</p>
         </CardHeader>
         <CardContent>
           {hasStripe && (planId === "essentials" || planId === "pro") ? (
             <>
-              <p className="text-sm font-sans text-slate-600">
+              <p className="text-sm font-sans text-[#6a6a6a]">
                 Payment method on file. Manage in Stripe portal.
               </p>
               <Button variant="outline" onClick={handlePortal} disabled={loading} className="mt-4 font-sans">
@@ -217,9 +217,9 @@ export function BillingPageClient() {
             </>
           ) : (
             <>
-              <p className="text-sm font-sans text-slate-600">No payment method on file</p>
+              <p className="text-sm font-sans text-[#6a6a6a]">No payment method on file</p>
               {!hasStripe && (
-                <p className="text-xs text-slate-500 mt-2 font-sans">
+                <p className="text-xs text-[#a0a0a0] mt-2 font-sans">
                   Connect Stripe in Settings to manage billing.
                 </p>
               )}
@@ -228,21 +228,21 @@ export function BillingPageClient() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-slate-200 shadow-sm overflow-hidden">
+      <Card className="rounded-2xl border-[#e2e2e2] overflow-hidden">
         <CardHeader>
           <CardTitle className="font-display">Billing History</CardTitle>
-          <p className="text-sm text-slate-500 font-sans">Invoices and payments</p>
+          <p className="text-sm text-[#a0a0a0] font-sans">Invoices and payments</p>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm font-sans">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Date</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Description</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Amount</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Invoice</th>
+                <tr className="border-b border-[#f0f0f0]">
+                  <th className="text-left py-3 px-4 font-medium text-[#a0a0a0] text-xs uppercase tracking-wider">Date</th>
+                  <th className="text-left py-3 px-4 font-medium text-[#a0a0a0] text-xs uppercase tracking-wider">Description</th>
+                  <th className="text-left py-3 px-4 font-medium text-[#a0a0a0] text-xs uppercase tracking-wider">Amount</th>
+                  <th className="text-left py-3 px-4 font-medium text-[#a0a0a0] text-xs uppercase tracking-wider">Status</th>
+                  <th className="text-left py-3 px-4 font-medium text-[#a0a0a0] text-xs uppercase tracking-wider">Invoice</th>
                 </tr>
               </thead>
               <tbody>
@@ -254,17 +254,17 @@ export function BillingPageClient() {
                   { date: "Oct 19, 2025", desc: "LeadHandler Pro — Monthly", amount: "$249.00", status: "Paid" },
                   { date: "Sep 19, 2025", desc: "LeadHandler Pro — Monthly", amount: "$249.00", status: "Paid" },
                 ].map((row, i) => (
-                  <tr key={i} className="border-b border-slate-100">
-                    <td className="py-3 px-4 text-slate-600">{row.date}</td>
-                    <td className="py-3 px-4 text-slate-900">{row.desc}</td>
-                    <td className="py-3 px-4 text-slate-600">{row.amount}</td>
+                  <tr key={i} className="border-b border-[#f0f0f0]">
+                    <td className="py-3 px-4 text-[#6a6a6a]">{row.date}</td>
+                    <td className="py-3 px-4 text-[#111111]">{row.desc}</td>
+                    <td className="py-3 px-4 text-[#6a6a6a]">{row.amount}</td>
                     <td className="py-3 px-4">
                       <Badge variant="secondary" className="bg-green-100 text-green-800 font-sans">
                         {row.status}
                       </Badge>
                     </td>
                     <td className="py-3 px-4">
-                      <button type="button" className="text-blue-600 hover:underline font-sans">
+                      <button type="button" className="text-[#111111] hover:underline font-sans">
                         Download
                       </button>
                     </td>

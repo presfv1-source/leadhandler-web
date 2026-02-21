@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 export function CtaBanner() {
   return (
-    <section className="relative py-16 md:py-24 overflow-hidden bg-[#0A0F1E]">
+    <section className="relative py-16 md:py-24 overflow-hidden bg-[var(--ink)]">
       <div className={cn(CONTAINER, PAGE_PADDING)}>
         <div className="text-center max-w-2xl mx-auto">
           <h2 className="font-display font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-4 tracking-tight">
@@ -18,7 +18,7 @@ export function CtaBanner() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/signup"
-              className="inline-flex items-center justify-center rounded-full px-8 py-3.5 font-sans font-semibold bg-white text-blue-600 hover:bg-white/90 min-h-[48px] transition-all"
+              className="inline-flex items-center justify-center rounded-full px-8 py-3.5 font-sans font-semibold bg-[var(--white)] text-[var(--ink)] hover:opacity-90 min-h-[48px] transition-all"
             >
               Request beta access
             </Link>

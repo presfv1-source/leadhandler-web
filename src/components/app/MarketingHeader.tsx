@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * @deprecated Use @/components/marketing/Navbar instead.
+ * This component uses the old blue accent design. All marketing pages
+ * should import Navbar from @/components/marketing/Navbar.
+ */
+
 import Link from "next/link";
 import { Zap, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";

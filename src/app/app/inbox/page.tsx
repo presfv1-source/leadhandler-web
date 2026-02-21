@@ -198,15 +198,15 @@ export default function InboxPage() {
       <PageHeader title="Inbox" subtitle="SMS conversations with your leads" />
       <div className="flex flex-col md:flex-row flex-1 min-h-[400px] gap-0 md:gap-4 min-w-0 h-[calc(100vh-14rem)]">
       {/* Left: conversation list */}
-      <Card className="w-full md:w-80 shrink-0 flex flex-col rounded-2xl border-slate-200 shadow-sm overflow-hidden">
-        <CardHeader className="py-4 border-b border-slate-200">
+      <Card className="w-full md:w-80 shrink-0 flex flex-col rounded-2xl border-[#e2e2e2] overflow-hidden">
+        <CardHeader className="py-4 border-b border-[#e2e2e2]">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a0a0a0]" />
             <Input
               placeholder="Search conversations..."
               value={searchName}
               onChange={(e) => setSearchName(e.target.value)}
-              className="pl-9 h-10 bg-slate-50 border-slate-200 font-sans"
+              className="pl-9 h-10 bg-[#fafafa] border-[#e2e2e2] font-sans"
             />
           </div>
           <div className="flex gap-1 mt-3">
@@ -218,8 +218,8 @@ export default function InboxPage() {
                 className={cn(
                   "px-2.5 py-1.5 rounded-lg text-xs font-medium font-sans capitalize",
                   filterTab === tab
-                    ? "bg-blue-600 text-white"
-                    : "text-slate-500 hover:bg-slate-100"
+                    ? "bg-[#111111] text-white"
+                    : "text-[#6a6a6a] hover:bg-[#f5f5f5]"
                 )}
               >
                 {tab}
@@ -237,23 +237,23 @@ export default function InboxPage() {
                 type="button"
                 onClick={() => setSelectedLeadId(lead.id)}
                 className={cn(
-                  "w-full text-left px-4 py-3 min-h-[44px] flex items-center gap-3 border-b border-slate-100 last:border-0 transition-colors",
-                  isActive ? "bg-blue-50 border-l-4 border-l-blue-600" : "hover:bg-slate-50"
+                  "w-full text-left px-4 py-3 min-h-[44px] flex items-center gap-3 border-b border-[#f0f0f0] last:border-0 transition-colors",
+                  isActive ? "bg-[#f5f5f5] border-l-4 border-l-[#111111]" : "hover:bg-[#fafafa]"
                 )}
               >
-                <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-sm font-medium text-slate-600 flex-shrink-0">
+                <div className="h-10 w-10 rounded-full bg-[#e2e2e2] flex items-center justify-center text-sm font-medium text-[#6a6a6a] flex-shrink-0">
                   {initials}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={cn("font-medium truncate font-sans", isActive && "text-slate-900")}>
+                  <p className={cn("font-medium truncate font-sans", isActive && "text-[#111111]")}>
                     {lead.name}
                   </p>
-                  <p className="text-xs text-slate-500 truncate font-sans">Last message preview…</p>
+                  <p className="text-xs text-[#a0a0a0] truncate font-sans">Last message preview…</p>
                 </div>
                 {(lead.unreadCount ?? 0) > 0 && (
-                  <span className="shrink-0 h-2.5 min-w-2.5 rounded-full bg-blue-600" aria-label={`${lead.unreadCount} unread`} />
+                  <span className="shrink-0 h-2.5 min-w-2.5 rounded-full bg-[#111111]" aria-label={`${lead.unreadCount} unread`} />
                 )}
-                <div className="shrink-0 text-xs text-slate-400 font-sans">
+                <div className="shrink-0 text-xs text-[#a0a0a0] font-sans">
                   {formatRelative(new Date().toISOString())}
                 </div>
                 {lead.status && (
@@ -284,15 +284,15 @@ export default function InboxPage() {
       </Card>
 
       {/* Right: thread */}
-      <Card className="flex-1 flex flex-col min-w-0 min-h-0 rounded-2xl border-slate-200 shadow-sm overflow-hidden">
+      <Card className="flex-1 flex flex-col min-w-0 min-h-0 rounded-2xl border-[#e2e2e2] overflow-hidden">
         {selectedLeadId && selectedLead ? (
           <>
-            <CardHeader className="py-4 border-b border-slate-200 flex flex-row items-center justify-between gap-2 flex-wrap">
+            <CardHeader className="py-4 border-b border-[#e2e2e2] flex flex-row items-center justify-between gap-2 flex-wrap">
               <div className="min-w-0">
-                <h2 className="font-display font-semibold text-slate-900 truncate">
+                <h2 className="font-display font-semibold text-[#111111] truncate">
                   {selectedLead.name}
                 </h2>
-                <p className="text-sm text-slate-500 font-sans">
+                <p className="text-sm text-[#a0a0a0] font-sans">
                   {selectedLead.phone ?? ""}
                   {selectedLead.source && (
                     <StatusBadge variant="contacted" className="ml-2">
@@ -338,7 +338,7 @@ export default function InboxPage() {
                 if (isSystem) {
                   return (
                     <div key={m.id} className="flex justify-center">
-                      <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-full font-sans">
+                      <span className="text-xs text-[#a0a0a0] bg-[#f5f5f5] px-2 py-1 rounded-full font-sans">
                         System event
                       </span>
                     </div>
@@ -356,13 +356,13 @@ export default function InboxPage() {
                       className={cn(
                         "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm font-sans",
                         isOut
-                          ? "bg-blue-600 text-white"
-                          : "bg-white border border-slate-200 text-slate-900"
+                          ? "bg-[#111111] text-white"
+                          : "bg-white border border-[#e2e2e2] text-[#111111]"
                       )}
                     >
                       {m.body}
                     </div>
-                    <span className="text-xs text-slate-400 px-1 font-sans">
+                    <span className="text-xs text-[#a0a0a0] px-1 font-sans">
                       {new Date(m.createdAt).toLocaleString(undefined, {
                         month: "short",
                         day: "numeric",
@@ -374,13 +374,13 @@ export default function InboxPage() {
                 );
               })}
               {messages.length === 0 && (
-                <div className="flex items-center justify-center h-32 text-slate-500 font-sans">
+                <div className="flex items-center justify-center h-32 text-[#a0a0a0] font-sans">
                   <MessageSquare className="h-8 w-8 mr-2" />
                   No messages yet
                 </div>
               )}
             </CardContent>
-            <div className="p-4 border-t border-slate-200">
+            <div className="p-4 border-t border-[#e2e2e2]">
               {demoEnabled && (
                 <p className="text-xs text-amber-600 mb-2 font-sans" title="Demo: messages stored locally; connect Twilio for real SMS">
                   Demo: messages stored locally. Connect Twilio to send real SMS.
@@ -392,13 +392,13 @@ export default function InboxPage() {
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
                   rows={2}
-                  className="resize-none flex-1 rounded-xl border-slate-200 font-sans"
+                  className="resize-none flex-1 rounded-xl border-[#e2e2e2] font-sans"
                 />
                 <Button
                   type="submit"
                   disabled={sending || !body.trim()}
                   size="icon"
-                  className="shrink-0 min-h-[44px] min-w-[44px] bg-blue-600 hover:bg-blue-700"
+                  className="shrink-0 min-h-[44px] min-w-[44px] bg-[#111111] hover:opacity-90"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
@@ -406,7 +406,7 @@ export default function InboxPage() {
             </div>
           </>
         ) : (
-          <CardContent className="flex-1 flex items-center justify-center text-slate-500 font-sans">
+          <CardContent className="flex-1 flex items-center justify-center text-[#a0a0a0] font-sans">
             <MessageSquare className="h-12 w-12 mr-2" />
             Select a conversation
           </CardContent>

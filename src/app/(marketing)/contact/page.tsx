@@ -53,34 +53,34 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-[var(--white)]">
       <Navbar />
       <main>
-        <section className="py-12 md:py-16 bg-[#0A0F1E]">
-          <div className={cn(CONTAINER, PAGE_PADDING)}>
-            <h1 className="text-3xl md:text-4xl font-bold text-white text-center">
+        <section className="py-16 md:py-20 bg-[var(--off)]">
+          <div className={cn(CONTAINER, PAGE_PADDING, "text-center max-w-2xl mx-auto")}>
+            <SectionLabel className="mb-3">Contact</SectionLabel>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-[-0.5px] text-[var(--ink)]">
               Let&apos;s talk about your brokerage.
             </h1>
           </div>
         </section>
         <FadeUp>
-          <section className="py-16 md:py-24 bg-white">
+          <section className="py-16 md:py-24 bg-[var(--white)]">
             <div className={cn(CONTAINER, PAGE_PADDING)}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start max-w-5xl mx-auto">
                 {/* Left column */}
                 <div>
-                  <SectionLabel className="mb-3">Contact</SectionLabel>
-                  <p className="font-sans text-gray-500 text-lg leading-relaxed mb-8">
+                  <p className="font-sans text-[var(--muted)] text-lg leading-relaxed mb-8">
                     Whether you want a demo, have questions about pricing, or want to talk
                     about your specific setup — we&apos;re here. Real humans, fast replies.
                   </p>
-                  <div className="space-y-4 font-sans text-gray-600">
+                  <div className="space-y-4 font-sans text-[var(--muted)]">
                     <p className="flex items-center gap-3">
                       <span aria-hidden>📧</span>
                       Email:{" "}
                       <a
                         href="mailto:hello@leadhandler.ai"
-                        className="text-blue-600 hover:underline"
+                        className="text-[var(--ink)] hover:underline"
                       >
                         hello@leadhandler.ai
                       </a>
@@ -96,20 +96,20 @@ export default function ContactPage() {
                   </div>
                   <Link
                     href="/demo"
-                    className="mt-6 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-sans font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                    className="mt-6 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-sans font-medium bg-[var(--white)] border border-[var(--border)] text-[var(--ink)] hover:bg-[var(--off)]"
                   >
                     Or book a demo call →
                   </Link>
                 </div>
 
                 {/* Right column — form */}
-                <div className="rounded-3xl border border-gray-100 bg-white p-6 sm:p-8 shadow-2xl max-w-md lg:max-w-none mx-auto lg:mx-0">
+                <div className="rounded-3xl border border-[var(--border)] bg-[var(--white)] p-6 sm:p-8 shadow-2xl max-w-md lg:max-w-none mx-auto lg:mx-0">
                   {submitted ? (
                     <div className="text-center py-8">
-                      <p className="font-display font-semibold text-[#0A0A0A] text-xl mb-2">
+                      <p className="font-display font-semibold text-[var(--ink)] text-xl mb-2">
                         Thanks!
                       </p>
-                      <p className="font-sans text-gray-500">
+                      <p className="font-sans text-[var(--muted)]">
                         We&apos;ll be in touch within a few hours.
                       </p>
                     </div>
@@ -122,7 +122,7 @@ export default function ContactPage() {
                       <div>
                         <label
                           htmlFor="name"
-                          className="block text-sm font-sans font-medium text-gray-700 mb-1"
+                          className="block text-sm font-sans font-medium text-[var(--ink)] mb-1"
                         >
                           Full name
                         </label>
@@ -132,14 +132,14 @@ export default function ContactPage() {
                           required
                           value={form.name}
                           onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
-                          className="w-full h-11 rounded-xl border border-gray-200 px-4 py-3 font-sans text-[#0A0A0A] focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none"
+                          className="w-full h-11 rounded-xl border border-[var(--border)] px-4 py-3 font-sans text-[var(--ink)] focus:border-[var(--ink)] focus:ring-2 focus:ring-[var(--border)] outline-none"
                           placeholder="Your name"
                         />
                       </div>
                       <div>
                         <label
                           htmlFor="brokerage"
-                          className="block text-sm font-sans font-medium text-gray-700 mb-1"
+                          className="block text-sm font-sans font-medium text-[var(--ink)] mb-1"
                         >
                           Brokerage name
                         </label>
@@ -151,14 +151,14 @@ export default function ContactPage() {
                           onChange={(e) =>
                             setForm((s) => ({ ...s, brokerage: e.target.value }))
                           }
-                          className="w-full h-11 rounded-xl border border-gray-200 px-4 py-3 font-sans text-[#0A0A0A] focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none"
+                          className="w-full h-11 rounded-xl border border-[var(--border)] px-4 py-3 font-sans text-[var(--ink)] focus:border-[var(--ink)] focus:ring-2 focus:ring-[var(--border)] outline-none"
                           placeholder="Your brokerage"
                         />
                       </div>
                       <div>
                         <label
                           htmlFor="email"
-                          className="block text-sm font-sans font-medium text-gray-700 mb-1"
+                          className="block text-sm font-sans font-medium text-[var(--ink)] mb-1"
                         >
                           Email
                         </label>
@@ -168,30 +168,30 @@ export default function ContactPage() {
                           required
                           value={form.email}
                           onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
-                          className="w-full h-11 rounded-xl border border-gray-200 px-4 py-3 font-sans text-[#0A0A0A] focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none"
+                          className="w-full h-11 rounded-xl border border-[var(--border)] px-4 py-3 font-sans text-[var(--ink)] focus:border-[var(--ink)] focus:ring-2 focus:ring-[var(--border)] outline-none"
                           placeholder="you@brokerage.com"
                         />
                       </div>
                       <div>
                         <label
                           htmlFor="phone"
-                          className="block text-sm font-sans font-medium text-gray-700 mb-1"
+                          className="block text-sm font-sans font-medium text-[var(--ink)] mb-1"
                         >
-                          Phone <span className="text-gray-400">(optional)</span>
+                          Phone <span className="text-[var(--subtle)]">(optional)</span>
                         </label>
                         <input
                           id="phone"
                           type="tel"
                           value={form.phone}
                           onChange={(e) => setForm((s) => ({ ...s, phone: e.target.value }))}
-                          className="w-full h-11 rounded-xl border border-gray-200 px-4 py-3 font-sans text-[#0A0A0A] focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none"
+                          className="w-full h-11 rounded-xl border border-[var(--border)] px-4 py-3 font-sans text-[var(--ink)] focus:border-[var(--ink)] focus:ring-2 focus:ring-[var(--border)] outline-none"
                           placeholder="(555) 000-0000"
                         />
                       </div>
                       <div>
                         <label
                           htmlFor="agents"
-                          className="block text-sm font-sans font-medium text-gray-700 mb-1"
+                          className="block text-sm font-sans font-medium text-[var(--ink)] mb-1"
                         >
                           Number of agents
                         </label>
@@ -201,7 +201,7 @@ export default function ContactPage() {
                           onChange={(e) =>
                             setForm((s) => ({ ...s, agents: e.target.value }))
                           }
-                          className="w-full h-11 rounded-xl border border-gray-200 px-4 py-3 font-sans text-[#0A0A0A] focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                          className="w-full h-11 rounded-xl border border-[var(--border)] px-4 py-3 font-sans text-[var(--ink)] focus:border-[var(--ink)] focus:ring-2 focus:ring-[var(--border)] outline-none bg-[var(--white)]"
                         >
                           <option value="">Select</option>
                           {AGENTS_OPTIONS.map((opt) => (
@@ -214,7 +214,7 @@ export default function ContactPage() {
                       <div>
                         <label
                           htmlFor="message"
-                          className="block text-sm font-sans font-medium text-gray-700 mb-1"
+                          className="block text-sm font-sans font-medium text-[var(--ink)] mb-1"
                         >
                           Message
                         </label>
@@ -226,14 +226,14 @@ export default function ContactPage() {
                           onChange={(e) =>
                             setForm((s) => ({ ...s, message: e.target.value }))
                           }
-                          className="w-full h-11 min-h-[100px] rounded-xl border border-gray-200 px-4 py-3 font-sans text-[#0A0A0A] focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                          className="w-full h-11 min-h-[100px] rounded-xl border border-[var(--border)] px-4 py-3 font-sans text-[var(--ink)] focus:border-[var(--ink)] focus:ring-2 focus:ring-[var(--border)] outline-none resize-none"
                           placeholder="How can we help?"
                         />
                       </div>
                       <button
                         type="submit"
                         disabled={loading}
-                        className="w-full rounded-xl px-6 py-3 font-sans font-semibold bg-blue-600 text-white hover:bg-blue-500 min-h-[48px] disabled:opacity-70 transition-all"
+                        className="w-full rounded-xl px-6 py-3 font-sans font-semibold bg-[var(--ink)] text-white hover:opacity-90 min-h-[48px] disabled:opacity-70 transition-all"
                       >
                         {loading ? "Sending…" : "Send message →"}
                       </button>
@@ -247,32 +247,32 @@ export default function ContactPage() {
         </FadeUp>
 
         <FadeUp>
-          <section className="py-12 md:py-16 bg-[#F8FAFC] border-t border-gray-200">
+          <section className="py-12 md:py-16 bg-[var(--off)] border-t border-[var(--border)]">
             <div className={cn(CONTAINER, PAGE_PADDING)}>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
                 <div>
-                  <h3 className="font-display font-semibold text-[#0A0A0A] mb-2">
+                  <h3 className="font-display font-semibold text-[var(--ink)] mb-2">
                     How fast can I get started?
                   </h3>
-                  <p className="font-sans text-gray-500 text-sm leading-relaxed">
+                  <p className="font-sans text-[var(--muted)] text-sm leading-relaxed">
                     You can be live in under 30 minutes. We&apos;ll help you connect your
                     lead sources and set up routing.
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-display font-semibold text-[#0A0A0A] mb-2">
+                  <h3 className="font-display font-semibold text-[var(--ink)] mb-2">
                     Do you offer demos?
                   </h3>
-                  <p className="font-sans text-gray-500 text-sm leading-relaxed">
+                  <p className="font-sans text-[var(--muted)] text-sm leading-relaxed">
                     Yes. Book a call and we&apos;ll walk you through the full platform with
                     your own brokerage in mind.
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-display font-semibold text-[#0A0A0A] mb-2">
+                  <h3 className="font-display font-semibold text-[var(--ink)] mb-2">
                     How do I get beta access?
                   </h3>
-                  <p className="font-sans text-gray-500 text-sm leading-relaxed">
+                  <p className="font-sans text-[var(--muted)] text-sm leading-relaxed">
                     Request access via the signup page. We&apos;re onboarding a limited number of brokerages during beta.
                   </p>
                 </div>

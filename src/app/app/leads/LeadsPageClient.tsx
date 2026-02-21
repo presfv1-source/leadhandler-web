@@ -109,7 +109,7 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setSelectedLeadId(row.original.id); }}
-            className="font-semibold text-slate-900 hover:text-blue-600 text-left font-sans"
+            className="font-semibold text-[#111111] hover:underline text-left font-sans"
           >
             {row.original.name}
           </button>
@@ -119,7 +119,7 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
         accessorKey: "phone",
         header: "Phone",
         cell: ({ row }) => (
-          <span className="text-slate-600 font-sans">{row.original.phone ?? "—"}</span>
+          <span className="text-[#6a6a6a] font-sans">{row.original.phone ?? "—"}</span>
         ),
       },
       {
@@ -157,7 +157,7 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
               accessorKey: "assignedToName",
               header: "Assigned Agent",
               cell: ({ row }: { row: Row<Lead> }) => (
-                <span className="font-sans text-slate-600">
+                <span className="font-sans text-[#6a6a6a]">
                   {row.original.assignedToName ?? "—"}
                 </span>
               ),
@@ -167,7 +167,7 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
       {
         id: "firstReply",
         header: "First Reply",
-        cell: () => <span className="text-slate-500 font-sans text-sm">—</span>,
+        cell: () => <span className="text-[#a0a0a0] font-sans text-sm">—</span>,
       },
       {
         id: "lastActivity",
@@ -314,7 +314,7 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
               </Button>
               <Button
                 onClick={() => setNewLeadOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700 font-sans gap-2"
+                className="bg-[#111111] hover:opacity-90 font-sans gap-2"
               >
                 <Plus className="h-4 w-4" />
                 New Lead
@@ -332,12 +332,12 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
 
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a0a0a0]" />
           <Input
             placeholder="Search name or phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-white border-slate-200 font-sans"
+            className="pl-9 bg-white border-[#e2e2e2] font-sans"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -395,7 +395,7 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
         </Select>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#e2e2e2] overflow-hidden">
         <ResponsiveDataList<Lead>
           columns={columns}
           data={filteredLeads}
@@ -405,18 +405,18 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
             const l = row.original;
             const score = l.qualificationScore ?? fallbackQualificationScore(l.id);
             return (
-              <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="rounded-lg border border-[#e2e2e2] bg-white p-4">
                 <div className="flex items-start justify-between gap-2">
                   <button
                     type="button"
-                    className="font-semibold text-slate-900 hover:text-blue-600 text-left font-sans"
+                    className="font-semibold text-[#111111] hover:underline text-left font-sans"
                     onClick={(e) => { e.stopPropagation(); setSelectedLeadId(l.id); }}
                   >
                     {l.name}
                   </button>
                   <LeadStatusPill status={l.status} />
                 </div>
-                <p className="text-sm text-slate-600 font-sans mt-1">{l.phone ?? "—"}</p>
+                <p className="text-sm text-[#6a6a6a] font-sans mt-1">{l.phone ?? "—"}</p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   <StatusBadge variant="contacted">{l.source ?? "—"}</StatusBadge>
                   <span
@@ -428,10 +428,10 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
                     Score {score}
                   </span>
                   {isOwner && l.assignedToName && (
-                    <span className="text-xs text-slate-500 font-sans">{l.assignedToName}</span>
+                    <span className="text-xs text-[#a0a0a0] font-sans">{l.assignedToName}</span>
                   )}
                 </div>
-                <p className="text-xs text-slate-400 font-sans mt-2">
+                <p className="text-xs text-[#a0a0a0] font-sans mt-2">
                   {l.updatedAt ?? l.createdAt
                     ? (() => {
                         const t = l.updatedAt ?? l.createdAt!;
@@ -542,7 +542,7 @@ export function LeadsPageClient({ leads: initialLeads, agents, airtableError, de
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={newLeadSubmitting}>
+              <Button type="submit" className="bg-[#111111] hover:opacity-90" disabled={newLeadSubmitting}>
                 {newLeadSubmitting ? "Creating…" : "Create Lead"}
               </Button>
             </DialogFooter>

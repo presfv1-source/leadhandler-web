@@ -87,13 +87,13 @@ export function LeadDetailPanel({ lead, onClose, isOwner }: LeadDetailPanelProps
   return (
     <>
       <div
-        className="fixed inset-0 z-50 bg-slate-900/20"
+        className="fixed inset-0 z-50 bg-black/20"
         aria-hidden
         onClick={onClose}
       />
-      <div className="fixed right-0 top-0 z-50 h-full w-full md:w-96 bg-white shadow-2xl border-l border-slate-200 flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 shrink-0">
-          <h2 className="font-display font-semibold text-lg text-slate-900 truncate">
+      <div className="fixed right-0 top-0 z-50 h-full w-full md:w-96 bg-white shadow-2xl border-l border-[#e2e2e2] flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b border-[#e2e2e2] shrink-0">
+          <h2 className="font-display font-semibold text-lg text-[#111111] truncate">
             {lead.name}
           </h2>
           <Button
@@ -108,14 +108,14 @@ export function LeadDetailPanel({ lead, onClose, isOwner }: LeadDetailPanelProps
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           <div>
-            <p className="text-sm text-slate-600 font-sans">{lead.phone ?? "—"}</p>
+            <p className="text-sm text-[#6a6a6a] font-sans">{lead.phone ?? "—"}</p>
             <div className="flex gap-2 mt-2">
               <StatusBadge variant="contacted">{lead.source ?? "—"}</StatusBadge>
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-medium text-slate-500 font-sans uppercase tracking-wider">Status</label>
+            <label className="text-xs font-medium text-[#a0a0a0] font-sans uppercase tracking-wider">Status</label>
             <Select defaultValue={lead.status}>
               <SelectTrigger className="mt-1 font-sans">
                 <SelectValue />
@@ -132,17 +132,17 @@ export function LeadDetailPanel({ lead, onClose, isOwner }: LeadDetailPanelProps
           </div>
 
           <div>
-            <p className="text-xs font-medium text-slate-500 font-sans uppercase tracking-wider">Qualification Score</p>
-            <p className="text-2xl font-display font-bold text-slate-900 mt-1">{score}/100</p>
-            <p className="text-sm text-slate-500 mt-2 font-sans">
+            <p className="text-xs font-medium text-[#a0a0a0] font-sans uppercase tracking-wider">Qualification Score</p>
+            <p className="text-2xl font-display font-bold text-[#111111] mt-1">{score}/100</p>
+            <p className="text-sm text-[#a0a0a0] mt-2 font-sans">
               {lead.aiSummary ?? "Lead showing interest. Engaged via SMS. Budget and location documented."}
             </p>
           </div>
 
           {isOwner && (
             <div>
-              <p className="text-xs font-medium text-slate-500 font-sans uppercase tracking-wider">Assigned Agent</p>
-              <p className="font-sans text-slate-900 mt-1">{lead.assignedToName ?? "—"}</p>
+              <p className="text-xs font-medium text-[#a0a0a0] font-sans uppercase tracking-wider">Assigned Agent</p>
+              <p className="font-sans text-[#111111] mt-1">{lead.assignedToName ?? "—"}</p>
               <Button variant="outline" size="sm" className="mt-2 font-sans">
                 Reassign
               </Button>
@@ -150,7 +150,7 @@ export function LeadDetailPanel({ lead, onClose, isOwner }: LeadDetailPanelProps
           )}
 
           <div>
-            <p className="text-xs font-medium text-slate-500 font-sans uppercase tracking-wider mb-2">Conversation</p>
+            <p className="text-xs font-medium text-[#a0a0a0] font-sans uppercase tracking-wider mb-2">Conversation</p>
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {messages.map((m) => (
                 <div
@@ -158,15 +158,15 @@ export function LeadDetailPanel({ lead, onClose, isOwner }: LeadDetailPanelProps
                   className={cn(
                     "rounded-2xl px-3 py-2 text-sm font-sans max-w-[90%]",
                     m.direction === "out"
-                      ? "ml-auto bg-blue-600 text-white"
-                      : "bg-slate-100 text-slate-900"
+                      ? "ml-auto bg-[#111111] text-white"
+                      : "bg-[#f5f5f5] text-[#111111]"
                   )}
                 >
                   {m.body}
                 </div>
               ))}
               {messages.length === 0 && (
-                <p className="text-sm text-slate-400 font-sans">No messages yet.</p>
+                <p className="text-sm text-[#a0a0a0] font-sans">No messages yet.</p>
               )}
             </div>
             <form onSubmit={handleSend} className="flex gap-2 mt-3">
@@ -175,13 +175,13 @@ export function LeadDetailPanel({ lead, onClose, isOwner }: LeadDetailPanelProps
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 rows={2}
-                className="resize-none flex-1 rounded-xl border-slate-200 font-sans text-sm"
+                className="resize-none flex-1 rounded-xl border-[#e2e2e2] font-sans text-sm"
               />
               <Button
                 type="submit"
                 disabled={sending || !body.trim()}
                 size="icon"
-                className="shrink-0 min-h-[40px] min-w-[40px] bg-blue-600 hover:bg-blue-700"
+                className="shrink-0 min-h-[40px] min-w-[40px] bg-[#111111] hover:opacity-90"
                 aria-label="Send"
               >
                 <Send className="h-4 w-4" />
@@ -190,10 +190,10 @@ export function LeadDetailPanel({ lead, onClose, isOwner }: LeadDetailPanelProps
           </div>
 
           <div>
-            <p className="text-xs font-medium text-slate-500 font-sans uppercase tracking-wider mb-2">Timeline</p>
+            <p className="text-xs font-medium text-[#a0a0a0] font-sans uppercase tracking-wider mb-2">Timeline</p>
             <ul className="space-y-2 font-sans text-sm">
-              <li className="text-slate-600">Lead created — {new Date(lead.createdAt ?? "").toLocaleString()}</li>
-              <li className="text-slate-600">Assigned to {lead.assignedToName ?? "—"}</li>
+              <li className="text-[#6a6a6a]">Lead created — {new Date(lead.createdAt ?? "").toLocaleString()}</li>
+              <li className="text-[#6a6a6a]">Assigned to {lead.assignedToName ?? "—"}</li>
             </ul>
           </div>
         </div>

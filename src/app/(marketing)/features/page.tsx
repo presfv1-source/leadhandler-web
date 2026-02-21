@@ -63,20 +63,20 @@ const FEATURES = [
 
 function SmsMockup() {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-lg max-w-sm">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--white)] p-4 shadow-lg max-w-sm">
       <div className="space-y-3">
         <div className="flex justify-start">
-          <div className="rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-2 text-sm font-sans text-gray-700 max-w-[80%]">
+          <div className="rounded-2xl rounded-tl-sm bg-[var(--off)] px-4 py-2 text-sm font-sans text-[var(--ink2)] max-w-[80%]">
             Hi, I saw your listing at 123 Oak St. Is it still available?
           </div>
         </div>
         <div className="flex justify-end">
-          <div className="rounded-2xl rounded-tr-sm bg-blue-600 px-4 py-2 text-sm font-sans text-white max-w-[80%]">
+          <div className="rounded-2xl rounded-tr-sm bg-[var(--ink)] px-4 py-2 text-sm font-sans text-white max-w-[80%]">
             Are you looking to buy or sell?
           </div>
         </div>
         <div className="flex justify-start">
-          <div className="rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-2 text-sm font-sans text-gray-700 max-w-[80%]">
+          <div className="rounded-2xl rounded-tl-sm bg-[var(--off)] px-4 py-2 text-sm font-sans text-[var(--ink2)] max-w-[80%]">
             Looking to buy
           </div>
         </div>
@@ -87,35 +87,35 @@ function SmsMockup() {
 
 function RoutingMockup() {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-lg max-w-xs">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--white)] p-5 shadow-lg max-w-xs">
       <div className="flex items-center justify-between gap-2">
         {["A", "B", "C"].map((l, i) => (
           <div
             key={l}
-            className="w-12 h-12 rounded-full bg-blue-50 border-2 border-blue-200 flex items-center justify-center text-sm font-display font-bold text-blue-600"
+            className="w-12 h-12 rounded-full bg-[var(--off)] border-2 border-[var(--border)] flex items-center justify-center text-sm font-display font-bold text-[var(--ink)]"
           >
             {l}
           </div>
         ))}
       </div>
       <div className="flex justify-center mt-2">
-        <Route className="h-6 w-6 text-gray-400" aria-hidden />
+        <Route className="h-6 w-6 text-[var(--subtle)]" aria-hidden />
       </div>
-      <p className="text-center text-xs font-sans text-gray-500 mt-1">Round-robin</p>
+      <p className="text-center text-xs font-sans text-[var(--muted)] mt-1">Round-robin</p>
     </div>
   );
 }
 
 function DashboardMiniMockup() {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-lg max-w-xs">
-      <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-3 font-sans">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--white)] p-4 shadow-lg max-w-xs">
+      <p className="text-xs font-bold uppercase tracking-widest text-[var(--subtle)] mb-3 font-sans">
         Today
       </p>
       <div className="grid grid-cols-2 gap-2">
         {["24", "2.5m", "8", "68%"].map((v, i) => (
-          <div key={i} className="rounded-lg bg-gray-50 px-3 py-2">
-            <p className="text-lg font-display font-semibold text-[#0A0A0A]">{v}</p>
+          <div key={i} className="rounded-lg bg-[var(--off)] px-3 py-2">
+            <p className="text-lg font-display font-semibold text-[var(--ink)]">{v}</p>
           </div>
         ))}
       </div>
@@ -125,13 +125,13 @@ function DashboardMiniMockup() {
 
 function InboxMockup() {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white shadow-lg max-w-sm overflow-hidden">
-      <div className="border-b border-gray-200 px-4 py-2 bg-gray-50">
-        <p className="text-xs font-sans font-medium text-gray-600">Inbox</p>
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--white)] shadow-lg max-w-sm overflow-hidden">
+      <div className="border-b border-[var(--border)] px-4 py-2 bg-[var(--off)]">
+        <p className="text-xs font-sans font-medium text-[var(--muted)]">Inbox</p>
       </div>
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-[var(--border)]">
         {["James R. · Listing", "Maria S. · Direct", "David K. · Referral"].map((row) => (
-          <div key={row} className="px-4 py-3 text-sm font-sans text-[#0A0A0A]">
+          <div key={row} className="px-4 py-3 text-sm font-sans text-[var(--ink)]">
             {row}
           </div>
         ))}
@@ -142,13 +142,13 @@ function InboxMockup() {
 
 function EscalationMockup() {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-lg max-w-xs">
-      <p className="text-xs font-sans font-medium text-gray-500 mb-2">Escalation</p>
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--white)] p-4 shadow-lg max-w-xs">
+      <p className="text-xs font-sans font-medium text-[var(--muted)] mb-2">Escalation</p>
       <div className="space-y-2">
         <div className="rounded-lg bg-amber-50 px-3 py-2 text-sm font-sans text-amber-800">
           No reply in 15m → alert
         </div>
-        <div className="rounded-lg bg-gray-50 px-3 py-2 text-sm font-sans text-gray-600">
+        <div className="rounded-lg bg-[var(--off)] px-3 py-2 text-sm font-sans text-[var(--muted)]">
           Lead never sits unanswered
         </div>
       </div>
@@ -158,9 +158,9 @@ function EscalationMockup() {
 
 function SetupMockup() {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-lg max-w-xs">
-      <p className="text-xs font-sans font-medium text-gray-500 mb-2">Setup</p>
-      <div className="space-y-2 text-sm font-sans text-gray-600">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--white)] p-4 shadow-lg max-w-xs">
+      <p className="text-xs font-sans font-medium text-[var(--muted)] mb-2">Setup</p>
+      <div className="space-y-2 text-sm font-sans text-[var(--muted)]">
         <p>1. Add your number</p>
         <p>2. Set routing rules</p>
         <p>3. Go live in minutes</p>
@@ -180,47 +180,39 @@ const ILLUSTRATIONS: Record<string, React.ReactNode> = {
 
 export default function FeaturesPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-[var(--white)]">
       <Navbar />
       <main>
-        <section className="py-12 md:py-16 bg-[#0A0F1E]">
-          <div className={cn(CONTAINER, PAGE_PADDING)}>
-            <h1 className="text-3xl md:text-4xl font-bold text-white text-center">
+        <section className="py-16 md:py-20 bg-[var(--off)]">
+          <div className={cn(CONTAINER, PAGE_PADDING, "text-center max-w-2xl mx-auto")}>
+            <SectionLabel className="mb-3">Features</SectionLabel>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-[-0.5px] text-[var(--ink)]">
               Built for brokerages that can&apos;t afford to miss a lead.
             </h1>
+            <p className="mt-4 font-sans text-[var(--muted)] text-base sm:text-lg leading-relaxed mb-8">
+              Every feature is designed around one goal — making sure your leads get
+              responded to, routed, and handed to the right agent before your competition even wakes up.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button href="/signup" variant="primary">
+                Request beta access
+              </Button>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center justify-center rounded-full px-8 py-3.5 font-semibold font-sans text-base border border-[var(--border)] text-[var(--ink)] hover:bg-[var(--off)] transition-all min-h-[44px]"
+              >
+                See pricing →
+              </Link>
+            </div>
           </div>
         </section>
-        <FadeUp>
-          <section className="py-16 md:py-24 bg-white">
-            <div className={cn(CONTAINER, PAGE_PADDING)}>
-              <div className="text-center max-w-2xl mx-auto">
-                <SectionLabel className="mb-3">Features</SectionLabel>
-                <p className="font-sans text-gray-600 text-lg leading-relaxed mb-8">
-                  Every feature is designed around one goal — making sure your leads get
-                  responded to, routed, and handed to the right agent before your competition even wakes up.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button href="/signup" variant="primary">
-                    Request beta access
-                  </Button>
-                  <Link
-                    href="/pricing"
-                    className="inline-flex items-center justify-center rounded-full px-8 py-3.5 font-semibold font-sans text-base border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all min-h-[44px]"
-                  >
-                    See pricing →
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </section>
-        </FadeUp>
 
         {FEATURES.map((f, i) => (
           <FadeUp key={f.id} delay={i * 50}>
             <section
               className={cn(
                 "py-16 md:py-24",
-                i % 2 === 0 ? "bg-white" : "bg-[#F8FAFC]"
+                i % 2 === 0 ? "bg-[var(--white)]" : "bg-[var(--off)]"
               )}
             >
               <div className={cn(CONTAINER, PAGE_PADDING)}>
@@ -231,15 +223,15 @@ export default function FeaturesPage() {
                   )}
                 >
                   <div className={f.illustration === "right" ? "md:col-start-2" : ""}>
-                    <h2 className="font-display font-bold text-[#0A0A0A] text-2xl mb-4">
+                    <h2 className="font-display font-bold text-[var(--ink)] text-2xl mb-4">
                       {f.title}
                     </h2>
-                    <p className="font-sans text-gray-500 leading-relaxed mb-4">{f.copy}</p>
+                    <p className="font-sans text-[var(--muted)] leading-relaxed mb-4">{f.copy}</p>
                     <div className="flex flex-wrap gap-2">
                       {f.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="rounded-full bg-blue-50 px-3 py-1 text-xs font-sans font-medium text-blue-600"
+                          className="rounded-full bg-[var(--off)] border border-[var(--border)] px-3 py-1 text-xs font-sans font-medium text-[var(--ink)]"
                         >
                           {tag}
                         </span>

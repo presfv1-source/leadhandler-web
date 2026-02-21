@@ -131,16 +131,16 @@ export function RoutingPageContent({
       {airtableError && <AirtableErrorFallback className="mb-4" />}
 
       {/* Section 1 — Routing Mode */}
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
+      <Card className="rounded-2xl border-[#e2e2e2]">
         <CardHeader>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-display font-semibold text-slate-900">Routing Mode</h2>
-            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-sm font-medium text-blue-800 font-sans">
+            <h2 className="font-display font-semibold text-[#111111]">Routing Mode</h2>
+            <span className="rounded-full bg-[#f0f0f0] px-2.5 py-0.5 text-sm font-medium text-[#111111] font-sans">
               Active: Round Robin
             </span>
           </div>
-          <p className="text-sm text-slate-500 font-sans mt-1 flex items-center gap-1.5">
-            <Info className="h-4 w-4 text-slate-400 shrink-0" aria-hidden />
+          <p className="text-sm text-[#a0a0a0] font-sans mt-1 flex items-center gap-1.5">
+            <Info className="h-4 w-4 text-[#a0a0a0] shrink-0" aria-hidden />
             Routing logic is managed via Make.com automation.
           </p>
         </CardHeader>
@@ -152,15 +152,15 @@ export function RoutingPageContent({
               className={cn(
                 "rounded-2xl border-2 p-4 text-left transition font-sans",
                 mode === "round-robin"
-                  ? "border-blue-600 bg-blue-50"
-                  : "border-slate-200 hover:border-slate-300"
+                  ? "border-[#111111] bg-[#f5f5f5]"
+                  : "border-[#e2e2e2] hover:border-[#d4d4d4]"
               )}
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-slate-900">Round Robin</span>
-                {mode === "round-robin" && <Check className="h-5 w-5 text-blue-600" />}
+                <span className="font-medium text-[#111111]">Round Robin</span>
+                {mode === "round-robin" && <Check className="h-5 w-5 text-[#111111]" />}
               </div>
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-sm text-[#a0a0a0] mt-1">
                 Distribute leads equally across all active agents.
               </p>
             </button>
@@ -168,14 +168,14 @@ export function RoutingPageContent({
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="rounded-2xl border-2 border-slate-200 p-4 opacity-80 cursor-not-allowed relative">
+                  <div className="rounded-2xl border-2 border-[#e2e2e2] p-4 opacity-80 cursor-not-allowed relative">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-slate-700 font-sans">Weighted</span>
-                      <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 font-sans">
+                      <span className="font-medium text-[#222222] font-sans">Weighted</span>
+                      <span className="rounded bg-[#f5f5f5] px-2 py-0.5 text-xs font-medium text-[#6a6a6a] font-sans">
                         Coming soon
                       </span>
                     </div>
-                    <p className="text-sm text-slate-500 mt-1 font-sans">
+                    <p className="text-sm text-[#a0a0a0] mt-1 font-sans">
                       Assign leads based on custom agent weights.
                     </p>
                   </div>
@@ -184,14 +184,14 @@ export function RoutingPageContent({
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="rounded-2xl border-2 border-slate-200 p-4 opacity-80 cursor-not-allowed relative">
+                  <div className="rounded-2xl border-2 border-[#e2e2e2] p-4 opacity-80 cursor-not-allowed relative">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-slate-700 font-sans">Performance-based</span>
-                      <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 font-sans">
+                      <span className="font-medium text-[#222222] font-sans">Performance-based</span>
+                      <span className="rounded bg-[#f5f5f5] px-2 py-0.5 text-xs font-medium text-[#6a6a6a] font-sans">
                         Coming soon
                       </span>
                     </div>
-                    <p className="text-sm text-slate-500 mt-1 font-sans">
+                    <p className="text-sm text-[#a0a0a0] mt-1 font-sans">
                       Route to highest-performing agents automatically.
                     </p>
                   </div>
@@ -204,37 +204,37 @@ export function RoutingPageContent({
       </Card>
 
       {/* Section 2 — Agent Queue */}
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
+      <Card className="rounded-2xl border-[#e2e2e2]">
         <CardHeader>
-          <h2 className="font-display font-semibold text-slate-900">Agent Queue</h2>
+          <h2 className="font-display font-semibold text-[#111111]">Agent Queue</h2>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-slate-200">
-                  <TableHead className="w-10 font-sans text-slate-600"></TableHead>
-                  <TableHead className="font-sans text-slate-600">Agent</TableHead>
-                  <TableHead className="font-sans text-slate-600">Active</TableHead>
-                  <TableHead className="font-sans text-slate-600">Priority</TableHead>
-                  <TableHead className="font-sans text-slate-600">Leads today</TableHead>
+                <TableRow className="border-[#e2e2e2]">
+                  <TableHead className="w-10 font-sans text-[#6a6a6a]"></TableHead>
+                  <TableHead className="font-sans text-[#6a6a6a]">Agent</TableHead>
+                  <TableHead className="font-sans text-[#6a6a6a]">Active</TableHead>
+                  <TableHead className="font-sans text-[#6a6a6a]">Priority</TableHead>
+                  <TableHead className="font-sans text-[#6a6a6a]">Leads today</TableHead>
                   {isPro && (
-                    <TableHead className="font-sans text-slate-600">Weight %</TableHead>
+                    <TableHead className="font-sans text-[#6a6a6a]">Weight %</TableHead>
                   )}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {agents.map((a, idx) => (
-                  <TableRow key={a.id} className="border-slate-100">
-                    <TableCell className="text-slate-400">
+                  <TableRow key={a.id} className="border-[#f0f0f0]">
+                    <TableCell className="text-[#a0a0a0]">
                       <GripVertical className="h-4 w-4" />
                     </TableCell>
                     <TableCell className="font-medium font-sans">{a.name}</TableCell>
                     <TableCell>
                       <Switch checked={a.active} disabled />
                     </TableCell>
-                    <TableCell className="font-sans text-slate-600">{idx + 1}</TableCell>
-                    <TableCell className="font-sans text-slate-600">
+                    <TableCell className="font-sans text-[#6a6a6a]">{idx + 1}</TableCell>
+                    <TableCell className="font-sans text-[#6a6a6a]">
                       {a.metrics?.leadsAssigned ?? 0}
                     </TableCell>
                     {isPro && (
@@ -261,7 +261,7 @@ export function RoutingPageContent({
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="mt-4 bg-blue-600 hover:bg-blue-700 font-sans"
+            className="mt-4 bg-[#111111] hover:opacity-90 font-sans"
           >
             Save Changes
           </Button>
@@ -270,10 +270,10 @@ export function RoutingPageContent({
 
       {/* Section 3 — Escalation (Pro only) */}
       {isPro ? (
-        <Card className="rounded-2xl border-slate-200 shadow-sm">
+        <Card className="rounded-2xl border-[#e2e2e2]">
           <CardHeader>
-            <h2 className="font-display font-semibold text-slate-900">Escalation Rules</h2>
-            <p className="text-sm text-slate-500 font-sans mt-1">
+            <h2 className="font-display font-semibold text-[#111111]">Escalation Rules</h2>
+            <p className="text-sm text-[#a0a0a0] font-sans mt-1">
               When a lead isn&apos;t responded to in time, escalate to another agent or owner.
             </p>
           </CardHeader>
@@ -315,7 +315,7 @@ export function RoutingPageContent({
           </CardContent>
         </Card>
       ) : (
-        <div className="rounded-2xl border-2 border-dashed border-slate-200 p-8">
+        <div className="rounded-2xl border-2 border-dashed border-[#e2e2e2] p-8">
           <UpgradeCard feature="Escalation Rules" />
         </div>
       )}

@@ -158,15 +158,15 @@ export default function AccountPage() {
         subtitle="Profile, security, and preferences."
       />
 
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
+      <Card className="rounded-2xl border-[#e2e2e2]">
         <CardHeader>
           <CardTitle className="font-display">Profile</CardTitle>
-          <p className="text-sm text-slate-500 font-sans">Your name and avatar</p>
+          <p className="text-sm text-[#a0a0a0] font-sans">Your name and avatar</p>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-col sm:flex-row items-start gap-4">
             <Avatar className="h-20 w-20">
-              <AvatarFallback className="text-xl font-display font-semibold text-slate-700 bg-slate-200">
+              <AvatarFallback className="text-xl font-display font-semibold text-[#222222] bg-[#e2e2e2]">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -192,17 +192,17 @@ export default function AccountPage() {
                 id="profile-email"
                 value={session?.email ?? "—"}
                 readOnly
-                className="mt-1 bg-slate-50 font-sans"
+                className="mt-1 bg-[#fafafa] font-sans"
               />
             </div>
             <div>
               <Label className="font-sans">Phone</Label>
               <Input placeholder="+1 555 000 0000" className="mt-1 font-sans" />
             </div>
-            <p className="text-sm text-slate-500 font-sans">
-              Role: <span className="font-medium text-slate-700">{roleLabel(session?.role)}</span>
+            <p className="text-sm text-[#a0a0a0] font-sans">
+              Role: <span className="font-medium text-[#222222]">{roleLabel(session?.role)}</span>
             </p>
-            <Button onClick={handleNameSave} className="bg-blue-600 hover:bg-blue-700 font-sans">
+            <Button onClick={handleNameSave} className="bg-[#111111] hover:opacity-90 font-sans">
               Save
             </Button>
           </div>
@@ -210,10 +210,10 @@ export default function AccountPage() {
       </Card>
 
       {session?.role === "owner" && (
-        <Card className="rounded-2xl border-slate-200 shadow-sm">
+        <Card className="rounded-2xl border-[#e2e2e2]">
           <CardHeader>
             <CardTitle className="font-display">Preview as Role</CardTitle>
-            <p className="text-sm text-slate-500 font-sans">
+            <p className="text-sm text-[#a0a0a0] font-sans">
               Preview the app as Agent or Broker. You can switch back to Owner anytime.
             </p>
           </CardHeader>
@@ -249,18 +249,18 @@ export default function AccountPage() {
         </Card>
       )}
 
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
+      <Card className="rounded-2xl border-[#e2e2e2]">
         <CardHeader>
           <CardTitle className="font-display flex items-center gap-2">
-            <Bell className="h-5 w-5 text-slate-500" />
+            <Bell className="h-5 w-5 text-[#a0a0a0]" />
             Preferences
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4">
+          <div className="flex items-center justify-between rounded-xl border border-[#e2e2e2] p-4">
             <div>
               <Label htmlFor="pref-email-lead" className="font-medium font-sans">Email me when a new lead comes in</Label>
-              <p className="text-xs text-slate-500 font-sans">Agent preference</p>
+              <p className="text-xs text-[#a0a0a0] font-sans">Agent preference</p>
             </div>
             <Switch
               id="pref-email-lead"
@@ -272,7 +272,7 @@ export default function AccountPage() {
               }}
             />
           </div>
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4">
+          <div className="flex items-center justify-between rounded-xl border border-[#e2e2e2] p-4">
             <div>
               <Label htmlFor="pref-sms-hot" className="font-medium font-sans">SMS alert for hot leads</Label>
             </div>
@@ -289,31 +289,31 @@ export default function AccountPage() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
+      <Card className="rounded-2xl border-[#e2e2e2]">
         <CardHeader>
           <CardTitle className="font-display flex items-center gap-2">
-            <Shield className="h-5 w-5 text-slate-500" />
+            <Shield className="h-5 w-5 text-[#a0a0a0]" />
             Security
           </CardTitle>
-          <p className="text-sm text-slate-500 font-sans">Password and two-factor authentication</p>
+          <p className="text-sm text-[#a0a0a0] font-sans">Password and two-factor authentication</p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4">
+          <div className="flex items-center justify-between rounded-xl border border-[#e2e2e2] p-4">
             <div className="flex items-center gap-2">
-              <Lock className="h-4 w-4 text-slate-500" />
+              <Lock className="h-4 w-4 text-[#a0a0a0]" />
               <div>
                 <p className="font-medium font-sans">Change password</p>
-                <p className="text-xs text-slate-500 font-sans">Use Clerk to reset your password</p>
+                <p className="text-xs text-[#a0a0a0] font-sans">Use Clerk to reset your password</p>
               </div>
             </div>
             <Button variant="outline" size="sm" asChild className="font-sans">
               <Link href="/forgot-password">Change password</Link>
             </Button>
           </div>
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4 opacity-70">
+          <div className="flex items-center justify-between rounded-xl border border-[#e2e2e2] p-4 opacity-70">
             <div>
               <p className="font-medium font-sans">Two-factor authentication (2FA)</p>
-              <p className="text-xs text-slate-500 font-sans">Planned</p>
+              <p className="text-xs text-[#a0a0a0] font-sans">Planned</p>
             </div>
             <Switch disabled aria-label="2FA planned" />
           </div>
@@ -321,14 +321,14 @@ export default function AccountPage() {
       </Card>
 
       {session?.role === "owner" && (
-        <Card className="rounded-2xl border-slate-200 shadow-sm">
+        <Card className="rounded-2xl border-[#e2e2e2]">
           <CardHeader>
             <CardTitle className="font-display">Demo &amp; Integrations</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {demoEnabled != null && (
-              <p className="text-sm text-slate-500 font-sans">
-                Demo mode is currently <span className="font-medium text-slate-700">{demoEnabled ? "on" : "off"}</span>.
+              <p className="text-sm text-[#a0a0a0] font-sans">
+                Demo mode is currently <span className="font-medium text-[#222222]">{demoEnabled ? "on" : "off"}</span>.
               </p>
             )}
             <Button

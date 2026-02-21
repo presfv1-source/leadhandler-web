@@ -23,12 +23,12 @@ export function EmptyState({
   const actionNode =
     action != null && typeof action === "object" && "label" in action ? (
       action.href ? (
-        <Button asChild className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-sans">
+        <Button asChild className="mt-6 bg-[#111111] hover:opacity-90 text-white font-sans">
           <a href={action.href}>{action.label}</a>
         </Button>
       ) : (
         <Button
-          className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-sans"
+          className="mt-6 bg-[#111111] hover:opacity-90 text-white font-sans"
           onClick={action.onClick}
         >
           {action.label}
@@ -47,14 +47,14 @@ export function EmptyState({
       role="status"
       aria-label={title}
     >
-      <div className="mb-4 text-slate-300">
+      <div className="mb-4 text-[#a0a0a0]">
         <Icon className="h-12 w-12 shrink-0" aria-hidden />
       </div>
-      <h3 className="font-display font-semibold text-lg text-slate-700 mb-1">
+      <h3 className="font-display font-semibold text-lg text-[#222222] mb-1">
         {title}
       </h3>
       {(desc != null && desc !== "") && (
-        <p className="text-slate-400 text-sm mb-6 max-w-xs font-sans">{desc}</p>
+        <p className="text-[#a0a0a0] text-sm mb-6 max-w-xs font-sans">{desc}</p>
       )}
       {actionNode}
     </div>

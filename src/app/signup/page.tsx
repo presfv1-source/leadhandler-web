@@ -18,7 +18,7 @@ export default function SignUpPage() {
       <div
         className={cn(
           "hidden lg:flex lg:w-1/2 flex-col justify-between p-10 xl:p-16",
-          "bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500"
+          "bg-[#111111]"
         )}
       >
         <Link
@@ -60,9 +60,9 @@ export default function SignUpPage() {
           <div className="lg:hidden text-center mb-8">
             <Link
               href="/"
-              className="font-display font-bold text-xl text-[#0A0A0A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-md"
+              className="font-display font-bold text-xl text-[#0A0A0A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#111111] rounded-md"
             >
-              LeadHandler<span className="text-blue-600">.ai</span>
+              LeadHandler<span className="text-[#6a6a6a]">.ai</span>
             </Link>
           </div>
           <SignUp
@@ -76,12 +76,12 @@ export default function SignUpPage() {
                 headerTitle: "font-display font-bold text-2xl text-[#0A0A0A]",
                 headerSubtitle: "font-sans text-gray-500",
                 socialButtonsBlockButton: "rounded-xl border border-gray-200 font-sans",
-                formFieldInput: "rounded-xl border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100",
-                formButtonPrimary: "rounded-xl bg-[#2563EB] hover:opacity-90 font-sans font-semibold",
-                footerActionLink: "text-blue-600 font-sans",
+                formFieldInput: "rounded-xl border-gray-200 focus:border-[#111111] focus:ring-2 focus:ring-[#e2e2e2]",
+                formButtonPrimary: "rounded-xl bg-[#111111] hover:opacity-90 font-sans font-semibold",
+                footerActionLink: "text-[#111111] font-sans",
               },
               variables: {
-                colorPrimary: "#2563EB",
+                colorPrimary: "#111111",
                 colorText: "#0A0A0A",
                 colorTextSecondary: "#6B7280",
               },
@@ -89,15 +89,15 @@ export default function SignUpPage() {
           />
           <p className="text-center mt-6 font-sans text-sm text-gray-500">
             Already have an account?{" "}
-            <Link href="/login" className="text-blue-600 hover:underline font-medium">
+            <Link href="/login" className="text-[#111111] hover:underline font-medium">
               Sign in →
             </Link>
           </p>
           <p className="text-center mt-4 font-sans text-xs text-gray-400">
             By creating an account you agree to our{" "}
-            <Link href="/terms" className="text-blue-600 hover:underline">Terms</Link>
+            <Link href="/terms" className="text-[#111111] hover:underline">Terms</Link>
             {" "}and{" "}
-            <Link href="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>.
+            <Link href="/privacy" className="text-[#111111] hover:underline">Privacy Policy</Link>.
           </p>
         </div>
       </div>

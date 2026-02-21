@@ -61,24 +61,24 @@ function AdvancedOwnerSection({
 }: AdvancedOwnerSectionProps) {
   const [open, setOpen] = useState(false);
   return (
-    <Card className="rounded-2xl border-slate-200 shadow-sm">
+    <Card className="rounded-2xl border-[#e2e2e2]">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between p-4 text-left font-sans"
         aria-expanded={open}
       >
-        <span className="font-display font-semibold text-slate-700">Advanced (Owner Only)</span>
-        {open ? <ChevronUp className="h-5 w-5 text-slate-500" /> : <ChevronDown className="h-5 w-5 text-slate-500" />}
+        <span className="font-display font-semibold text-[#222222]">Advanced (Owner Only)</span>
+        {open ? <ChevronUp className="h-5 w-5 text-[#a0a0a0]" /> : <ChevronDown className="h-5 w-5 text-[#a0a0a0]" />}
       </button>
       {open && (
-        <CardContent className="pt-0 space-y-6 border-t border-slate-200">
+        <CardContent className="pt-0 space-y-6 border-t border-[#e2e2e2]">
           <div className="space-y-4">
-            <p className="text-sm font-display font-semibold text-slate-900">Demo mode</p>
+            <p className="text-sm font-display font-semibold text-[#111111]">Demo mode</p>
             <DemoToggle demoEnabled={demoEnabled} disabled={false} className="max-w-xs" />
           </div>
           <div className="space-y-4">
-            <p className="text-sm font-display font-semibold text-slate-900">Integration details</p>
+            <p className="text-sm font-display font-semibold text-[#111111]">Integration details</p>
             {[
               { key: "twilio", name: "Twilio (SMS)", configured: integrationStatus.twilio, detail: devToolsPhone },
               { key: "airtable", name: "Airtable", configured: integrationStatus.airtable, detail: "Base linked" },
@@ -87,22 +87,22 @@ function AdvancedOwnerSection({
               const status = int.configured ? "Connected" : "Not configured";
               const helperText = int.configured ? int.detail : INTEGRATION_OWNER_HELPER;
               return (
-                <div key={int.key} className="rounded-xl border border-slate-200 p-4">
-                  <p className="font-sans font-semibold text-slate-900">{int.name}</p>
-                  {int.configured && int.detail && <p className="text-sm text-slate-500 font-sans">{int.detail}</p>}
-                  {!int.configured && <p className="text-sm text-slate-500 font-sans">{helperText}</p>}
+                <div key={int.key} className="rounded-xl border border-[#e2e2e2] p-4">
+                  <p className="font-sans font-semibold text-[#111111]">{int.name}</p>
+                  {int.configured && int.detail && <p className="text-sm text-[#a0a0a0] font-sans">{int.detail}</p>}
+                  {!int.configured && <p className="text-sm text-[#a0a0a0] font-sans">{helperText}</p>}
                   <span className={`text-sm font-sans ${int.configured ? "text-green-600" : "text-amber-600"}`}>{status}</span>
                 </div>
               );
             })}
-            <div className="rounded-xl border border-slate-200 p-4">
+            <div className="rounded-xl border border-[#e2e2e2] p-4">
               <Label htmlFor="make-webhook-adv" className="font-sans">Make.com webhook URL</Label>
               <Input id="make-webhook-adv" placeholder="https://hook.eu1.make.com/..." className="mt-2 font-sans" readOnly />
-              <p className="text-xs text-slate-500 font-sans mt-1">{INTEGRATION_OWNER_HELPER}</p>
+              <p className="text-xs text-[#a0a0a0] font-sans mt-1">{INTEGRATION_OWNER_HELPER}</p>
             </div>
           </div>
           <div className="space-y-4">
-            <p className="text-sm font-display font-semibold text-slate-900">First message & follow-up</p>
+            <p className="text-sm font-display font-semibold text-[#111111]">First message & follow-up</p>
             <div>
               <Label htmlFor="qual-prompt-adv" className="font-sans">Qualification prompt</Label>
               <Textarea id="qual-prompt-adv" value={qualPrompt} onChange={(e) => setQualPrompt(e.target.value)} className="mt-2 font-sans" rows={3} />
@@ -116,8 +116,8 @@ function AdvancedOwnerSection({
               <Textarea id="followup-msg-adv" value={followUpMsg} onChange={(e) => setFollowUpMsg(e.target.value)} className="mt-2 font-sans" rows={2} />
             </div>
             <div className="flex gap-2">
-              <Button className="bg-blue-600 hover:bg-blue-700 font-sans">Save</Button>
-              <Button variant="ghost" className="font-sans text-slate-600">Reset to defaults</Button>
+              <Button className="bg-[#111111] hover:opacity-90 font-sans">Save</Button>
+              <Button variant="ghost" className="font-sans text-[#6a6a6a]">Reset to defaults</Button>
             </div>
           </div>
         </CardContent>
@@ -210,7 +210,7 @@ export function SettingsPageContent({
       />
 
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="flex flex-wrap h-auto gap-1 bg-slate-100 p-1 rounded-xl font-sans">
+        <TabsList className="flex flex-wrap h-auto gap-1 bg-[#f5f5f5] p-1 rounded-xl font-sans">
           <TabsTrigger value="profile" className="rounded-lg data-[state=active]:bg-white">
             Brokerage Profile
           </TabsTrigger>
@@ -232,10 +232,10 @@ export function SettingsPageContent({
         </TabsList>
 
         <TabsContent value="profile" className="mt-6">
-          <Card className="rounded-2xl border-slate-200 shadow-sm">
+          <Card className="rounded-2xl border-[#e2e2e2]">
             <CardHeader>
               <CardTitle className="font-display">Brokerage Profile</CardTitle>
-              <p className="text-sm text-slate-500 font-sans">Name, market city, timezone</p>
+              <p className="text-sm text-[#a0a0a0] font-sans">Name, market city, timezone</p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
@@ -281,7 +281,7 @@ export function SettingsPageContent({
               <Button
                 onClick={handleGeneralSave}
                 disabled={generalSaving}
-                className="bg-blue-600 hover:bg-blue-700 font-sans"
+                className="bg-[#111111] hover:opacity-90 font-sans"
               >
                 {generalSaving ? "Saving…" : "Save changes"}
               </Button>
@@ -290,38 +290,38 @@ export function SettingsPageContent({
         </TabsContent>
 
         <TabsContent value="connections" className="mt-6 space-y-4">
-          <Card className="rounded-2xl border-slate-200 shadow-sm">
+          <Card className="rounded-2xl border-[#e2e2e2]">
             <CardHeader>
               <CardTitle className="font-display">Phone & Connections</CardTitle>
-              <p className="text-sm text-slate-500 font-sans">Status of your SMS line, lead intake, and billing</p>
+              <p className="text-sm text-[#a0a0a0] font-sans">Status of your SMS line, lead intake, and billing</p>
             </CardHeader>
             <CardContent className="space-y-3">
               {connections.map((c) => (
-                <div key={c.label} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3">
-                  <span className="font-sans font-medium text-slate-900">{c.label}</span>
+                <div key={c.label} className="flex items-center justify-between rounded-xl border border-[#e2e2e2] px-4 py-3">
+                  <span className="font-sans font-medium text-[#111111]">{c.label}</span>
                   <span className={c.configured ? "text-green-600 font-sans text-sm" : "text-amber-600 font-sans text-sm"}>
                     {c.configured ? "Connected ✓" : "Not configured"}
                   </span>
                 </div>
               ))}
               {!integrationStatus.twilio && isOwner && (
-                <p className="text-xs text-slate-500 font-sans">{INTEGRATION_OWNER_HELPER}</p>
+                <p className="text-xs text-[#a0a0a0] font-sans">{INTEGRATION_OWNER_HELPER}</p>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="routing" className="mt-6">
-          <Card className="rounded-2xl border-slate-200 shadow-sm">
+          <Card className="rounded-2xl border-[#e2e2e2]">
             <CardHeader>
               <CardTitle className="font-display">Routing</CardTitle>
-              <p className="text-sm text-slate-500 font-sans">Round Robin, Manual, or Priority — plus escalation</p>
+              <p className="text-sm text-[#a0a0a0] font-sans">Round Robin, Manual, or Priority — plus escalation</p>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-600 font-sans mb-4">
+              <p className="text-sm text-[#6a6a6a] font-sans mb-4">
                 Configure routing mode and escalation in the Routing page.
               </p>
-              <Button asChild className="bg-blue-600 hover:bg-blue-700 font-sans">
+              <Button asChild className="bg-[#111111] hover:opacity-90 font-sans">
                 <a href="/app/routing">Open Routing</a>
               </Button>
             </CardContent>
@@ -329,10 +329,10 @@ export function SettingsPageContent({
         </TabsContent>
 
         <TabsContent value="notifications" className="mt-6">
-          <Card className="rounded-2xl border-slate-200 shadow-sm">
+          <Card className="rounded-2xl border-[#e2e2e2]">
             <CardHeader>
               <CardTitle className="font-display">Notifications</CardTitle>
-              <p className="text-sm text-slate-500 font-sans">Agent alert preferences — email and SMS</p>
+              <p className="text-sm text-[#a0a0a0] font-sans">Agent alert preferences — email and SMS</p>
             </CardHeader>
             <CardContent className="space-y-4">
               {[
@@ -341,30 +341,30 @@ export function SettingsPageContent({
                 { id: "daily", label: "Daily digest email", desc: "Summary of activity each day", state: dailyDigest, set: setDailyDigest },
                 { id: "weekly", label: "Weekly report", desc: "Weekly performance summary", state: weeklyReport, set: setWeeklyReport },
               ].map((item) => (
-                <div key={item.id} className="flex items-center justify-between rounded-xl border border-slate-200 p-4">
+                <div key={item.id} className="flex items-center justify-between rounded-xl border border-[#e2e2e2] p-4">
                   <div>
                     <Label htmlFor={item.id} className="font-medium font-sans">{item.label}</Label>
-                    <p className="text-xs text-slate-500 font-sans">{item.desc}</p>
+                    <p className="text-xs text-[#a0a0a0] font-sans">{item.desc}</p>
                   </div>
                   <Switch id={item.id} checked={item.state} onCheckedChange={item.set} />
                 </div>
               ))}
-              <Button className="bg-blue-600 hover:bg-blue-700 font-sans">Save</Button>
+              <Button className="bg-[#111111] hover:opacity-90 font-sans">Save</Button>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="billing" className="mt-6">
-          <Card className="rounded-2xl border-slate-200 shadow-sm">
+          <Card className="rounded-2xl border-[#e2e2e2]">
             <CardHeader>
               <CardTitle className="font-display">Billing</CardTitle>
-              <p className="text-sm text-slate-500 font-sans">Plan, renewal date, and subscription</p>
+              <p className="text-sm text-[#a0a0a0] font-sans">Plan, renewal date, and subscription</p>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-600 font-sans mb-4">
+              <p className="text-sm text-[#6a6a6a] font-sans mb-4">
                 View your plan and manage your subscription in Billing.
               </p>
-              <Button asChild className="bg-blue-600 hover:bg-blue-700 font-sans">
+              <Button asChild className="bg-[#111111] hover:opacity-90 font-sans">
                 <a href="/app/billing">Manage subscription</a>
               </Button>
             </CardContent>
@@ -378,13 +378,13 @@ export function SettingsPageContent({
                 <AlertTriangle className="h-5 w-5" />
                 Danger Zone
               </CardTitle>
-              <p className="text-sm text-slate-500 font-sans">Reset demo data or contact support for account changes.</p>
+              <p className="text-sm text-[#a0a0a0] font-sans">Reset demo data or contact support for account changes.</p>
             </CardHeader>
             <CardContent className="space-y-4">
               {isOwner && (
                 <div className="rounded-xl border border-red-200 bg-red-50/50 p-4 space-y-2">
-                  <Label className="font-sans font-medium text-slate-900">Reset Demo Data</Label>
-                  <p className="text-sm text-slate-600 font-sans">
+                  <Label className="font-sans font-medium text-[#111111]">Reset Demo Data</Label>
+                  <p className="text-sm text-[#6a6a6a] font-sans">
                     Clear demo mode state and reset to default. Use this to start a fresh demo experience.
                   </p>
                   <Button
@@ -416,7 +416,7 @@ export function SettingsPageContent({
                   </Button>
                 </div>
               )}
-              <p className="text-sm text-slate-600 font-sans">
+              <p className="text-sm text-[#6a6a6a] font-sans">
                 To delete your account, contact support.
               </p>
             </CardContent>

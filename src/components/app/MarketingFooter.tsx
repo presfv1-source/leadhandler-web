@@ -1,3 +1,9 @@
+/**
+ * @deprecated Use @/components/marketing/Footer instead.
+ * This component uses the old design. All marketing pages
+ * should import Footer from @/components/marketing/Footer.
+ */
+
 import Link from "next/link";
 import { Zap } from "lucide-react";
 import { CONTAINER, PAGE_PADDING } from "@/lib/ui";

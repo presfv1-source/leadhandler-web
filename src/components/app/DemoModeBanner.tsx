@@ -10,7 +10,7 @@ export function DemoModeBanner({ demoEnabled }: DemoModeBannerProps) {
 
   return (
     <span
-      className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 font-sans shrink-0"
+      className="inline-flex items-center rounded-md bg-[#f5f5f5] px-2 py-1 text-xs font-medium text-[#6a6a6a] font-sans shrink-0"
       role="status"
       aria-label="Demo mode — sample data"
     >

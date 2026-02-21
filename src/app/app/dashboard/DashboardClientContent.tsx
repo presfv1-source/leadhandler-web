@@ -1,11 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/app/PageHeader";
 import { StatCard } from "@/components/app/StatCard";
 import { AirtableErrorFallback } from "@/components/app/AirtableErrorFallback";
 import { StatusBadge } from "@/components/app/Badge";
-import { useUser } from "@/hooks/useUser";
 import {
   UserPlus,
   Clock,
@@ -13,11 +13,20 @@ import {
   Zap,
   Users,
   LayoutGrid,
-  Route,
-  Download,
-  Lock,
+  BarChart3,
+  MoreHorizontal,
+  ChevronRight,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 import type { ActivityItem, Agent, Lead } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -54,6 +63,7 @@ interface DashboardClientContentProps {
     activeLeads: number;
   };
   recentLeads: Lead[];
+  leadsByDay: { date: string; label: string; leads: number }[];
   activity: ActivityItem[];
   agents: Agent[];
   airtableError: boolean;
@@ -66,16 +76,24 @@ export function DashboardClientContent({
   firstName,
   stats,
   recentLeads,
+  leadsByDay,
   activity,
   agents,
   airtableError,
   demoEnabled,
 }: DashboardClientContentProps) {
-  const { isPro } = useUser();
+  const [leadSearch, setLeadSearch] = useState("");
   const greeting = isOwner ? "Good morning" : "Welcome back";
   const subtext = isOwner
     ? "Here's what's happening at your brokerage today."
     : "Here are your assigned leads.";
+
+  const filteredLeads = leadSearch.trim()
+    ? recentLeads.filter((l) =>
+        l.name.toLowerCase().includes(leadSearch.trim().toLowerCase())
+      )
+    : recentLeads;
+  const displayLeads = isOwner ? filteredLeads.slice(0, 8) : filteredLeads;
 
   return (
     <div className="min-w-0 space-y-6 sm:space-y-8">
@@ -86,32 +104,42 @@ export function DashboardClientContent({
 
       {isOwner && airtableError && <AirtableErrorFallback className="mb-4" />}
 
-      {/* Row 1 — StatCards: 2-col mobile, 4-col desktop */}
+      {/* Row 1 — StatCards with sparklines and trends */}
       {isOwner ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="New Leads Today"
             value={stats.leadsToday}
             icon={UserPlus}
-            iconBg="bg-blue-100"
+            trend={{ value: "+12%", direction: "up" }}
+            sparklineData={[2, 4, 3, 6, 5, 8, stats.leadsToday || 3]}
           />
           <StatCard
             title="Avg First Reply"
             value={stats.avgResponseTime}
             icon={Clock}
-            iconBg="bg-green-100"
+            trend={{ value: "-18%", direction: "up" }}
+            sparklineData={[15, 12, 14, 10, 8, 9, 8]}
           />
           <StatCard
             title="Active Conversations"
             value={stats.activeLeads}
             icon={MessageSquare}
-            iconBg="bg-violet-100"
+            trend={{
+              value: `${stats.activeLeads > 0 ? "+" : ""}${stats.activeLeads}`,
+              direction: stats.activeLeads > 0 ? "up" : "down",
+            }}
+            sparklineData={[3, 5, 4, 7, 6, 8, stats.activeLeads || 2]}
           />
           <StatCard
             title="Qualification Rate"
             value={`${stats.qualifiedRate}%`}
             icon={Zap}
-            iconBg="bg-orange-100"
+            trend={{
+              value: `${stats.qualifiedRate}%`,
+              direction: stats.qualifiedRate >= 50 ? "up" : "down",
+            }}
+            sparklineData={[40, 45, 42, 50, 48, 52, stats.qualifiedRate || 45]}
           />
         </div>
       ) : (
@@ -120,202 +148,202 @@ export function DashboardClientContent({
             title="My Leads"
             value={recentLeads.length}
             icon={Users}
-            iconBg="bg-blue-100"
+            trend={{ value: `${recentLeads.length}`, direction: "up" }}
+            sparklineData={[2, 3, 2, 4, 3, 5, recentLeads.length || 2]}
           />
           <StatCard
             title="Avg Response Time"
             value={stats.avgResponseTime}
             icon={Clock}
-            iconBg="bg-green-100"
+            trend={{ value: "-18%", direction: "up" }}
+            sparklineData={[15, 12, 14, 10, 8, 9, 8]}
           />
           <StatCard
             title="Appointments This Week"
             value={stats.appointments}
             icon={LayoutGrid}
-            iconBg="bg-violet-100"
+            trend={{ value: `${stats.appointments}`, direction: "up" }}
+            sparklineData={[1, 2, 1, 3, 2, 4, stats.appointments || 2]}
           />
         </div>
       )}
 
-      {/* Row 2 — Owner: Recent Leads + Activity (stack full-width on mobile). Agent: full-width leads table */}
-      {isOwner ? (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <div className="w-full lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-              <h2 className="font-display font-semibold text-slate-900">Recent Leads</h2>
-              <Button variant="ghost" size="sm" asChild className="text-blue-600 font-sans">
-                <Link href="/app/leads">View all →</Link>
-              </Button>
+      {/* Row 2 — Owner: Lead Activity chart + Recent Activity. Agent: skip (go to table) */}
+      {isOwner && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-white rounded-2xl border border-[#e2e2e2] p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-[#6a6a6a]" />
+                <h2 className="font-semibold text-[#111111]">Lead Activity</h2>
+              </div>
+              <button
+                type="button"
+                className="text-[#a0a0a0] hover:text-[#111111]"
+                aria-label="More options"
+              >
+                <MoreHorizontal className="h-5 w-5" />
+              </button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm font-sans">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50">
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Name</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Source</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Agent</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentLeads.slice(0, 10).map((l) => (
-                    <tr key={l.id} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="py-3 px-4">
-                        <Link
-                          href={`/app/leads?leadId=${l.id}`}
-                          className="font-medium text-slate-900 hover:text-blue-600"
-                        >
-                          {l.name}
-                        </Link>
-                      </td>
-                      <td className="py-3 px-4 text-slate-600">{l.source}</td>
-                      <td className="py-3 px-4">
-                        <StatusBadge variant={statusToVariant(l.status)}>{l.status}</StatusBadge>
-                      </td>
-                      <td className="py-3 px-4 text-slate-600">{l.assignedToName ?? "—"}</td>
-                      <td className="py-3 px-4 text-slate-500">{formatTime(l.createdAt ?? "")}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="h-48">
+              {leadsByDay.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={leadsByDay} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 12, fill: "#a0a0a0" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: "#a0a0a0" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Bar dataKey="leads" fill="#111111" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-[#a0a0a0] text-sm">
+                  No data
+                </div>
+              )}
             </div>
           </div>
-          <div className="w-full lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h2 className="font-display font-semibold text-slate-900">Recent Activity</h2>
+
+          <div className="bg-white rounded-2xl border border-[#e2e2e2] p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-[#6a6a6a]" />
+                <h2 className="font-semibold text-[#111111]">Recent Activity</h2>
+              </div>
+              <button
+                type="button"
+                className="text-[#a0a0a0] hover:text-[#111111]"
+                aria-label="More options"
+              >
+                <MoreHorizontal className="h-5 w-5" />
+              </button>
             </div>
-            <div className="p-4 space-y-3 max-h-[320px] overflow-y-auto">
-              {activity.slice(0, 15).map((a) => (
-                <div key={a.id} className="flex gap-3">
-                  <div
-                    className={cn(
-                      "h-2 w-2 rounded-full mt-1.5 shrink-0",
-                      a.type === "lead_created" && "bg-blue-500",
-                      a.type === "message_sent" && "bg-green-500",
-                      a.type === "message_received" && "bg-slate-400",
-                      a.type === "status_changed" && "bg-amber-500",
-                      a.type === "lead_assigned" && "bg-violet-500"
-                    )}
-                  />
-                  <div className="min-w-0">
-                    <p className="text-sm text-slate-900 font-sans">{a.title}</p>
-                    {a.description && (
-                      <p className="text-xs text-slate-500 truncate">{a.description}</p>
-                    )}
-                    <p className="text-xs text-slate-400 mt-0.5">{formatTime(a.createdAt)}</p>
+            <div className="space-y-0 divide-y divide-[#f0f0f0]">
+              {activity.slice(0, 5).map((a) => (
+                <div key={a.id} className="flex items-center gap-4 py-3">
+                  <div className="h-10 w-10 rounded-xl bg-[#f5f5f5] flex items-center justify-center shrink-0">
+                    <span className="text-[10px] leading-tight text-center text-[#6a6a6a] font-medium">
+                      {new Date(a.createdAt).toLocaleDateString(undefined, { month: "short" })}
+                      <br />
+                      {new Date(a.createdAt).getDate()}
+                    </span>
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[#111111] truncate">{a.title}</p>
+                    {a.description && (
+                      <p className="text-xs text-[#a0a0a0] truncate">{a.description}</p>
+                    )}
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-[#d4d4d4] shrink-0" />
                 </div>
               ))}
             </div>
           </div>
         </div>
-      ) : (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200">
-            <h2 className="font-display font-semibold text-slate-900">My Assigned Leads</h2>
+      )}
+
+      {/* Row 3 — Full-width Recent Leads / My Assigned Leads table */}
+      <div className="bg-white rounded-2xl border border-[#e2e2e2] overflow-hidden">
+        <div className="px-6 py-4 flex items-center justify-between border-b border-[#f0f0f0]">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-[#6a6a6a]" />
+            <h2 className="font-semibold text-[#111111]">
+              {isOwner ? "Recent Leads" : "My Assigned Leads"}
+            </h2>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm font-sans">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Name</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Source</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Last Activity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentLeads.map((l) => (
-                  <tr key={l.id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="py-3 px-4">
+          <div className="flex items-center gap-3">
+            {isOwner && (
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a0a0a0]" />
+                <input
+                  type="text"
+                  placeholder="Search"
+                  value={leadSearch}
+                  onChange={(e) => setLeadSearch(e.target.value)}
+                  className="pl-9 pr-3 py-1.5 text-sm border border-[#e2e2e2] rounded-lg bg-white placeholder:text-[#a0a0a0] focus:outline-none focus:border-[#111111] w-48"
+                />
+              </div>
+            )}
+            <Button variant="ghost" size="sm" asChild className="text-[#111111] font-medium">
+              <Link href="/app/leads">View all →</Link>
+            </Button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#f0f0f0]">
+                <th className="text-left py-3 px-6 font-medium text-[#a0a0a0] text-xs uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="text-left py-3 px-4 font-medium text-[#a0a0a0] text-xs uppercase tracking-wider">
+                  Source
+                </th>
+                <th className="text-left py-3 px-4 font-medium text-[#a0a0a0] text-xs uppercase tracking-wider">
+                  Status
+                </th>
+                {isOwner && (
+                  <th className="text-left py-3 px-4 font-medium text-[#a0a0a0] text-xs uppercase tracking-wider">
+                    Agent
+                  </th>
+                )}
+                <th className="text-left py-3 px-4 font-medium text-[#a0a0a0] text-xs uppercase tracking-wider">
+                  {isOwner ? "Time" : "Last Activity"}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayLeads.map((l) => {
+                const initials = l.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase();
+                return (
+                  <tr
+                    key={l.id}
+                    className="border-b border-[#f5f5f5] hover:bg-[#fafafa] transition-colors"
+                  >
+                    <td className="py-3 px-6">
                       <Link
                         href={`/app/leads?leadId=${l.id}`}
-                        className="font-medium text-slate-900 hover:text-blue-600"
+                        className="flex items-center gap-3"
                       >
-                        {l.name}
+                        <div className="h-8 w-8 rounded-full bg-[#f0f0f0] flex items-center justify-center text-xs font-medium text-[#6a6a6a]">
+                          {initials}
+                        </div>
+                        <span className="font-medium text-[#111111]">{l.name}</span>
                       </Link>
                     </td>
-                    <td className="py-3 px-4 text-slate-600">{l.source}</td>
+                    <td className="py-3 px-4 text-[#6a6a6a]">{l.source}</td>
                     <td className="py-3 px-4">
                       <StatusBadge variant={statusToVariant(l.status)}>{l.status}</StatusBadge>
                     </td>
-                    <td className="py-3 px-4 text-slate-500">{formatTime(l.updatedAt ?? l.createdAt ?? "")}</td>
+                    {isOwner && (
+                      <td className="py-3 px-4 text-[#6a6a6a]">{l.assignedToName ?? "—"}</td>
+                    )}
+                    <td className="py-3 px-4 text-[#a0a0a0]">
+                      {formatTime(
+                        isOwner ? (l.createdAt ?? "") : (l.updatedAt ?? l.createdAt ?? "")
+                      )}
+                    </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      )}
-
-      {/* Row 3 — Owner only: Agent Performance + Quick Actions (full-width on mobile) */}
-      {isOwner && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="w-full lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h2 className="font-display font-semibold text-slate-900">Agent Performance</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm font-sans">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50">
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Agent</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Leads assigned</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Avg response</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Appointments</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {agents.slice(0, 5).map((a) => (
-                    <tr key={a.id} className="border-b border-slate-100">
-                      <td className="py-3 px-4 font-medium text-slate-900">{a.name}</td>
-                      <td className="py-3 px-4 text-slate-600">{a.metrics?.leadsAssigned ?? 0}</td>
-                      <td className="py-3 px-4 text-slate-600">{stats.avgResponseTime}</td>
-                      <td className="py-3 px-4 text-slate-600">{a.metrics?.appointmentsSet ?? 0}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-            <h2 className="font-display font-semibold text-slate-900 mb-4">Quick Actions</h2>
-            <div className="space-y-3">
-              <Button asChild className="w-full justify-start font-sans" variant="outline">
-                <Link href="/app/agents" className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Add Agent
-                </Link>
-              </Button>
-              <Button asChild className="w-full justify-start font-sans" variant="outline">
-                <Link href="/app/routing" className="flex items-center gap-2">
-                  <Route className="h-4 w-4" />
-                  View Routing
-                </Link>
-              </Button>
-              {isPro ? (
-                <Button asChild className="w-full justify-start font-sans" variant="outline">
-                  <Link href="/app/analytics" className="flex items-center gap-2">
-                    <Download className="h-4 w-4" />
-                    Download Report
-                  </Link>
-                </Button>
-              ) : (
-                <Button
-                  disabled
-                  className="w-full justify-start font-sans"
-                  variant="outline"
-                  title="Pro feature"
-                >
-                  <Lock className="h-4 w-4 mr-2" />
-                  Download Report
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

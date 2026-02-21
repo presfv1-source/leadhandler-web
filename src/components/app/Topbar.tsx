@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
 import { Bell, LogOut, User, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,26 +28,6 @@ function viewAsLabel(r: Role) {
   return r === "owner" ? "Owner" : r === "broker" ? "Broker" : "Agent";
 }
 
-const PATH_TITLES: Record<string, string> = {
-  "/app/dashboard": "Dashboard",
-  "/app/leads": "Leads",
-  "/app/inbox": "Conversations",
-  "/app/routing": "Lead Routing",
-  "/app/agents": "Agents",
-  "/app/analytics": "Performance",
-  "/app/billing": "Billing & Plan",
-  "/app/settings": "Settings",
-  "/app/account": "Account",
-};
-
-function getPageTitle(pathname: string): string {
-  if (PATH_TITLES[pathname]) return PATH_TITLES[pathname];
-  for (const [path, title] of Object.entries(PATH_TITLES)) {
-    if (pathname.startsWith(path + "/")) return title;
-  }
-  return "App";
-}
-
 interface TopbarProps {
   session: { name?: string; role: Role; effectiveRole?: Role } | null;
   demoEnabled: boolean;
@@ -62,7 +42,6 @@ export function Topbar({
   className,
 }: TopbarProps) {
   const router = useRouter();
-  const pathname = usePathname();
   const { signOut } = useClerk();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -94,13 +73,11 @@ export function Topbar({
     .toUpperCase()
     .slice(0, 2) || "U";
 
-  const pageTitle = getPageTitle(pathname);
-
   return (
     <>
       <header
         className={cn(
-          "sticky top-0 z-30 flex h-[60px] items-center gap-4 border-b border-slate-200 bg-white px-4 shrink-0",
+          "sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-[#e2e2e2] bg-white px-4 shrink-0",
           className
         )}
       >
@@ -110,7 +87,7 @@ export function Topbar({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 min-h-[44px] min-w-[44px] text-slate-600"
+                className="h-10 w-10 min-h-[44px] min-w-[44px] text-[#6a6a6a]"
                 aria-label="Open menu"
               >
                 <Menu className="h-5 w-5" />
@@ -118,10 +95,10 @@ export function Topbar({
             </SheetTrigger>
             <SheetContent
               side="left"
-              className="w-72 max-w-[calc(100vw-2rem)] bg-slate-900 border-slate-800 p-0"
+              className="w-72 max-w-[calc(100vw-2rem)] bg-white border-[#e2e2e2] p-0"
             >
-              <div className="p-4 border-b border-slate-800">
-                <span className="font-display font-semibold text-white">
+              <div className="p-4 border-b border-[#e2e2e2]">
+                <span className="font-display font-semibold text-[#111111]">
                   LeadHandler
                 </span>
               </div>
@@ -131,9 +108,6 @@ export function Topbar({
               />
             </SheetContent>
           </Sheet>
-          <h1 className="font-display font-semibold text-lg text-slate-900 truncate">
-            {pageTitle}
-          </h1>
           <DemoModeBanner demoEnabled={demoEnabled} />
         </div>
 
@@ -141,7 +115,7 @@ export function Topbar({
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 text-slate-600 hover:text-slate-900"
+            className="h-10 w-10 text-[#a0a0a0] hover:text-[#111111]"
             aria-label="Notifications"
           >
             <Bell className="h-5 w-5" />
@@ -153,7 +127,7 @@ export function Topbar({
                 className="relative h-10 w-10 rounded-full min-h-[44px] min-w-[44px] md:h-9 md:w-9 md:min-h-0 md:min-w-0"
               >
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-slate-200 text-slate-700 font-sans">
+                  <AvatarFallback className="bg-[#f0f0f0] text-[#111111] font-sans">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -162,8 +136,8 @@ export function Topbar({
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col font-sans">
-                  <span className="text-slate-900">{displayName}</span>
-                  <span className="text-xs font-normal text-slate-500">
+                  <span className="text-[#111111]">{displayName}</span>
+                  <span className="text-xs font-normal text-[#a0a0a0]">
                     Viewing as {roleLabel}
                     {demoEnabled && " (Demo)"}
                   </span>
@@ -172,7 +146,7 @@ export function Topbar({
               {realRole === "owner" && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs font-normal text-slate-500">
+                  <DropdownMenuLabel className="text-xs font-normal text-[#a0a0a0]">
                     View as
                   </DropdownMenuLabel>
                   {ROLES.map((r) => (
@@ -183,7 +157,7 @@ export function Topbar({
                     >
                       {viewAsLabel(r)}
                       {effectiveRole === r && (
-                        <span className="ml-auto text-xs text-blue-600">✓</span>
+                        <span className="ml-auto text-xs text-[#111111]">✓</span>
                       )}
                     </DropdownMenuItem>
                   ))}

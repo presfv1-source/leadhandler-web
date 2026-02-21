@@ -21,10 +21,10 @@ export function Button({
   onClick?: () => void;
 }) {
   const base =
-    "inline-flex items-center justify-center rounded-full px-8 py-3.5 font-semibold font-sans text-base transition-all min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2";
+    "inline-flex items-center justify-center rounded-full px-8 py-3.5 font-semibold font-sans text-base transition-all min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ink)] focus-visible:ring-offset-2";
   const styles = {
     primary:
-      "bg-blue-600 text-white hover:bg-blue-500",
+      "bg-[var(--ink)] text-white hover:opacity-90",
     ghost:
       "border border-slate-600 text-slate-300 hover:border-slate-400 bg-transparent",
   };

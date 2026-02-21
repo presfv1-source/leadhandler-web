@@ -76,20 +76,20 @@ function FaqItem({
   onToggle: () => void;
 }) {
   return (
-    <div className="border-b border-gray-200 last:border-0">
+    <div className="border-b border-[var(--border)] last:border-0">
       <button
         type="button"
         onClick={onToggle}
         className="flex w-full items-center justify-between gap-4 py-4 text-left font-sans"
       >
-        <span className="font-medium text-[#0A0A0A]">{question}</span>
+        <span className="font-medium text-[var(--ink)]">{question}</span>
         <ChevronDown
-          className={cn("h-5 w-5 shrink-0 text-gray-500 transition-transform", open && "rotate-180")}
+          className={cn("h-5 w-5 shrink-0 text-[var(--muted)] transition-transform", open && "rotate-180 text-[var(--ink)]")}
           aria-hidden
         />
       </button>
       {open && (
-        <p className="pb-4 font-sans text-gray-500 text-sm leading-relaxed pr-8">{answer}</p>
+        <p className="pb-4 font-sans text-[var(--muted)] text-sm leading-relaxed pr-8">{answer}</p>
       )}
     </div>
   );
@@ -100,57 +100,54 @@ export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-[var(--white)]">
       <Navbar />
       <main>
-        <section className="py-12 md:py-16 bg-[#0A0F1E]">
-          <div className={cn(CONTAINER, PAGE_PADDING)}>
-            <h1 className="text-3xl md:text-4xl font-bold text-white text-center">
+        <section className="py-16 md:py-20 bg-[var(--off)]">
+          <div className={cn(CONTAINER, PAGE_PADDING, "text-center max-w-2xl mx-auto")}>
+            <SectionLabel className="mb-3">Pricing</SectionLabel>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-[-0.5px] text-[var(--ink)]">
               Simple beta pricing.
             </h1>
+            <p className="mt-4 text-[var(--muted)] text-base sm:text-lg leading-relaxed">
+              Beta pricing — locked for early members.
+            </p>
+            <div className="flex justify-center items-center gap-3 mt-8">
+              <div className="inline-flex rounded-xl border border-[var(--border)] bg-[var(--off2)] p-1">
+                <button
+                  type="button"
+                  onClick={() => setInterval("monthly")}
+                  className={cn(
+                    "rounded-lg px-4 py-2 text-sm font-sans font-medium transition-colors min-h-[44px]",
+                    interval === "monthly"
+                      ? "bg-[var(--white)] text-[var(--ink)] shadow-sm"
+                      : "text-[var(--muted)] hover:text-[var(--ink)]"
+                  )}
+                >
+                  Monthly
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInterval("annual")}
+                  className={cn(
+                    "rounded-lg px-4 py-2 text-sm font-sans font-medium transition-colors min-h-[44px] flex items-center gap-2",
+                    interval === "annual"
+                      ? "bg-[var(--white)] text-[var(--ink)] shadow-sm"
+                      : "text-[var(--muted)] hover:text-[var(--ink)]"
+                  )}
+                >
+                  Annual
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                    Save 20%
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
         </section>
         <FadeUp>
-          <section className="py-16 md:py-24 bg-white">
+          <section className="py-16 md:py-24 bg-[var(--white)]">
             <div className={cn(CONTAINER, PAGE_PADDING)}>
-              <div className="text-center max-w-2xl mx-auto">
-                <SectionLabel className="mb-3">Pricing</SectionLabel>
-                <p className="font-sans text-gray-500 text-lg">
-                  Beta pricing — locked for early members.
-                </p>
-                <div className="flex justify-center items-center gap-3 mt-8">
-                  <div className="inline-flex rounded-xl border border-gray-200 bg-gray-50 p-1">
-                    <button
-                      type="button"
-                      onClick={() => setInterval("monthly")}
-                      className={cn(
-                        "rounded-lg px-4 py-2 text-sm font-sans font-medium transition-colors min-h-[44px]",
-                        interval === "monthly"
-                          ? "bg-white text-[#0A0A0A] shadow-sm"
-                          : "text-gray-500 hover:text-[#0A0A0A]"
-                      )}
-                    >
-                      Monthly
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setInterval("annual")}
-                      className={cn(
-                        "rounded-lg px-4 py-2 text-sm font-sans font-medium transition-colors min-h-[44px] flex items-center gap-2",
-                        interval === "annual"
-                          ? "bg-white text-[#0A0A0A] shadow-sm"
-                          : "text-gray-500 hover:text-[#0A0A0A]"
-                      )}
-                    >
-                      Annual
-                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                        Save 20%
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mt-12">
                 {PLANS.map((plan) => {
                   const isEnterprise = plan.price == null;
@@ -159,12 +156,12 @@ export default function PricingPage() {
                     <div
                       key={plan.id}
                       className={cn(
-                        "rounded-2xl border border-gray-100 bg-white p-6 sm:p-8 shadow-sm flex flex-col transition-all hover:shadow-md hover:border-blue-100 relative",
-                        plan.featured && "ring-1 ring-blue-200"
+                        "rounded-2xl border border-[var(--border)] bg-[var(--white)] p-6 sm:p-8 shadow-sm flex flex-col transition-all hover:shadow-md hover:border-[var(--border2)] relative",
+                        plan.featured && "ring-2 ring-[var(--border)]"
                       )}
                     >
                       {plan.featured && (
-                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 text-white text-xs font-semibold px-3 py-1">
+                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--ink)] text-white text-xs font-semibold px-3 py-1">
                           Popular
                         </span>
                       )}
@@ -173,33 +170,33 @@ export default function PricingPage() {
                           Beta pricing
                         </span>
                       )}
-                      <h2 className="font-display font-semibold text-xl text-[#0A0A0A] mb-1">
+                      <h2 className="font-display font-semibold text-xl text-[var(--ink)] mb-1">
                         {plan.name}
                       </h2>
                       <div className="flex items-baseline gap-2 mb-4 flex-wrap">
                         {isEnterprise ? (
-                          <span className="font-display text-2xl font-bold text-[#0A0A0A]">Custom</span>
+                          <span className="font-display text-2xl font-bold text-[var(--ink)]">Custom</span>
                         ) : (
                           <>
-                            <span className="font-display text-4xl font-bold text-[#0A0A0A]">
+                            <span className="font-display text-4xl font-bold text-[var(--ink)]">
                               ${price}
                             </span>
-                            <span className="font-sans text-gray-500">/mo</span>
+                            <span className="font-sans text-[var(--muted)]">/mo</span>
                             {interval === "annual" && (
-                              <span className="text-sm font-sans text-gray-400">
+                              <span className="text-sm font-sans text-[var(--subtle)]">
                                 (billed annually)
                               </span>
                             )}
                           </>
                         )}
                       </div>
-                      <p className="font-sans text-gray-500 text-sm mb-6 leading-relaxed">
+                      <p className="font-sans text-[var(--muted)] text-sm mb-6 leading-relaxed">
                         {plan.description}
                       </p>
                       <ul className="space-y-3 mb-6 flex-1">
                         {plan.features.map((f) => (
-                          <li key={f} className="flex items-start gap-2 text-sm font-sans text-gray-600">
-                            <Check className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" aria-hidden />
+                          <li key={f} className="flex items-start gap-2 text-sm font-sans text-[var(--muted)]">
+                            <Check className="h-4 w-4 shrink-0 text-[var(--ink)] mt-0.5" aria-hidden />
                             {f}
                           </li>
                         ))}
@@ -207,10 +204,10 @@ export default function PricingPage() {
                       <Link
                         href={plan.href}
                         className={cn(
-                          "inline-flex items-center justify-center rounded-full px-6 py-3 font-sans font-semibold min-h-[48px] w-full transition-all",
+                          "inline-flex items-center justify-center rounded-lg px-6 py-3 font-sans font-semibold min-h-[48px] w-full transition-all",
                           plan.id === "enterprise"
-                            ? "border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
-                            : "bg-blue-600 text-white hover:bg-blue-500"
+                            ? "border-2 border-[var(--ink)] text-[var(--ink)] hover:bg-[var(--off)]"
+                            : "bg-[var(--ink)] text-white hover:opacity-90"
                         )}
                       >
                         {plan.cta}
@@ -224,19 +221,19 @@ export default function PricingPage() {
         </FadeUp>
 
         <FadeUp>
-          <section className="py-16 md:py-24 bg-[#F8FAFC] border-t border-gray-200">
+          <section className="py-16 md:py-24 bg-[var(--off)] border-t border-[var(--border)]">
             <div className={cn(CONTAINER, PAGE_PADDING)}>
-              <h2 className="font-display font-bold text-[#0A0A0A] text-2xl mb-8 text-center">
+              <h2 className="font-display font-bold text-[var(--ink)] text-2xl mb-8 text-center">
                 Feature comparison
               </h2>
-              <div className="max-w-3xl mx-auto overflow-x-auto overflow-hidden rounded-2xl border border-gray-200 bg-white">
+              <div className="max-w-3xl mx-auto overflow-x-auto overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--white)]">
                 <table className="w-full text-left font-sans text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="px-4 py-3 font-semibold text-[#0A0A0A]">Feature</th>
-                      <th className="px-4 py-3 font-semibold text-[#0A0A0A]">Starter</th>
-                      <th className="px-4 py-3 font-semibold text-[#0A0A0A]">Growth</th>
-                      <th className="px-4 py-3 font-semibold text-[#0A0A0A]">Enterprise</th>
+                    <tr className="border-b border-[var(--border)] bg-[var(--off)]">
+                      <th className="px-4 py-3 font-semibold text-[var(--ink)]">Feature</th>
+                      <th className="px-4 py-3 font-semibold text-[var(--ink)]">Starter</th>
+                      <th className="px-4 py-3 font-semibold text-[var(--ink)]">Growth</th>
+                      <th className="px-4 py-3 font-semibold text-[var(--ink)]">Enterprise</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -244,19 +241,19 @@ export default function PricingPage() {
                       <tr
                         key={row.feature}
                         className={cn(
-                          "border-b border-gray-100 last:border-0",
-                          i % 2 === 1 && "bg-gray-50/50"
+                          "border-b border-[var(--border)] last:border-0",
+                          i % 2 === 1 && "bg-[var(--off)]/50"
                         )}
                       >
-                        <td className="px-4 py-3 text-gray-600">{row.feature}</td>
+                        <td className="px-4 py-3 text-[var(--muted)]">{row.feature}</td>
                         <td className="px-4 py-3">
-                          {row.essentials === "✓" ? <span className="text-blue-600">✓</span> : <span className="text-gray-300">—</span>}
+                          {row.essentials === "✓" ? <span className="text-[var(--ink)]">✓</span> : <span className="text-[var(--subtle)]">—</span>}
                         </td>
                         <td className="px-4 py-3">
-                          {row.pro === "✓" ? <span className="text-blue-600">✓</span> : <span className="text-gray-300">—</span>}
+                          {row.pro === "✓" ? <span className="text-[var(--ink)]">✓</span> : <span className="text-[var(--subtle)]">—</span>}
                         </td>
                         <td className="px-4 py-3">
-                          {row.enterprise === "✓" ? <span className="text-blue-600">✓</span> : (row.enterprise as string)}
+                          {row.enterprise === "✓" ? <span className="text-[var(--ink)]">✓</span> : (row.enterprise as string)}
                         </td>
                       </tr>
                     ))}
@@ -268,12 +265,12 @@ export default function PricingPage() {
         </FadeUp>
 
         <FadeUp>
-          <section className="py-16 md:py-24 bg-[#F8FAFC]">
+          <section className="py-16 md:py-24 bg-[var(--off)]">
             <div className={cn(CONTAINER, PAGE_PADDING)}>
-              <h2 className="font-display font-bold text-[#0A0A0A] text-2xl mb-8 text-center">
+              <h2 className="font-display font-bold text-[var(--ink)] text-2xl mb-8 text-center">
                 Common questions
               </h2>
-              <div className="max-w-2xl mx-auto rounded-2xl border border-gray-200 bg-white p-6">
+              <div className="max-w-2xl mx-auto rounded-2xl border border-[var(--border)] bg-[var(--white)] p-6">
                 {FAQ_ITEMS.map((item, i) => (
                   <FaqItem
                     key={item.q}

@@ -72,7 +72,7 @@ export function AgentsPageContent({
         right={
           <Button
             onClick={() => setInviteOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 font-sans"
+            className="bg-[#111111] hover:opacity-90 font-sans"
           >
             <UserPlus className="h-4 w-4 mr-2" />
             Invite Agent
@@ -92,17 +92,17 @@ export function AgentsPageContent({
           return (
             <div
               key={agent.id}
-              className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col"
+              className="bg-white rounded-2xl border border-[#e2e2e2] p-6 flex flex-col"
             >
               <div className="flex items-start gap-4">
-                <div className="h-12 w-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-display font-semibold flex-shrink-0">
+                <div className="h-12 w-12 rounded-full bg-[#e2e2e2] flex items-center justify-center text-[#222222] font-display font-semibold flex-shrink-0">
                   {initials}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-display font-semibold text-slate-900 truncate">
+                  <h3 className="font-display font-semibold text-[#111111] truncate">
                     {agent.name}
                   </h3>
-                  <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 font-sans">
+                  <span className="inline-flex rounded-full bg-[#f5f5f5] px-2 py-0.5 text-xs font-medium text-[#6a6a6a] font-sans">
                     Agent
                   </span>
                   <div className="flex items-center gap-2 mt-2 font-sans">
@@ -112,24 +112,24 @@ export function AgentsPageContent({
                         handleAvailabilityChange(agent.id, checked)
                       }
                     />
-                    <span className="text-xs text-slate-600">
+                    <span className="text-xs text-[#6a6a6a]">
                       {agent.active ? "Available" : "Unavailable"}
                     </span>
                   </div>
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-3 gap-2 text-center font-sans text-sm">
+              <div className="mt-4 pt-4 border-t border-[#f0f0f0] grid grid-cols-3 gap-2 text-center font-sans text-sm">
                 <div>
-                  <p className="text-slate-500">Leads</p>
-                  <p className="font-semibold text-slate-900">{agent.metrics?.leadsAssigned ?? 0}</p>
+                  <p className="text-[#a0a0a0]">Leads</p>
+                  <p className="font-semibold text-[#111111]">{agent.metrics?.leadsAssigned ?? 0}</p>
                 </div>
                 <div>
-                  <p className="text-slate-500">Avg response</p>
-                  <p className="font-semibold text-slate-900">—</p>
+                  <p className="text-[#a0a0a0]">Avg response</p>
+                  <p className="font-semibold text-[#111111]">—</p>
                 </div>
                 <div>
-                  <p className="text-slate-500">Appointments</p>
-                  <p className="font-semibold text-slate-900">{agent.metrics?.appointmentsSet ?? 0}</p>
+                  <p className="text-[#a0a0a0]">Appointments</p>
+                  <p className="font-semibold text-[#111111]">{agent.metrics?.appointmentsSet ?? 0}</p>
                 </div>
               </div>
               <div className="mt-4 flex gap-2">
@@ -225,43 +225,43 @@ function InviteAgentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/20" onClick={onClose} aria-hidden />
-      <div className="relative bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6">
-        <h3 className="font-display font-semibold text-lg text-slate-900 mb-4">
+      <div className="absolute inset-0 bg-black/20" onClick={onClose} aria-hidden />
+      <div className="relative bg-white rounded-2xl shadow-xl border border-[#e2e2e2] w-full max-w-md p-6">
+        <h3 className="font-display font-semibold text-lg text-[#111111] mb-4">
           Invite Agent
         </h3>
         <form className="space-y-4 font-sans" onSubmit={handleSubmit}>
           <div>
-            <label className="text-sm font-medium text-slate-700">Full name</label>
+            <label className="text-sm font-medium text-[#222222]">Full name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-[#e2e2e2] px-3 py-2 text-sm"
               placeholder="Jane Smith"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700">Email</label>
+            <label className="text-sm font-medium text-[#222222]">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-[#e2e2e2] px-3 py-2 text-sm"
               placeholder="jane@example.com"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700">Phone (optional)</label>
+            <label className="text-sm font-medium text-[#222222]">Phone (optional)</label>
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-[#e2e2e2] px-3 py-2 text-sm"
               placeholder="+1 555 000 0000"
             />
           </div>
-          <p className="text-xs text-slate-500">Role: Agent</p>
+          <p className="text-xs text-[#a0a0a0]">Role: Agent</p>
           <div className="flex gap-2 pt-2">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1 font-sans">
               Cancel
@@ -269,7 +269,7 @@ function InviteAgentModal({
             <Button
               type="submit"
               disabled={submitting}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 font-sans"
+              className="flex-1 bg-[#111111] hover:opacity-90 font-sans"
             >
               {submitting ? "Sending…" : "Send Invite"}
             </Button>
@@ -331,56 +331,56 @@ function AgentDetailPanel({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-slate-900/20" aria-hidden onClick={onClose} />
-      <div className="fixed right-0 top-0 z-50 h-full w-full max-w-md bg-white shadow-xl border-l border-slate-200 flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          <h2 className="font-display font-semibold text-lg text-slate-900 truncate">{name || agent.name}</h2>
+      <div className="fixed inset-0 z-50 bg-black/20" aria-hidden onClick={onClose} />
+      <div className="fixed right-0 top-0 z-50 h-full w-full max-w-md bg-white shadow-xl border-l border-[#e2e2e2] flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b border-[#e2e2e2]">
+          <h2 className="font-display font-semibold text-lg text-[#111111] truncate">{name || agent.name}</h2>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
             <X className="h-5 w-5" />
           </Button>
         </div>
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-slate-200 flex items-center justify-center text-xl font-display font-semibold text-slate-700 flex-shrink-0">
+            <div className="h-16 w-16 rounded-full bg-[#e2e2e2] flex items-center justify-center text-xl font-display font-semibold text-[#222222] flex-shrink-0">
               {initials}
             </div>
             <div className="min-w-0 flex-1 space-y-2 font-sans">
               <div>
-                <label className="text-xs font-medium text-slate-500">Name</label>
+                <label className="text-xs font-medium text-[#a0a0a0]">Name</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="mt-0.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900"
+                  className="mt-0.5 w-full rounded-lg border border-[#e2e2e2] px-3 py-2 text-sm text-[#111111]"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-slate-500">Email</label>
+                <label className="text-xs font-medium text-[#a0a0a0]">Email</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-0.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900"
+                  className="mt-0.5 w-full rounded-lg border border-[#e2e2e2] px-3 py-2 text-sm text-[#111111]"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-slate-500">Phone</label>
+                <label className="text-xs font-medium text-[#a0a0a0]">Phone</label>
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="mt-0.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900"
+                  className="mt-0.5 w-full rounded-lg border border-[#e2e2e2] px-3 py-2 text-sm text-[#111111]"
                 />
               </div>
               <div className="flex items-center gap-2 pt-1">
                 <Switch checked={active} onCheckedChange={setActive} />
-                <span className="text-sm text-slate-600">{active ? "Available" : "Unavailable"}</span>
+                <span className="text-sm text-[#6a6a6a]">{active ? "Available" : "Unavailable"}</span>
               </div>
             </div>
           </div>
           <div>
-            <h4 className="font-display font-semibold text-slate-900 mb-2">Stats</h4>
-            <ul className="space-y-1 font-sans text-sm text-slate-600">
+            <h4 className="font-display font-semibold text-[#111111] mb-2">Stats</h4>
+            <ul className="space-y-1 font-sans text-sm text-[#6a6a6a]">
               <li>Leads assigned: {agent.metrics?.leadsAssigned ?? 0}</li>
               <li>Qualified: {agent.metrics?.qualifiedCount ?? 0}</li>
               <li>Appointments: {agent.metrics?.appointmentsSet ?? 0}</li>

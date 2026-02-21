@@ -5,6 +5,7 @@ import {
   getDemoLeadsAsAppType,
   getDemoAgentsAsAppType,
   getDemoActivity,
+  getDemoLeadsByDay,
 } from "@/lib/demoData";
 import { computeDashboardStatsFromLeads } from "@/lib/demo/data";
 import { AirtableAuthError } from "@/lib/airtable";
@@ -86,6 +87,33 @@ async function DashboardContent() {
     ? leads.filter((l) => l.assignedTo === agentId)
     : leads.slice(0, 10);
 
+  const leadsByDay =
+    demoEnabled
+      ? getDemoLeadsByDay()
+      : (() => {
+          const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+          const byDate: Record<string, number> = {};
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            byDate[d.toISOString().slice(0, 10)] = 0;
+          }
+          leads.forEach((l) => {
+            const dateStr = l.createdAt?.slice(0, 10);
+            if (dateStr && dateStr in byDate) byDate[dateStr]++;
+          });
+          return Object.entries(byDate)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([date, count]) => {
+              const d = new Date(date);
+              return {
+                date,
+                label: dayLabels[d.getDay()],
+                leads: count,
+              };
+            });
+        })();
+
   if (!demoEnabled && leads.length === 0 && !airtableError) {
     return (
       <div className="space-y-6 sm:space-y-8">
@@ -110,6 +138,7 @@ async function DashboardContent() {
       firstName={firstName}
       stats={safeStats}
       recentLeads={recentLeads}
+      leadsByDay={leadsByDay}
       activity={activity}
       agents={agents}
       airtableError={airtableError}
