@@ -1,10 +1,12 @@
 import { unstable_cache } from "next/cache";
 import { env } from "./env.mjs";
-import { hasAirtable } from "./config";
-import type { ActivityItem, Agent, Lead, Message } from "./types";
+import type { ActivityItem } from "./types";
 
 const BASE_URL = "https://api.airtable.com/v0";
 const PAGE_SIZE = 100;
+
+export const hasAirtable =
+  !!process.env.AIRTABLE_API_KEY?.trim() && !!process.env.AIRTABLE_BASE_ID?.trim();
 
 /** Thrown when Airtable returns 401; callers can show "check Airtable connection" instead of crashing. */
 export class AirtableAuthError extends Error {
@@ -17,11 +19,186 @@ export class AirtableAuthError extends Error {
 
 type AirtableRecord<T> = { id: string; fields: T; createdTime?: string };
 
+// ---------------------------------------------------------------------------
+// Table names (schema)
+// ---------------------------------------------------------------------------
+const TABLES = {
+  Brokerages: "Brokerages",
+  Agents: "Agents",
+  Leads: env.server.AIRTABLE_TABLE_LEADS || "Leads",
+  Messages: env.server.AIRTABLE_TABLE_MESSAGES || "Messages",
+  Conversations: "Conversations",
+  Phone_Lines: "Phone_Lines",
+  Users: env.server.AIRTABLE_TABLE_USERS || "Users",
+  ActivityLog: "ActivityLog",
+  RoutingLog: "RoutingLog",
+  Insights: "Insights",
+  Waitlist: env.server.AIRTABLE_TABLE_WAITLIST || "Waitlist",
+} as const;
+
+// ---------------------------------------------------------------------------
+// Types (Airtable schema)
+// ---------------------------------------------------------------------------
+
+export interface AirtableBrokerage {
+  id: string;
+  name: string;
+  ownerEmail: string;
+  ownerName: string;
+  ownerPhone: string;
+  twilioNumber: string;
+  planTier: "starter" | "growth";
+  status: "active" | "inactive" | "past_due" | "canceled";
+  routingMode: "round_robin" | "manual" | "priority";
+  excludeInactiveAgents: boolean;
+  escalationEnabled: boolean;
+  escalationMinutes: number;
+  escalationMax: number;
+  onboardingComplete: boolean;
+  onboardingStatus: "not_started" | "in_progress" | "complete";
+  agentLimit: number;
+  marketCity: string;
+  timeZone: string;
+  stripeCustomerId: string;
+  stripeSubscriptionId: string;
+  mrr: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AirtableAgent {
+  id: string;
+  agentId: number;
+  brokerageId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  status: "active" | "inactive";
+  role: "agent" | "admin" | "owner";
+  weight: number;
+  lastAssignedAt: string | null;
+  receiveSmsAlerts: boolean;
+  receiveEmailAlerts: boolean;
+  notes: string;
+}
+
+export interface AirtableLead {
+  id: string;
+  leadId: number;
+  brokerageId: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  leadPhone: string;
+  leadEmail: string;
+  source:
+    | "website"
+    | "zillow"
+    | "realtor"
+    | "facebook_ads"
+    | "referral"
+    | "other"
+    | "manual";
+  status:
+    | "new"
+    | "qualifying"
+    | "qualified"
+    | "unqualified"
+    | "assigned"
+    | "nurturing"
+    | "closed"
+    | "complete";
+  assignedAgentId: string | null;
+  assignedLineId: string | null;
+  assignedAt: string | null;
+  lastAgentReplyAt: string | null;
+  lastLeadMessageAt: string | null;
+  createdAt: string;
+  intentLabel: "high" | "medium" | "low" | null;
+  intentReason: string;
+  suggestedAction: "call_now" | "follow_up_1hr" | "nurture" | null;
+  escalationEnabled: boolean;
+  escalationMinutes: number;
+  escalationMax: number;
+  escalationCount: number;
+  lastEscalatedAt: string | null;
+  timeline: "0_30" | "30_90" | "90_plus" | "unknown" | null;
+  preApproved: "yes" | "no" | "unknown" | null;
+  budgetMin: number | null;
+  budgetMax: number | null;
+  notes: string;
+}
+
+export interface AirtableMessage {
+  id: string;
+  messageId: number;
+  leadId: string;
+  brokerageId: string;
+  direction: "inbound" | "outbound";
+  fromNumber: string;
+  toNumber: string;
+  body: string;
+  sentAt: string;
+  actorType: "lead" | "ai" | "agent" | "system";
+  actorAgentId: string | null;
+  twilioMessageSid: string;
+  deliveryStatus: "queued" | "sent" | "delivered" | "failed";
+}
+
+export interface AirtableConversation {
+  id: string;
+  conversationId: number;
+  leadId: string;
+  brokerageId: string;
+  assignedAgentId: string | null;
+  lastMessageAt: string | null;
+  lastMessagePreview: string;
+  status: "new" | "qualifying" | "complete";
+  createdAt: string;
+}
+
+export interface AirtablePhoneLine {
+  id: string;
+  lineId: number;
+  brokerageId: string;
+  twilioPhoneNumber: string;
+  friendlyName: string;
+  lineType: "main" | "personal";
+  assignedAgentId: string | null;
+  status: "active" | "paused";
+}
+
+// Legacy status for API compat (Lead in types.ts)
+const AIRTABLE_TO_LEGACY_STATUS: Record<string, string> = {
+  new: "new",
+  qualifying: "contacted",
+  qualified: "qualified",
+  unqualified: "lost",
+  assigned: "appointment",
+  nurturing: "contacted",
+  closed: "closed",
+  complete: "closed",
+};
+const LEGACY_TO_AIRTABLE_STATUS: Record<string, string> = {
+  new: "new",
+  contacted: "qualifying",
+  qualified: "qualified",
+  appointment: "assigned",
+  lost: "unqualified",
+  closed: "closed",
+};
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 function getHeaders(): HeadersInit {
   const key = env.server.AIRTABLE_API_KEY?.trim();
   const baseId = env.server.AIRTABLE_BASE_ID?.trim();
   if (!key || !baseId) {
-    throw new Error("Missing Airtable env vars: AIRTABLE_API_KEY and AIRTABLE_BASE_ID required");
+    throw new Error(
+      "Missing Airtable env vars: AIRTABLE_API_KEY and AIRTABLE_BASE_ID required"
+    );
   }
   return {
     Authorization: `Bearer ${env.server.AIRTABLE_API_KEY}`,
@@ -36,7 +213,6 @@ function tableUrl(tableName: string, params?: string): string {
   return params ? `${url}?${params}` : url;
 }
 
-/** Fetch all records with pagination. */
 async function listAllRecords<T>(
   tableName: string,
   filterByFormula?: string
@@ -59,127 +235,145 @@ async function listAllRecords<T>(
       console.error(`[airtable] ${tableName} fetch failed: ${res.status}`, err);
       throw new Error(`Airtable ${tableName}: ${res.status} ${err}`);
     }
-    const data = (await res.json()) as { records: AirtableRecord<T>[]; offset?: string };
+    const data = (await res.json()) as {
+      records: AirtableRecord<T>[];
+      offset?: string;
+    };
     all.push(...data.records);
     offset = data.offset;
   } while (offset);
   return all;
 }
 
-// ---- Leads ----
-// Expected Airtable fields: Name, Email, Phone, Source, Status, Assigned To (link), Notes.
-// createdTime on record; optional Last modified in fields.
-type LeadFields = {
-  Name?: string;
-  Email?: string;
-  Phone?: string;
-  Source?: string;
-  Status?: string;
-  "Assigned To"?: string[];
-  Notes?: string;
-  "Assigned To Name"?: string;
-  "Last modified"?: string;
-  "Last Message At"?: string;
-};
-
-function recordToLead(r: AirtableRecord<LeadFields>): Lead {
-  const f = r.fields ?? {};
-  const status = (f.Status ?? "new").toString().toLowerCase();
-  const validStatus = ["new", "contacted", "qualified", "appointment", "closed", "lost"] as const;
-  const leadStatus = validStatus.includes(status as (typeof validStatus)[number])
-    ? (status as Lead["status"])
-    : "new";
-  const assignedTo = Array.isArray(f["Assigned To"]) ? f["Assigned To"][0] : undefined;
-  return {
-    id: r.id,
-    name: (f.Name ?? "").toString().trim() || "—",
-    email: (f.Email ?? "").toString().trim(),
-    phone: (f.Phone ?? "").toString().trim(),
-    status: leadStatus,
-    source: (f.Source ?? "").toString().trim() || "—",
-    assignedTo: assignedTo ?? undefined,
-    assignedToName: (f["Assigned To Name"] ?? "").toString().trim() || undefined,
-    notes: (f.Notes ?? "").toString().trim() || undefined,
-    createdAt: r.createdTime ?? undefined,
-    updatedAt: (f["Last modified"] ?? r.createdTime) ?? undefined,
-  };
-}
-
-async function getLeadsUncached(): Promise<Lead[]> {
-  if (!hasAirtable) return [];
-  const table = env.server.AIRTABLE_TABLE_LEADS;
-  const records = await listAllRecords<LeadFields>(table);
-  const leads = records.map(recordToLead);
-  const needsEnrichment = leads.some((l) => l.assignedTo && !l.assignedToName);
-  if (needsEnrichment) {
-    const agents = await getAgents();
-    const agentMap = new Map(agents.map((a) => [a.id, a.name]));
-    for (const lead of leads) {
-      if (lead.assignedTo && !lead.assignedToName) {
-        lead.assignedToName = agentMap.get(lead.assignedTo) ?? undefined;
-      }
-    }
-  }
-  return leads;
-}
-
-const getLeadsCachedAll = hasAirtable
-  ? unstable_cache(getLeadsUncached, ["airtable-leads"], { revalidate: 60, tags: ["leads"] })
-  : getLeadsUncached;
-
-/** Get all leads, or only leads assigned to the given agent (Airtable Agent record id). */
-export async function getLeads(assignedToAgentId?: string): Promise<Lead[]> {
-  const all = await getLeadsCachedAll();
-  if (assignedToAgentId) {
-    return all.filter((l) => l.assignedTo === assignedToAgentId);
-  }
-  return all;
-}
-
-/** Normalize phone to last 10 digits for matching. */
 function normalizePhone(phone: string): string {
   const digits = (phone ?? "").replace(/\D/g, "");
   return digits.slice(-10);
 }
 
-/** Find lead by phone number (uncached). Returns null if not found or Airtable not configured. */
-export async function getLeadByPhone(phone: string): Promise<Lead | null> {
-  if (!hasAirtable) return null;
-  try {
-    const all = await getLeadsUncached();
-    const normalized = normalizePhone(phone);
-    if (!normalized) return null;
-    return all.find((l) => normalizePhone(l.phone ?? "") === normalized) ?? null;
-  } catch (e) {
-    if (e instanceof AirtableAuthError) throw e;
-    console.warn("[airtable] getLeadByPhone failed:", e instanceof Error ? e.message : e);
-    return null;
-  }
+/** Direction: treat any value that is not inbound/outbound as outbound */
+function normalizeDirection(raw: string): "inbound" | "outbound" {
+  const d = (raw ?? "").toString().toLowerCase();
+  return d === "inbound" ? "inbound" : "outbound";
 }
 
-export async function createLead(
-  lead: Omit<Lead, "id" | "createdAt" | "updatedAt">
-): Promise<Lead> {
-  if (!hasAirtable) {
-    return {
-      ...lead,
-      id: `lead-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-  }
-  const table = env.server.AIRTABLE_TABLE_LEADS;
-  const url = tableUrl(table);
-  const fields: Record<string, unknown> = {
-    Name: lead.name,
-    Email: lead.email ?? "",
-    Phone: lead.phone ?? "",
-    Source: lead.source ?? "website",
-    Status: lead.status,
-  };
-  if (lead.notes) fields.Notes = lead.notes;
-  if (lead.assignedTo) fields["Assigned To"] = [lead.assignedTo];
+// ---------------------------------------------------------------------------
+// Brokerages
+// ---------------------------------------------------------------------------
 
+type BrokerageFields = {
+  Name?: string;
+  OwnerEmail?: string;
+  OwnerName?: string;
+  OwnerPhone?: string;
+  TwilioNumber?: string;
+  PlanTier?: string;
+  Status?: string;
+  RoutingMode?: string;
+  ExcludeInactiveAgents?: boolean;
+  EscalationEnabled?: boolean;
+  EscalationMinutes?: number;
+  EscalationMax?: number;
+  OnboardingComplete?: boolean;
+  OnboardingStatus?: string;
+  AgentLimit?: number;
+  MarketCity?: string;
+  TimeZone?: string;
+  StripeCustomerId?: string;
+  StripeSubscriptionId?: string;
+  MRR?: number;
+  CreatedAt?: string;
+  UpdatedAt?: string;
+};
+
+function recordToBrokerage(r: AirtableRecord<BrokerageFields>): AirtableBrokerage {
+  const f = r.fields ?? {};
+  const planTier =
+    f.PlanTier === "growth" ? "growth" : "starter";
+  const status = (f.Status ?? "active").toString().toLowerCase() as AirtableBrokerage["status"];
+  const routingMode = (f.RoutingMode ?? "round_robin").toString().toLowerCase() as AirtableBrokerage["routingMode"];
+  const onboardingStatus = (f.OnboardingStatus ?? "not_started").toString().toLowerCase() as AirtableBrokerage["onboardingStatus"];
+  return {
+    id: r.id,
+    name: (f.Name ?? "").toString().trim(),
+    ownerEmail: (f.OwnerEmail ?? "").toString().trim(),
+    ownerName: (f.OwnerName ?? "").toString().trim(),
+    ownerPhone: (f.OwnerPhone ?? "").toString().trim(),
+    twilioNumber: (f.TwilioNumber ?? "").toString().trim(),
+    planTier,
+    status: ["active", "inactive", "past_due", "canceled"].includes(status) ? status : "active",
+    routingMode: ["round_robin", "manual", "priority"].includes(routingMode) ? routingMode : "round_robin",
+    excludeInactiveAgents: f.ExcludeInactiveAgents === true,
+    escalationEnabled: f.EscalationEnabled === true,
+    escalationMinutes: typeof f.EscalationMinutes === "number" ? f.EscalationMinutes : 0,
+    escalationMax: typeof f.EscalationMax === "number" ? f.EscalationMax : 0,
+    onboardingComplete: f.OnboardingComplete === true,
+    onboardingStatus: ["not_started", "in_progress", "complete"].includes(onboardingStatus) ? onboardingStatus : "not_started",
+    agentLimit: typeof f.AgentLimit === "number" ? f.AgentLimit : 0,
+    marketCity: (f.MarketCity ?? "").toString().trim(),
+    timeZone: (f.TimeZone ?? "").toString().trim(),
+    stripeCustomerId: (f.StripeCustomerId ?? "").toString().trim(),
+    stripeSubscriptionId: (f.StripeSubscriptionId ?? "").toString().trim(),
+    mrr: typeof f.MRR === "number" ? f.MRR : 0,
+    createdAt: (f.CreatedAt ?? r.createdTime ?? "").toString(),
+    updatedAt: (f.UpdatedAt ?? r.createdTime ?? "").toString(),
+  };
+}
+
+export async function getBrokerageByEmail(
+  email: string
+): Promise<AirtableBrokerage | null> {
+  if (!hasAirtable) return null;
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) return null;
+  const escaped = trimmed.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  const formula = `LOWER({OwnerEmail}) = "${escaped}"`;
+  const records = await listAllRecords<BrokerageFields>(TABLES.Brokerages, formula);
+  const first = records[0];
+  if (!first) return null;
+  return recordToBrokerage(first);
+}
+
+export async function getBrokerageById(
+  id: string
+): Promise<AirtableBrokerage | null> {
+  if (!hasAirtable) return null;
+  const url = `${tableUrl(TABLES.Brokerages)}/${id}`;
+  const res = await fetch(url, { headers: getHeaders(), cache: "no-store" });
+  if (!res.ok) {
+    if (res.status === 401) throw new AirtableAuthError(`Airtable getBrokerageById: 401`);
+    if (res.status === 404) return null;
+    throw new Error(`Airtable getBrokerageById: ${res.status}`);
+  }
+  const r = (await res.json()) as AirtableRecord<BrokerageFields>;
+  return recordToBrokerage(r);
+}
+
+export async function createBrokerage(
+  data: Partial<AirtableBrokerage>
+): Promise<AirtableBrokerage> {
+  if (!hasAirtable) throw new Error("Airtable not configured");
+  const url = tableUrl(TABLES.Brokerages);
+  const fields: Record<string, unknown> = {};
+  if (data.name != null) fields.Name = data.name;
+  if (data.ownerEmail != null) fields.OwnerEmail = data.ownerEmail;
+  if (data.ownerName != null) fields.OwnerName = data.ownerName;
+  if (data.ownerPhone != null) fields.OwnerPhone = data.ownerPhone;
+  if (data.twilioNumber != null) fields.TwilioNumber = data.twilioNumber;
+  if (data.planTier != null) fields.PlanTier = data.planTier;
+  if (data.status != null) fields.Status = data.status;
+  if (data.routingMode != null) fields.RoutingMode = data.routingMode;
+  if (data.excludeInactiveAgents != null) fields.ExcludeInactiveAgents = data.excludeInactiveAgents;
+  if (data.escalationEnabled != null) fields.EscalationEnabled = data.escalationEnabled;
+  if (data.escalationMinutes != null) fields.EscalationMinutes = data.escalationMinutes;
+  if (data.escalationMax != null) fields.EscalationMax = data.escalationMax;
+  if (data.onboardingComplete != null) fields.OnboardingComplete = data.onboardingComplete;
+  if (data.onboardingStatus != null) fields.OnboardingStatus = data.onboardingStatus;
+  if (data.agentLimit != null) fields.AgentLimit = data.agentLimit;
+  if (data.marketCity != null) fields.MarketCity = data.marketCity;
+  if (data.timeZone != null) fields.TimeZone = data.timeZone;
+  if (data.stripeCustomerId != null) fields.StripeCustomerId = data.stripeCustomerId;
+  if (data.stripeSubscriptionId != null) fields.StripeSubscriptionId = data.stripeSubscriptionId;
+  if (data.mrr != null) fields.MRR = data.mrr;
   const res = await fetch(url, {
     method: "POST",
     headers: getHeaders(),
@@ -188,33 +382,46 @@ export async function createLead(
   });
   if (!res.ok) {
     const err = await res.text();
-    if (res.status === 401) {
-      console.error("[airtable] AUTHENTICATION_REQUIRED createLead", err);
-      throw new AirtableAuthError(`Airtable create lead: 401 ${err}`);
-    }
-    console.error("[airtable] createLead failed:", res.status, err);
-    throw new Error(`Airtable create lead: ${res.status} ${err}`);
+    if (res.status === 401) throw new AirtableAuthError(`Airtable createBrokerage: 401 ${err}`);
+    throw new Error(`Airtable createBrokerage: ${res.status} ${err}`);
   }
-  const created = (await res.json()) as AirtableRecord<LeadFields>;
-  return recordToLead(created);
+  const created = (await res.json()) as AirtableRecord<BrokerageFields>;
+  return recordToBrokerage(created);
 }
 
-/** Update a lead (e.g. lastMessageAt, status, assignedTo). Only provided fields are patched. */
-export async function updateLead(id: string, data: Partial<Pick<Lead, "lastMessageAt" | "status" | "assignedTo">>): Promise<Lead> {
-  if (!hasAirtable) {
-    console.warn("[airtable] updateLead: Airtable not configured");
-    return { id, name: "", phone: "", email: "", status: "new", source: "" };
-  }
-  const table = env.server.AIRTABLE_TABLE_LEADS;
+export async function updateBrokerage(
+  id: string,
+  data: Partial<AirtableBrokerage>
+): Promise<AirtableBrokerage> {
+  if (!hasAirtable) throw new Error("Airtable not configured");
+  const url = `${tableUrl(TABLES.Brokerages)}/${id}`;
   const fields: Record<string, unknown> = {};
-  if (data.lastMessageAt != null) fields["Last Message At"] = data.lastMessageAt;
+  if (data.name != null) fields.Name = data.name;
+  if (data.ownerEmail != null) fields.OwnerEmail = data.ownerEmail;
+  if (data.ownerName != null) fields.OwnerName = data.ownerName;
+  if (data.ownerPhone != null) fields.OwnerPhone = data.ownerPhone;
+  if (data.twilioNumber != null) fields.TwilioNumber = data.twilioNumber;
+  if (data.planTier != null) fields.PlanTier = data.planTier;
   if (data.status != null) fields.Status = data.status;
-  if (data.assignedTo !== undefined) fields["Assigned To"] = data.assignedTo ? [data.assignedTo] : [];
+  if (data.routingMode != null) fields.RoutingMode = data.routingMode;
+  if (data.excludeInactiveAgents != null) fields.ExcludeInactiveAgents = data.excludeInactiveAgents;
+  if (data.escalationEnabled != null) fields.EscalationEnabled = data.escalationEnabled;
+  if (data.escalationMinutes != null) fields.EscalationMinutes = data.escalationMinutes;
+  if (data.escalationMax != null) fields.EscalationMax = data.escalationMax;
+  if (data.onboardingComplete != null) fields.OnboardingComplete = data.onboardingComplete;
+  if (data.onboardingStatus != null) fields.OnboardingStatus = data.onboardingStatus;
+  if (data.agentLimit != null) fields.AgentLimit = data.agentLimit;
+  if (data.marketCity != null) fields.MarketCity = data.marketCity;
+  if (data.timeZone != null) fields.TimeZone = data.timeZone;
+  if (data.stripeCustomerId != null) fields.StripeCustomerId = data.stripeCustomerId;
+  if (data.stripeSubscriptionId != null) fields.StripeSubscriptionId = data.stripeSubscriptionId;
+  if (data.mrr != null) fields.MRR = data.mrr;
+  if (data.updatedAt != null) fields.UpdatedAt = data.updatedAt;
   if (Object.keys(fields).length === 0) {
-    const all = await getLeadsUncached();
-    return all.find((l) => l.id === id) ?? { id, name: "", phone: "", email: "", status: "new", source: "" };
+    const b = await getBrokerageById(id);
+    if (!b) throw new Error("Brokerage not found");
+    return b;
   }
-  const url = `${tableUrl(table)}/${id}`;
   const res = await fetch(url, {
     method: "PATCH",
     headers: getHeaders(),
@@ -223,130 +430,153 @@ export async function updateLead(id: string, data: Partial<Pick<Lead, "lastMessa
   });
   if (!res.ok) {
     const err = await res.text();
-    if (res.status === 401) throw new AirtableAuthError(`Airtable update lead: 401 ${err}`);
-    throw new Error(`Airtable update lead: ${res.status} ${err}`);
+    if (res.status === 401) throw new AirtableAuthError(`Airtable updateBrokerage: 401 ${err}`);
+    throw new Error(`Airtable updateBrokerage: ${res.status} ${err}`);
   }
-  const updated = (await res.json()) as AirtableRecord<LeadFields>;
-  return recordToLead(updated);
+  const updated = (await res.json()) as AirtableRecord<BrokerageFields>;
+  return recordToBrokerage(updated);
 }
 
-/** Delete a lead. No-op if Airtable not configured. */
-export async function deleteLead(id: string): Promise<void> {
-  if (!hasAirtable) {
-    console.warn("[airtable] deleteLead: Airtable not configured");
-    return;
-  }
-  const table = env.server.AIRTABLE_TABLE_LEADS;
-  const url = `${tableUrl(table)}/${id}`;
-  const res = await fetch(url, { method: "DELETE", headers: getHeaders(), cache: "no-store" });
-  if (!res.ok && res.status !== 404) {
-    const err = await res.text();
-    if (res.status === 401) throw new AirtableAuthError(`Airtable delete lead: 401 ${err}`);
-    throw new Error(`Airtable delete lead: ${res.status} ${err}`);
-  }
-}
+// ---------------------------------------------------------------------------
+// Agents
+// ---------------------------------------------------------------------------
 
-// ---- Agents ----
-// Expected fields: Name, Email, Phone, Active (checkbox), Round Robin Weight (1–10), Close Rate (0–100 optional).
 type AgentFields = {
-  Name?: string;
+  AgentID?: number;
+  "Full Name"?: string;
   Email?: string;
   Phone?: string;
-  Active?: boolean;
-  RoundRobinWeight?: number;
-  CloseRate?: number;
+  Status?: string;
+  Role?: string;
+  Weight?: number;
+  LastAssignedAt?: string;
+  ReceiveSmsAlerts?: boolean;
+  ReceiveEmailAlerts?: boolean;
+  Notes?: string;
+  Brokerage?: string[];
 };
 
-function recordToAgent(r: AirtableRecord<AgentFields>): Agent {
+function recordToAgent(r: AirtableRecord<AgentFields>): AirtableAgent {
   const f = r.fields ?? {};
-  const w = f.RoundRobinWeight;
-  const num = typeof w === "number" && !Number.isNaN(w) ? Math.min(10, Math.max(1, Math.round(w))) : undefined;
-  const cr = f.CloseRate;
-  const closeRate = typeof cr === "number" && !Number.isNaN(cr) ? Math.min(100, Math.max(0, Math.round(cr))) : undefined;
+  const status = (f.Status ?? "active").toString().toLowerCase() as "active" | "inactive";
+  const role = (f.Role ?? "agent").toString().toLowerCase() as "agent" | "admin" | "owner";
   return {
     id: r.id,
-    name: (f.Name ?? "").toString().trim() || "—",
+    agentId: typeof f.AgentID === "number" ? f.AgentID : 0,
+    brokerageId: Array.isArray(f.Brokerage) ? f.Brokerage[0] ?? "" : "",
+    fullName: (f["Full Name"] ?? "").toString().trim(),
     email: (f.Email ?? "").toString().trim(),
     phone: (f.Phone ?? "").toString().trim(),
-    active: f.Active === true,
-    roundRobinWeight: num,
-    closeRate,
-    createdAt: r.createdTime ?? undefined,
+    status: status === "inactive" ? "inactive" : "active",
+    role: ["agent", "admin", "owner"].includes(role) ? role : "agent",
+    weight: typeof f.Weight === "number" ? f.Weight : 0,
+    lastAssignedAt: f.LastAssignedAt?.trim() ?? null,
+    receiveSmsAlerts: f.ReceiveSmsAlerts === true,
+    receiveEmailAlerts: f.ReceiveEmailAlerts === true,
+    notes: (f.Notes ?? "").toString().trim(),
   };
 }
 
-async function getAgentsUncached(): Promise<Agent[]> {
+/** Get agents. When brokerageId provided, filter by brokerage; otherwise return all (backward compat). */
+export async function getAgents(brokerageId?: string): Promise<AgentCompat[]> {
   if (!hasAirtable) return [];
-  const table = env.server.AIRTABLE_TABLE_AGENTS;
-  const records = await listAllRecords<AgentFields>(table);
-  return records.map(recordToAgent);
-}
-
-export const getAgents = hasAirtable
-  ? unstable_cache(getAgentsUncached, ["airtable-agents"], { revalidate: 60, tags: ["agents"] })
-  : getAgentsUncached;
-
-/** Create an agent in the Agents table. Returns created Agent or null if not configured / failed. */
-export async function createAgent(data: {
-  name: string;
-  email: string;
-  phone?: string;
-}): Promise<Agent | null> {
-  const table = env.server.AIRTABLE_TABLE_AGENTS;
-  if (!table || !hasAirtable) return null;
-  const name = (data.name ?? "").toString().trim();
-  const email = (data.email ?? "").toString().trim();
-  if (!email) return null;
-  const url = tableUrl(table);
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify({
-        fields: {
-          Name: name || email.split("@")[0] || "Agent",
-          Email: email,
-          ...(data.phone?.trim() && { Phone: data.phone.trim() }),
-          Active: true,
-          RoundRobinWeight: 5,
-        },
-      }),
-      cache: "no-store",
-    });
-    if (!res.ok) {
-      const err = await res.text();
-      if (res.status === 401) throw new AirtableAuthError(`Airtable Agents create: 401 ${err}`);
-      console.error("[airtable] createAgent failed:", res.status, err);
-      return null;
-    }
-    const created = (await res.json()) as AirtableRecord<AgentFields>;
-    return recordToAgent(created);
-  } catch (e) {
-    if (e instanceof AirtableAuthError) throw e;
-    console.error("[airtable] createAgent error:", e);
-    return null;
+  let formula: string | undefined;
+  if (brokerageId?.trim()) {
+    const escaped = brokerageId.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    formula = `FIND("${escaped}", ARRAYJOIN({Brokerage}))`;
   }
+  const records = await listAllRecords<AgentFields>(TABLES.Agents, formula);
+  return records.map(recordToAgent).map(toAgentCompat);
 }
 
-/** Update an agent (Name, Email, Phone, Active). Only provided fields are patched. Returns updated agent. */
+export async function getAgentById(id: string): Promise<AirtableAgent | null> {
+  if (!hasAirtable) return null;
+  const url = `${tableUrl(TABLES.Agents)}/${id}`;
+  const res = await fetch(url, { headers: getHeaders(), cache: "no-store" });
+  if (!res.ok) {
+    if (res.status === 401) throw new AirtableAuthError(`Airtable getAgentById: 401`);
+    if (res.status === 404) return null;
+    throw new Error(`Airtable getAgentById: ${res.status}`);
+  }
+  const r = (await res.json()) as AirtableRecord<AgentFields>;
+  return recordToAgent(r);
+}
+
+export async function getAgentByEmail(
+  email: string
+): Promise<AirtableAgent | null> {
+  if (!hasAirtable) return null;
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) return null;
+  const escaped = trimmed.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  const formula = `LOWER({Email}) = "${escaped}"`;
+  const records = await listAllRecords<AgentFields>(TABLES.Agents, formula);
+  const first = records[0];
+  if (!first) return null;
+  return recordToAgent(first);
+}
+
+export async function createAgent(
+  data: Partial<AirtableAgent> & { name?: string }
+): Promise<AgentCompat> {
+  if (!hasAirtable) throw new Error("Airtable not configured");
+  const url = tableUrl(TABLES.Agents);
+  const fullName = data.fullName ?? (data as { name?: string }).name ?? "";
+  const fields: Record<string, unknown> = {
+    "Full Name": fullName || data.email?.split("@")[0] || "Agent",
+    Email: data.email ?? "",
+    Phone: data.phone ?? "",
+    Status: (data.status ?? "active").toString(),
+    Role: (data.role ?? "agent").toString(),
+    Weight: typeof data.weight === "number" ? data.weight : 0,
+    ReceiveSmsAlerts: data.receiveSmsAlerts ?? false,
+    ReceiveEmailAlerts: data.receiveEmailAlerts ?? false,
+    Notes: data.notes ?? "",
+  };
+  if (data.lastAssignedAt != null) fields.LastAssignedAt = data.lastAssignedAt;
+  if (data.brokerageId) fields.Brokerage = [data.brokerageId];
+  const res = await fetch(url, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ fields }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    if (res.status === 401) throw new AirtableAuthError(`Airtable createAgent: 401 ${err}`);
+    throw new Error(`Airtable createAgent: ${res.status} ${err}`);
+  }
+  const created = (await res.json()) as AirtableRecord<AgentFields>;
+  return toAgentCompat(recordToAgent(created));
+}
+
 export async function updateAgent(
-  agentId: string,
-  data: Partial<Pick<Agent, "name" | "email" | "phone" | "active">>
-): Promise<Agent> {
-  if (!hasAirtable) {
-    throw new Error("Airtable not configured");
-  }
-  const table = env.server.AIRTABLE_TABLE_AGENTS;
+  id: string,
+  data: Partial<AirtableAgent> & { name?: string; email?: string; phone?: string; active?: boolean }
+): Promise<AgentCompat> {
+  if (!hasAirtable) throw new Error("Airtable not configured");
+  const url = `${tableUrl(TABLES.Agents)}/${id}`;
   const fields: Record<string, unknown> = {};
-  if (data.name !== undefined) fields.Name = data.name.trim();
-  if (data.email !== undefined) fields.Email = data.email.trim();
-  if (data.phone !== undefined) fields.Phone = data.phone.trim();
-  if (data.active !== undefined) fields.Active = data.active;
-  if (Object.keys(fields).length === 0) {
-    const all = await getAgentsUncached();
-    return all.find((a) => a.id === agentId) ?? { id: agentId, name: "", email: "", phone: "", active: false };
+  const name = data.fullName ?? (data as { name?: string }).name;
+  if (name !== undefined) fields["Full Name"] = name.toString().trim();
+  if (data.email !== undefined) fields.Email = data.email.toString().trim();
+  if (data.phone !== undefined) fields.Phone = data.phone.toString().trim();
+  if ((data as { active?: boolean }).active !== undefined) {
+    fields.Status = (data as { active?: boolean }).active ? "active" : "inactive";
   }
-  const url = `${tableUrl(table)}/${agentId}`;
+  if (data.status !== undefined) fields.Status = data.status;
+  if (data.role !== undefined) fields.Role = data.role;
+  if (data.weight !== undefined) fields.Weight = data.weight;
+  if (data.lastAssignedAt !== undefined) fields.LastAssignedAt = data.lastAssignedAt;
+  if (data.receiveSmsAlerts !== undefined) fields.ReceiveSmsAlerts = data.receiveSmsAlerts;
+  if (data.receiveEmailAlerts !== undefined) fields.ReceiveEmailAlerts = data.receiveEmailAlerts;
+  if (data.notes !== undefined) fields.Notes = data.notes;
+  if (data.brokerageId !== undefined) fields.Brokerage = data.brokerageId ? [data.brokerageId] : [];
+  if (Object.keys(fields).length === 0) {
+    const a = await getAgentById(id);
+    if (!a) throw new Error("Agent not found");
+    return toAgentCompat(a);
+  }
   const res = await fetch(url, {
     method: "PATCH",
     headers: getHeaders(),
@@ -355,47 +585,775 @@ export async function updateAgent(
   });
   if (!res.ok) {
     const err = await res.text();
-    if (res.status === 401) throw new AirtableAuthError(`Airtable update agent: 401 ${err}`);
-    throw new Error(`Airtable update agent: ${res.status} ${err}`);
+    if (res.status === 401) throw new AirtableAuthError(`Airtable updateAgent: 401 ${err}`);
+    throw new Error(`Airtable updateAgent: ${res.status} ${err}`);
   }
   const updated = (await res.json()) as AirtableRecord<AgentFields>;
-  return recordToAgent(updated);
+  return toAgentCompat(recordToAgent(updated));
 }
 
-/** Update one agent's round-robin weight (1–10). Used by routing settings. */
-export async function updateAgentRoundRobinWeight(agentId: string, weight: number): Promise<void> {
-  const table = env.server.AIRTABLE_TABLE_AGENTS;
-  if (!table || !hasAirtable) return;
+export async function updateAgentRoundRobinWeight(
+  agentId: string,
+  weight: number
+): Promise<void> {
+  if (!hasAirtable) return;
   const n = Math.min(10, Math.max(1, Math.round(weight)));
-  const url = `${tableUrl(table)}/${agentId}`;
+  const url = `${tableUrl(TABLES.Agents)}/${agentId}`;
   const res = await fetch(url, {
     method: "PATCH",
     headers: getHeaders(),
-    body: JSON.stringify({ fields: { RoundRobinWeight: n } }),
+    body: JSON.stringify({ fields: { Weight: n } }),
     cache: "no-store",
   });
   if (!res.ok) {
     const err = await res.text();
-    if (res.status === 401) throw new AirtableAuthError(`Airtable update agent: 401 ${err}`);
+    if (res.status === 401) throw new AirtableAuthError(`Airtable update agent weight: 401 ${err}`);
     throw new Error(`Airtable update agent weight: ${res.status} ${err}`);
   }
 }
 
-// ---- Users (optional: Email, Role owner/broker/agent, Agent link) ----
-export type AirtableUser = { role: "owner" | "broker" | "agent"; agentId?: string };
+/** Agent compat: name and active for API/frontend that expect Agent shape */
+export type AgentCompat = AirtableAgent & { name: string; active: boolean };
+
+function toAgentCompat(a: AirtableAgent): AgentCompat {
+  return {
+    ...a,
+    name: a.fullName || "—",
+    active: a.status === "active",
+  };
+}
+
+/** Resolve Airtable Agent record id by email. */
+export async function getAgentIdByEmail(email: string): Promise<string | null> {
+  const agent = await getAgentByEmail(email);
+  return agent?.id ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Leads
+// ---------------------------------------------------------------------------
+
+type LeadFields = {
+  LeadID?: number;
+  "First Name"?: string;
+  "Last Name"?: string;
+  "Full Name"?: string;
+  "Lead Phone"?: string;
+  "Lead Email"?: string;
+  Source?: string;
+  Status?: string;
+  "Assigned Agent"?: string[];
+  "Assigned Line"?: string[];
+  "Assigned At"?: string;
+  "Last Agent Reply At"?: string;
+  "Last Lead Message At"?: string;
+  "Created At"?: string;
+  "Intent Label"?: string;
+  "Intent Reason"?: string;
+  "Suggested Action"?: string;
+  "Escalation Enabled"?: boolean;
+  "Escalation Minutes"?: number;
+  "Escalation Max"?: number;
+  "Escalation Count"?: number;
+  "Last Escalated At"?: string;
+  Timeline?: string;
+  "Pre Approved"?: string;
+  "Budget Min"?: number;
+  "Budget Max"?: number;
+  Notes?: string;
+  Brokerage?: string[];
+};
+
+const LEAD_SOURCES = [
+  "website",
+  "zillow",
+  "realtor",
+  "facebook_ads",
+  "referral",
+  "other",
+  "manual",
+] as const;
+const LEAD_STATUSES = [
+  "new",
+  "qualifying",
+  "qualified",
+  "unqualified",
+  "assigned",
+  "nurturing",
+  "closed",
+  "complete",
+] as const;
+const INTENT_LABELS = ["high", "medium", "low"] as const;
+const SUGGESTED_ACTIONS = ["call_now", "follow_up_1hr", "nurture"] as const;
+const TIMELINES = ["0_30", "30_90", "90_plus", "unknown"] as const;
+const PRE_APPROVED = ["yes", "no", "unknown"] as const;
+
+function recordToLead(r: AirtableRecord<LeadFields>): AirtableLead {
+  const f = r.fields ?? {};
+  const rawStatus = (f.Status ?? "new").toString().toLowerCase();
+  const status = LEAD_STATUSES.includes(rawStatus as (typeof LEAD_STATUSES)[number])
+    ? (rawStatus as AirtableLead["status"])
+    : "new";
+  const source = LEAD_SOURCES.includes((f.Source ?? "").toString().toLowerCase() as (typeof LEAD_SOURCES)[number])
+    ? (f.Source as AirtableLead["source"])
+    : "other";
+  const intentLabel = INTENT_LABELS.includes((f["Intent Label"] ?? "").toString().toLowerCase() as (typeof INTENT_LABELS)[number])
+    ? (f["Intent Label"] as AirtableLead["intentLabel"])
+    : null;
+  const suggestedAction = SUGGESTED_ACTIONS.includes((f["Suggested Action"] ?? "").toString().toLowerCase() as (typeof SUGGESTED_ACTIONS)[number])
+    ? (f["Suggested Action"] as AirtableLead["suggestedAction"])
+    : null;
+  const timeline = TIMELINES.includes((f.Timeline ?? "").toString() as (typeof TIMELINES)[number])
+    ? (f.Timeline as AirtableLead["timeline"])
+    : null;
+  const preApproved = PRE_APPROVED.includes((f["Pre Approved"] ?? "").toString().toLowerCase() as (typeof PRE_APPROVED)[number])
+    ? (f["Pre Approved"] as AirtableLead["preApproved"])
+    : null;
+  return {
+    id: r.id,
+    leadId: typeof f.LeadID === "number" ? f.LeadID : 0,
+    brokerageId: Array.isArray(f.Brokerage) ? f.Brokerage[0] ?? "" : "",
+    firstName: (f["First Name"] ?? "").toString().trim(),
+    lastName: (f["Last Name"] ?? "").toString().trim(),
+    fullName: (f["Full Name"] ?? "").toString().trim(),
+    leadPhone: (f["Lead Phone"] ?? "").toString().trim(),
+    leadEmail: (f["Lead Email"] ?? "").toString().trim(),
+    source,
+    status,
+    assignedAgentId: Array.isArray(f["Assigned Agent"]) ? f["Assigned Agent"][0] ?? null : null,
+    assignedLineId: Array.isArray(f["Assigned Line"]) ? f["Assigned Line"][0] ?? null : null,
+    assignedAt: f["Assigned At"]?.trim() ?? null,
+    lastAgentReplyAt: f["Last Agent Reply At"]?.trim() ?? null,
+    lastLeadMessageAt: f["Last Lead Message At"]?.trim() ?? null,
+    createdAt: (f["Created At"] ?? r.createdTime ?? "").toString(),
+    intentLabel,
+    intentReason: (f["Intent Reason"] ?? "").toString().trim(),
+    suggestedAction,
+    escalationEnabled: f["Escalation Enabled"] === true,
+    escalationMinutes: typeof f["Escalation Minutes"] === "number" ? f["Escalation Minutes"] : 0,
+    escalationMax: typeof f["Escalation Max"] === "number" ? f["Escalation Max"] : 0,
+    escalationCount: typeof f["Escalation Count"] === "number" ? f["Escalation Count"] : 0,
+    lastEscalatedAt: f["Last Escalated At"]?.trim() ?? null,
+    timeline,
+    preApproved,
+    budgetMin: typeof f["Budget Min"] === "number" ? f["Budget Min"] : null,
+    budgetMax: typeof f["Budget Max"] === "number" ? f["Budget Max"] : null,
+    notes: (f.Notes ?? "").toString().trim(),
+  };
+}
+
+/** Lead shape with legacy name/phone/email/status for API compat */
+export type LeadCompat = AirtableLead & {
+  name: string;
+  phone: string;
+  email: string;
+  status: "new" | "contacted" | "qualified" | "appointment" | "closed" | "lost";
+  assignedTo?: string;
+  assignedToName?: string;
+  lastMessageAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+function toLeadCompat(l: AirtableLead, assignedToName?: string): LeadCompat {
+  const legacyStatus = (AIRTABLE_TO_LEGACY_STATUS[l.status] ?? l.status) as LeadCompat["status"];
+  return {
+    ...l,
+    name: l.fullName || "—",
+    phone: l.leadPhone || "",
+    email: l.leadEmail || "",
+    status: legacyStatus,
+    assignedTo: l.assignedAgentId ?? undefined,
+    assignedToName,
+    lastMessageAt: l.lastLeadMessageAt,
+    createdAt: l.createdAt,
+    updatedAt: l.lastLeadMessageAt ?? l.assignedAt ?? l.createdAt,
+  };
+}
+
+async function getLeadsUncached(
+  brokerageId?: string,
+  filters?: { status?: string; agentId?: string }
+): Promise<LeadCompat[]> {
+  if (!hasAirtable) return [];
+  let formula: string | undefined;
+  if (brokerageId?.trim()) {
+    const escaped = brokerageId.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    formula = `FIND("${escaped}", ARRAYJOIN({Brokerage}))`;
+  }
+  if (filters?.agentId?.trim()) {
+    const escaped = (filters.agentId ?? "").replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const agentFilter = `{Assigned Agent} = "${escaped}"`;
+    formula = formula ? `AND(${formula}, ${agentFilter})` : agentFilter;
+  }
+  if (filters?.status?.trim() && filters.status !== "all") {
+    const statusVal = LEGACY_TO_AIRTABLE_STATUS[filters.status] ?? filters.status;
+    const statusFilter = `{Status} = "${statusVal}"`;
+    formula = formula ? `AND(${formula}, ${statusFilter})` : statusFilter;
+  }
+  const records = await listAllRecords<LeadFields>(TABLES.Leads, formula);
+  const leads = records.map(recordToLead);
+  const agentIds = [...new Set(leads.map((l) => l.assignedAgentId).filter(Boolean))] as string[];
+  let agentNames: Map<string, string> = new Map();
+  if (agentIds.length > 0) {
+    const agents = await getAgents();
+    agentNames = new Map(agents.map((a) => [a.id, a.fullName]));
+  }
+  return leads.map((l) => toLeadCompat(l, l.assignedAgentId ? agentNames.get(l.assignedAgentId) : undefined));
+}
+
+const getLeadsCachedAll = hasAirtable
+  ? unstable_cache(
+      () => getLeadsUncached(undefined, undefined),
+      ["airtable-leads"],
+      { revalidate: 60, tags: ["leads"] }
+    )
+  : () => Promise.resolve([]);
+
+/**
+ * Get leads. Backward compat: when only one string arg is passed, treat as agentId filter.
+ * getLeads() → all leads; getLeads(agentId) → leads for that agent; getLeads(brokerageId, filters) → filtered.
+ */
+export async function getLeads(
+  brokerageIdOrAgentId?: string,
+  filters?: { status?: string; agentId?: string }
+): Promise<LeadCompat[]> {
+  if (filters != null && Object.keys(filters).length > 0) {
+    return getLeadsUncached(brokerageIdOrAgentId, filters);
+  }
+  if (brokerageIdOrAgentId != null && brokerageIdOrAgentId.trim() !== "") {
+    return getLeadsUncached(undefined, { agentId: brokerageIdOrAgentId });
+  }
+  return getLeadsCachedAll();
+}
+
+export async function getLeadById(id: string): Promise<AirtableLead | null> {
+  if (!hasAirtable) return null;
+  const url = `${tableUrl(TABLES.Leads)}/${id}`;
+  const res = await fetch(url, { headers: getHeaders(), cache: "no-store" });
+  if (!res.ok) {
+    if (res.status === 401) throw new AirtableAuthError(`Airtable getLeadById: 401`);
+    if (res.status === 404) return null;
+    throw new Error(`Airtable getLeadById: ${res.status}`);
+  }
+  const r = (await res.json()) as AirtableRecord<LeadFields>;
+  return recordToLead(r);
+}
+
+export async function getLeadByPhone(phone: string): Promise<LeadCompat | null> {
+  if (!hasAirtable) return null;
+  try {
+    const normalized = normalizePhone(phone);
+    if (!normalized) return null;
+    const escaped = `"+1${normalized}"`;
+    const formula = `OR({Lead Phone} = "${normalized}", {Lead Phone} = ${escaped})`;
+    const records = await listAllRecords<LeadFields>(TABLES.Leads, formula);
+    const first = records[0];
+    if (!first) return null;
+    const lead = recordToLead(first);
+    const agentName = lead.assignedAgentId
+      ? (await getAgentById(lead.assignedAgentId))?.fullName
+      : undefined;
+    return toLeadCompat(lead, agentName);
+  } catch (e) {
+    if (e instanceof AirtableAuthError) throw e;
+    console.warn("[airtable] getLeadByPhone failed:", e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
+/** Input for createLead; source/status as string for API compat */
+export type CreateLeadInput = Omit<Partial<AirtableLead>, "source" | "status"> & {
+  name?: string;
+  phone?: string;
+  email?: string;
+  status?: string;
+  source?: string;
+  assignedTo?: string;
+  brokerageId?: string;
+};
+
+export async function createLead(data: CreateLeadInput): Promise<LeadCompat> {
+  if (!hasAirtable) {
+    const name = data.fullName ?? data.name ?? "—";
+    const phone = data.leadPhone ?? data.phone ?? "";
+    return toLeadCompat({
+      id: `lead-${Date.now()}`,
+      leadId: 0,
+      brokerageId: data.brokerageId ?? "",
+      firstName: "",
+      lastName: "",
+      fullName: name,
+      leadPhone: phone,
+      leadEmail: data.leadEmail ?? data.email ?? "",
+      source: (data.source as AirtableLead["source"]) ?? "other",
+      status: "new",
+      assignedAgentId: data.assignedAgentId ?? data.assignedTo ?? null,
+      assignedLineId: null,
+      assignedAt: null,
+      lastAgentReplyAt: null,
+      lastLeadMessageAt: null,
+      createdAt: new Date().toISOString(),
+      intentLabel: null,
+      intentReason: "",
+      suggestedAction: null,
+      escalationEnabled: false,
+      escalationMinutes: 0,
+      escalationMax: 0,
+      escalationCount: 0,
+      lastEscalatedAt: null,
+      timeline: null,
+      preApproved: null,
+      budgetMin: null,
+      budgetMax: null,
+      notes: "",
+    });
+  }
+  const url = tableUrl(TABLES.Leads);
+  const fullName = data.fullName ?? data.name ?? "";
+  const parts = (fullName || "").trim().split(/\s+/);
+  const firstName = data.firstName ?? parts[0] ?? "";
+  const lastName = data.lastName ?? parts.slice(1).join(" ") ?? "";
+  const leadPhone = data.leadPhone ?? data.phone ?? "";
+  const leadEmail = data.leadEmail ?? data.email ?? "";
+  const rawStatus = (data.status ?? "new").toString().toLowerCase();
+  const status = (LEGACY_TO_AIRTABLE_STATUS[rawStatus] ?? rawStatus) as AirtableLead["status"];
+  const source = LEAD_SOURCES.includes((data.source ?? "other").toLowerCase() as (typeof LEAD_SOURCES)[number])
+    ? (data.source as AirtableLead["source"])
+    : "other";
+  const fields: Record<string, unknown> = {
+    "First Name": firstName,
+    "Last Name": lastName,
+    "Full Name": (fullName || `${firstName} ${lastName}`).trim() || "—",
+    "Lead Phone": leadPhone,
+    "Lead Email": leadEmail,
+    Source: source,
+    Status: status,
+    Notes: data.notes ?? "",
+  };
+  if (data.brokerageId) fields.Brokerage = [data.brokerageId];
+  if (data.assignedAgentId ?? data.assignedTo) {
+    fields["Assigned Agent"] = [data.assignedAgentId ?? data.assignedTo!];
+  }
+  const res = await fetch(url, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ fields }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    if (res.status === 401) throw new AirtableAuthError(`Airtable createLead: 401 ${err}`);
+    throw new Error(`Airtable createLead: ${res.status} ${err}`);
+  }
+  const created = (await res.json()) as AirtableRecord<LeadFields>;
+  const lead = recordToLead(created);
+  return toLeadCompat(lead);
+}
+
+export async function updateLead(
+  id: string,
+  data: Partial<Pick<AirtableLead, "assignedAgentId" | "lastLeadMessageAt">> & {
+    status?: string;
+    assignedTo?: string;
+    lastMessageAt?: string;
+  }
+): Promise<LeadCompat> {
+  if (!hasAirtable) {
+    const existing = await getLeadById(id);
+    if (!existing) throw new Error("Lead not found");
+    return toLeadCompat(existing);
+  }
+  const url = `${tableUrl(TABLES.Leads)}/${id}`;
+  const fields: Record<string, unknown> = {};
+  if (data.lastLeadMessageAt != null) fields["Last Lead Message At"] = data.lastLeadMessageAt;
+  if ((data as { lastMessageAt?: string }).lastMessageAt != null) {
+    fields["Last Lead Message At"] = (data as { lastMessageAt?: string }).lastMessageAt;
+  }
+  if (data.status != null) {
+    const raw = data.status.toString().toLowerCase();
+    fields.Status = LEGACY_TO_AIRTABLE_STATUS[raw] ?? raw;
+  }
+  if (data.assignedTo !== undefined) {
+    fields["Assigned Agent"] = data.assignedTo ? [data.assignedTo] : [];
+  }
+  if (data.assignedAgentId !== undefined) {
+    fields["Assigned Agent"] = data.assignedAgentId ? [data.assignedAgentId] : [];
+  }
+  if (Object.keys(fields).length === 0) {
+    const lead = await getLeadById(id);
+    if (!lead) throw new Error("Lead not found");
+    return toLeadCompat(lead);
+  }
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify({ fields }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    if (res.status === 401) throw new AirtableAuthError(`Airtable updateLead: 401 ${err}`);
+    throw new Error(`Airtable updateLead: ${res.status} ${err}`);
+  }
+  const updated = (await res.json()) as AirtableRecord<LeadFields>;
+  const lead = recordToLead(updated);
+  return toLeadCompat(lead);
+}
+
+export async function deleteLead(id: string): Promise<void> {
+  if (!hasAirtable) return;
+  const url = `${tableUrl(TABLES.Leads)}/${id}`;
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: getHeaders(),
+    cache: "no-store",
+  });
+  if (!res.ok && res.status !== 404) {
+    const err = await res.text();
+    if (res.status === 401) throw new AirtableAuthError(`Airtable deleteLead: 401 ${err}`);
+    throw new Error(`Airtable deleteLead: ${res.status} ${err}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Messages
+// ---------------------------------------------------------------------------
+
+type MessageFields = {
+  MessageID?: number;
+  Lead?: string[];
+  Brokerage?: string[];
+  Direction?: string;
+  "From Number"?: string;
+  "To Number"?: string;
+  Body?: string;
+  "Sent At"?: string;
+  "Actor Type"?: string;
+  "Actor Agent"?: string[];
+  "Twilio Message SID"?: string;
+  "Delivery Status"?: string;
+};
+
+function recordToMessage(r: AirtableRecord<MessageFields>): AirtableMessage {
+  const f = r.fields ?? {};
+  const dir = normalizeDirection((f.Direction ?? "").toString());
+  const actorType = (f["Actor Type"] ?? "lead").toString().toLowerCase() as AirtableMessage["actorType"];
+  const deliveryStatus = (f["Delivery Status"] ?? "sent").toString().toLowerCase() as AirtableMessage["deliveryStatus"];
+  return {
+    id: r.id,
+    messageId: typeof f.MessageID === "number" ? f.MessageID : 0,
+    leadId: Array.isArray(f.Lead) ? f.Lead[0] ?? "" : "",
+    brokerageId: Array.isArray(f.Brokerage) ? f.Brokerage[0] ?? "" : "",
+    direction: dir,
+    fromNumber: (f["From Number"] ?? "").toString().trim(),
+    toNumber: (f["To Number"] ?? "").toString().trim(),
+    body: (f.Body ?? "").toString().trim(),
+    sentAt: (f["Sent At"] ?? r.createdTime ?? "").toString(),
+    actorType: ["lead", "ai", "agent", "system"].includes(actorType) ? actorType : "lead",
+    actorAgentId: Array.isArray(f["Actor Agent"]) ? f["Actor Agent"][0] ?? null : null,
+    twilioMessageSid: (f["Twilio Message SID"] ?? "").toString().trim(),
+    deliveryStatus: ["queued", "sent", "delivered", "failed"].includes(deliveryStatus) ? deliveryStatus : "sent",
+  };
+}
+
+/** Message compat: direction "in" | "out" and createdAt for API (overrides AirtableMessage.direction) */
+export type MessageCompat = Omit<AirtableMessage, "direction"> & {
+  direction: "in" | "out";
+  createdAt: string;
+  leadId?: string;
+  senderType?: "ai" | "agent" | "lead";
+};
+
+function toMessageCompat(m: AirtableMessage): MessageCompat {
+  return {
+    ...m,
+    direction: m.direction === "inbound" ? "in" : "out",
+    createdAt: m.sentAt,
+    leadId: m.leadId,
+    senderType: m.actorType === "ai" ? "ai" : m.actorType === "agent" ? "agent" : "lead",
+  };
+}
+
+export async function getMessages(leadId?: string): Promise<MessageCompat[]> {
+  if (!hasAirtable) return [];
+  let formula: string | undefined;
+  if (leadId?.trim()) {
+    const escaped = leadId.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    formula = `{Lead} = "${escaped}"`;
+  }
+  const records = await listAllRecords<MessageFields>(TABLES.Messages, formula);
+  const list = records.map(recordToMessage).map(toMessageCompat);
+  list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return list;
+}
+
+export type CreateMessageInput = {
+  leadId: string;
+  body: string;
+  direction: "in" | "out";
+  senderType?: "ai" | "agent" | "lead";
+  brokerageId?: string;
+  fromNumber?: string;
+  toNumber?: string;
+  actorAgentId?: string | null;
+  twilioMessageSid?: string;
+  deliveryStatus?: AirtableMessage["deliveryStatus"];
+};
+
+export async function createMessage(data: CreateMessageInput): Promise<MessageCompat> {
+  if (!hasAirtable) {
+    return toMessageCompat({
+      id: `msg-${Date.now()}`,
+      messageId: 0,
+      leadId: data.leadId,
+      brokerageId: data.brokerageId ?? "",
+      direction: data.direction === "in" ? "inbound" : "outbound",
+      fromNumber: data.fromNumber ?? "",
+      toNumber: data.toNumber ?? "",
+      body: data.body ?? "",
+      sentAt: new Date().toISOString(),
+      actorType: (data.senderType as "lead" | "ai" | "agent" | "system") ?? "lead",
+      actorAgentId: data.actorAgentId ?? null,
+      twilioMessageSid: data.twilioMessageSid ?? "",
+      deliveryStatus: data.deliveryStatus ?? "sent",
+    });
+  }
+  const url = tableUrl(TABLES.Messages);
+  const direction = data.direction === "in" ? "inbound" : "outbound";
+  const actorType = (data.senderType ?? "lead") as "lead" | "ai" | "agent" | "system";
+  const now = new Date().toISOString();
+  const fields: Record<string, unknown> = {
+    Lead: [data.leadId],
+    Direction: direction,
+    Body: data.body ?? "",
+    "Sent At": now,
+    "Actor Type": actorType,
+    "Twilio Message SID": data.twilioMessageSid ?? "",
+    "Delivery Status": data.deliveryStatus ?? "sent",
+  };
+  if (data.brokerageId) fields.Brokerage = [data.brokerageId];
+  if (data.fromNumber) fields["From Number"] = data.fromNumber;
+  if (data.toNumber) fields["To Number"] = data.toNumber;
+  if (data.actorAgentId) fields["Actor Agent"] = [data.actorAgentId];
+  const res = await fetch(url, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ fields }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    if (res.status === 401) throw new AirtableAuthError(`Airtable createMessage: 401 ${err}`);
+    throw new Error(`Airtable createMessage: ${res.status} ${err}`);
+  }
+  const created = (await res.json()) as AirtableRecord<MessageFields>;
+  return toMessageCompat(recordToMessage(created));
+}
+
+// ---------------------------------------------------------------------------
+// Conversations
+// ---------------------------------------------------------------------------
+
+type ConversationFields = {
+  ConversationID?: number;
+  Lead?: string[];
+  Brokerage?: string[];
+  AssignedAgent?: string[];
+  LastMessageAt?: string;
+  LastMessagePreview?: string;
+  Status?: string;
+  CreatedAt?: string;
+};
+
+function recordToConversation(
+  r: AirtableRecord<ConversationFields>
+): AirtableConversation {
+  const f = r.fields ?? {};
+  const status = (f.Status ?? "new").toString().toLowerCase() as AirtableConversation["status"];
+  return {
+    id: r.id,
+    conversationId: typeof f.ConversationID === "number" ? f.ConversationID : 0,
+    leadId: Array.isArray(f.Lead) ? f.Lead[0] ?? "" : "",
+    brokerageId: Array.isArray(f.Brokerage) ? f.Brokerage[0] ?? "" : "",
+    assignedAgentId: Array.isArray(f.AssignedAgent) ? f.AssignedAgent[0] ?? null : null,
+    lastMessageAt: f.LastMessageAt?.trim() ?? null,
+    lastMessagePreview: (f.LastMessagePreview ?? "").toString().trim(),
+    status: ["new", "qualifying", "complete"].includes(status) ? status : "new",
+    createdAt: (f.CreatedAt ?? r.createdTime ?? "").toString(),
+  };
+}
+
+export async function getConversations(
+  brokerageId: string
+): Promise<AirtableConversation[]> {
+  if (!hasAirtable) return [];
+  const escaped = brokerageId.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  const formula = `FIND("${escaped}", ARRAYJOIN({Brokerage}))`;
+  const records = await listAllRecords<ConversationFields>(
+    TABLES.Conversations,
+    formula
+  );
+  return records.map(recordToConversation);
+}
+
+export async function getConversationByLeadId(
+  leadId: string
+): Promise<AirtableConversation | null> {
+  if (!hasAirtable) return null;
+  const escaped = leadId.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  const formula = `{Lead} = "${escaped}"`;
+  const records = await listAllRecords<ConversationFields>(
+    TABLES.Conversations,
+    formula
+  );
+  const first = records[0];
+  if (!first) return null;
+  return recordToConversation(first);
+}
+
+export async function createConversation(
+  data: Partial<AirtableConversation>
+): Promise<AirtableConversation> {
+  if (!hasAirtable) throw new Error("Airtable not configured");
+  const url = tableUrl(TABLES.Conversations);
+  const fields: Record<string, unknown> = {
+    LastMessagePreview: data.lastMessagePreview ?? "",
+    Status: data.status ?? "new",
+  };
+  if (data.leadId) fields.Lead = [data.leadId];
+  if (data.brokerageId) fields.Brokerage = [data.brokerageId];
+  if (data.assignedAgentId) fields.AssignedAgent = [data.assignedAgentId];
+  if (data.lastMessageAt) fields.LastMessageAt = data.lastMessageAt;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ fields }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    if (res.status === 401) throw new AirtableAuthError(`Airtable createConversation: 401 ${err}`);
+    throw new Error(`Airtable createConversation: ${res.status} ${err}`);
+  }
+  const created = (await res.json()) as AirtableRecord<ConversationFields>;
+  return recordToConversation(created);
+}
+
+export async function updateConversation(
+  id: string,
+  data: Partial<AirtableConversation>
+): Promise<AirtableConversation> {
+  if (!hasAirtable) throw new Error("Airtable not configured");
+  const url = `${tableUrl(TABLES.Conversations)}/${id}`;
+  const fields: Record<string, unknown> = {};
+  if (data.assignedAgentId !== undefined) fields.AssignedAgent = data.assignedAgentId ? [data.assignedAgentId] : [];
+  if (data.lastMessageAt !== undefined) fields.LastMessageAt = data.lastMessageAt;
+  if (data.lastMessagePreview !== undefined) fields.LastMessagePreview = data.lastMessagePreview;
+  if (data.status !== undefined) fields.Status = data.status;
+  if (Object.keys(fields).length === 0) {
+    const list = await listAllRecords<ConversationFields>(TABLES.Conversations);
+    const found = list.find((rec) => rec.id === id);
+    if (!found) throw new Error("Conversation not found");
+    return recordToConversation(found);
+  }
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify({ fields }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    if (res.status === 401) throw new AirtableAuthError(`Airtable updateConversation: 401 ${err}`);
+    throw new Error(`Airtable updateConversation: ${res.status} ${err}`);
+  }
+  const updated = (await res.json()) as AirtableRecord<ConversationFields>;
+  return recordToConversation(updated);
+}
+
+// ---------------------------------------------------------------------------
+// Phone Lines
+// ---------------------------------------------------------------------------
+
+type PhoneLineFields = {
+  LineID?: number;
+  "Twilio Phone Number"?: string;
+  "Friendly Name"?: string;
+  "Line Type"?: string;
+  "Assigned Agent"?: string[];
+  Status?: string;
+  Brokerage?: string[];
+};
+
+function recordToPhoneLine(r: AirtableRecord<PhoneLineFields>): AirtablePhoneLine {
+  const f = r.fields ?? {};
+  const lineType = (f["Line Type"] ?? "main").toString().toLowerCase() as "main" | "personal";
+  const status = (f.Status ?? "active").toString().toLowerCase() as "active" | "paused";
+  return {
+    id: r.id,
+    lineId: typeof f.LineID === "number" ? f.LineID : 0,
+    brokerageId: Array.isArray(f.Brokerage) ? f.Brokerage[0] ?? "" : "",
+    twilioPhoneNumber: (f["Twilio Phone Number"] ?? "").toString().trim(),
+    friendlyName: (f["Friendly Name"] ?? "").toString().trim(),
+    lineType: lineType === "personal" ? "personal" : "main",
+    assignedAgentId: Array.isArray(f["Assigned Agent"]) ? f["Assigned Agent"][0] ?? null : null,
+    status: status === "paused" ? "paused" : "active",
+  };
+}
+
+export async function getPhoneLines(
+  brokerageId: string
+): Promise<AirtablePhoneLine[]> {
+  if (!hasAirtable) return [];
+  const escaped = brokerageId.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  const formula = `FIND("${escaped}", ARRAYJOIN({Brokerage}))`;
+  const records = await listAllRecords<PhoneLineFields>(
+    TABLES.Phone_Lines,
+    formula
+  );
+  return records.map(recordToPhoneLine);
+}
+
+export async function getPhoneLineByNumber(
+  number: string
+): Promise<AirtablePhoneLine | null> {
+  if (!hasAirtable) return null;
+  const normalized = normalizePhone(number);
+  if (!normalized) return null;
+  const escaped = `"+1${normalized}"`;
+  const formula = `OR({Twilio Phone Number} = "${normalized}", {Twilio Phone Number} = ${escaped})`;
+  const records = await listAllRecords<PhoneLineFields>(
+    TABLES.Phone_Lines,
+    formula
+  );
+  const first = records[0];
+  if (!first) return null;
+  return recordToPhoneLine(first);
+}
+
+// ---------------------------------------------------------------------------
+// Users (Airtable Users table)
+// ---------------------------------------------------------------------------
+
+export type AirtableUser = { role: ValidRole; agentId?: string };
 
 type UserFields = {
+  Name?: string;
+  demoMode?: boolean;
+  role?: string;
+  onboardingStatus?: string;
+  onboardingStep?: number;
+  OwnerEmail?: string[];
   Email?: string;
   Role?: string;
   Agent?: string[];
-  /** Optional bcrypt hash for Credentials login. Only read for server-side auth. */
   PasswordHash?: string;
-  /** Optional: subscription plan from Stripe (free | essentials | pro). */
   Plan?: string;
 };
 
 const VALID_ROLES = ["owner", "broker", "agent"] as const;
-type ValidRole = (typeof VALID_ROLES)[number];
+export type ValidRole = (typeof VALID_ROLES)[number];
 
 function parseRole(raw: string): ValidRole {
   const r = (raw ?? "").toString().toLowerCase();
@@ -403,46 +1361,57 @@ function parseRole(raw: string): ValidRole {
   return "broker";
 }
 
-/** Look up user by email in optional Users table. Returns null if table not configured or user not found. Does not include PasswordHash. */
-export async function getAirtableUserByEmail(email: string): Promise<AirtableUser | null> {
+/** Users table: primary is Name; we look up by Email (or OwnerEmail link). */
+export async function getAirtableUserByEmail(
+  email: string
+): Promise<AirtableUser | null> {
   const withHash = await getAirtableUserByEmailForAuth(email);
   if (!withHash) return null;
   return { role: withHash.role, agentId: withHash.agentId };
 }
 
-/** Look up user by email including PasswordHash. For server-side Credentials auth only; do not expose hash. */
 export async function getAirtableUserByEmailForAuth(
   email: string
-): Promise<{ role: ValidRole; agentId?: string; passwordHash?: string } | null> {
-  const table = env.server.AIRTABLE_TABLE_USERS?.trim();
-  if (!table || !hasAirtable) return null;
+): Promise<{
+  role: ValidRole;
+  agentId?: string;
+  passwordHash?: string;
+} | null> {
+  const table = TABLES.Users;
+  if (!table?.trim() || !hasAirtable) return null;
   const trimmed = email.trim().toLowerCase();
   if (!trimmed) return null;
   const escaped = trimmed.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  const formula = `LOWER({Email}) = "${escaped}"`;
+  const formula = `LOWER(TRIM(IF(Email, Email, ""))) = "${escaped}"`;
   try {
     const records = await listAllRecords<UserFields>(table, formula);
     const first = records[0];
     if (!first?.fields) return null;
-    const role = parseRole((first.fields.Role ?? "").toString());
-    const agentLink = Array.isArray(first.fields.Agent) ? first.fields.Agent[0] : undefined;
+    const role = parseRole((first.fields.Role ?? first.fields.role ?? "").toString());
+    const agentLink = Array.isArray(first.fields.Agent)
+      ? first.fields.Agent[0]
+      : undefined;
     const passwordHash =
-      typeof first.fields.PasswordHash === "string" && first.fields.PasswordHash.trim()
+      typeof first.fields.PasswordHash === "string" &&
+      first.fields.PasswordHash.trim()
         ? first.fields.PasswordHash.trim()
         : undefined;
-    return { role, agentId: agentLink ?? undefined, passwordHash };
+    return {
+      role,
+      agentId: agentLink ?? undefined,
+      passwordHash,
+    };
   } catch {
     return null;
   }
 }
 
-/** Create a user in the optional Users table (e.g. for OAuth first sign-in). Returns created AirtableUser or null if table not configured / request failed. */
 export async function createAirtableUser(
   email: string,
-  role: ValidRole
+  role: string
 ): Promise<AirtableUser | null> {
-  const table = env.server.AIRTABLE_TABLE_USERS?.trim();
-  if (!table || !hasAirtable) return null;
+  const table = TABLES.Users;
+  if (!table?.trim() || !hasAirtable) return null;
   const trimmed = email.trim();
   if (!trimmed) return null;
   const url = tableUrl(table);
@@ -461,11 +1430,10 @@ export async function createAirtableUser(
     if (!res.ok) {
       const err = await res.text();
       if (res.status === 401) throw new AirtableAuthError(`Airtable Users create: 401 ${err}`);
-      console.error("[airtable] createAirtableUser failed:", res.status, err);
       return null;
     }
     const created = (await res.json()) as AirtableRecord<UserFields>;
-    const roleParsed = parseRole((created.fields?.Role ?? "").toString());
+    const roleParsed = parseRole((created.fields?.Role ?? created.fields?.role ?? "").toString()) as ValidRole;
     return { role: roleParsed, agentId: undefined };
   } catch (e) {
     if (e instanceof AirtableAuthError) throw e;
@@ -473,14 +1441,16 @@ export async function createAirtableUser(
   }
 }
 
-/** Update a user's role in the Users table. Returns true if updated. */
-export async function updateUserRole(email: string, role: ValidRole): Promise<boolean> {
-  const table = env.server.AIRTABLE_TABLE_USERS?.trim();
-  if (!table || !hasAirtable) return false;
+export async function updateUserRole(
+  email: string,
+  role: ValidRole
+): Promise<boolean> {
+  const table = TABLES.Users;
+  if (!table?.trim() || !hasAirtable) return false;
   const trimmed = email.trim().toLowerCase();
   if (!trimmed) return false;
   const escaped = trimmed.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  const formula = `LOWER({Email}) = "${escaped}"`;
+  const formula = `LOWER(TRIM(IF(Email, Email, ""))) = "${escaped}"`;
   try {
     const records = await listAllRecords<UserFields>(table, formula);
     const recordId = records[0]?.id;
@@ -503,30 +1473,13 @@ export async function updateUserRole(email: string, role: ValidRole): Promise<bo
   }
 }
 
-/** Resolve Airtable Agent record id by email (from Agents table). Used when Users table has no Agent link. */
-export async function getAgentIdByEmail(email: string): Promise<string | null> {
-  if (!hasAirtable) return null;
-  const trimmed = email.trim().toLowerCase();
-  if (!trimmed) return null;
-  const table = env.server.AIRTABLE_TABLE_AGENTS;
-  const escaped = trimmed.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  const formula = `LOWER({Email}) = "${escaped}"`;
-  try {
-    const records = await listAllRecords<AgentFields>(table, formula);
-    return records[0]?.id ?? null;
-  } catch {
-    return null;
-  }
-}
-
-/** Plan id stored in Airtable Users (optional Plan field). Returns null if no table/field or not set. */
 export async function getAirtableUserPlan(email: string): Promise<string | null> {
-  const table = env.server.AIRTABLE_TABLE_USERS?.trim();
-  if (!table || !hasAirtable) return null;
+  const table = TABLES.Users;
+  if (!table?.trim() || !hasAirtable) return null;
   const trimmed = email.trim().toLowerCase();
   if (!trimmed) return null;
   const escaped = trimmed.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  const formula = `LOWER({Email}) = "${escaped}"`;
+  const formula = `LOWER(TRIM(IF(Email, Email, ""))) = "${escaped}"`;
   try {
     const records = await listAllRecords<UserFields>(table, formula);
     const plan = records[0]?.fields?.Plan;
@@ -539,14 +1492,16 @@ export async function getAirtableUserPlan(email: string): Promise<string | null>
   }
 }
 
-/** Update Plan field for user by email. No-op if Users table or record not found. */
-export async function updateAirtableUserPlan(email: string, planId: string): Promise<void> {
-  const table = env.server.AIRTABLE_TABLE_USERS?.trim();
-  if (!table || !hasAirtable) return;
+export async function updateAirtableUserPlan(
+  email: string,
+  planId: string
+): Promise<void> {
+  const table = TABLES.Users;
+  if (!table?.trim() || !hasAirtable) return;
   const trimmed = email.trim().toLowerCase();
   if (!trimmed) return;
   const escaped = trimmed.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  const formula = `LOWER({Email}) = "${escaped}"`;
+  const formula = `LOWER(TRIM(IF(Email, Email, ""))) = "${escaped}"`;
   try {
     const records = await listAllRecords<UserFields>(table, formula);
     const recordId = records[0]?.id;
@@ -563,8 +1518,10 @@ export async function updateAirtableUserPlan(email: string, planId: string): Pro
   }
 }
 
-// ---- Waitlist ----
-/** Create a waitlist entry. When Airtable is not configured, logs and returns mock id. */
+// ---------------------------------------------------------------------------
+// Waitlist
+// ---------------------------------------------------------------------------
+
 export async function createWaitlistEntry(
   email: string,
   name?: string,
@@ -572,17 +1529,14 @@ export async function createWaitlistEntry(
 ): Promise<{ id: string }> {
   const trimmed = email.trim().toLowerCase();
   if (!trimmed) throw new Error("Email is required");
-
   if (!hasAirtable) {
     return { id: `waitlist-mock-${Date.now()}` };
   }
-
-  const table = env.server.AIRTABLE_TABLE_WAITLIST?.trim() || "Waitlist";
+  const table = TABLES.Waitlist;
   const url = tableUrl(table);
   const fields: Record<string, string> = { Email: trimmed };
   if (name?.trim()) fields.Name = name.trim();
   if (source?.trim()) fields.Source = source.trim();
-
   const res = await fetch(url, {
     method: "POST",
     headers: getHeaders(),
@@ -592,106 +1546,22 @@ export async function createWaitlistEntry(
   if (!res.ok) {
     const err = await res.text();
     if (res.status === 401) {
-      console.error("[airtable] AUTHENTICATION_REQUIRED createWaitlistEntry", err);
       throw new AirtableAuthError(`Airtable Waitlist: 401 ${err}`);
     }
-    console.error("[airtable] createWaitlistEntry failed:", res.status, err);
     throw new Error(`Airtable Waitlist: ${res.status} ${err}`);
   }
   const created = (await res.json()) as { id: string };
   return { id: created.id };
 }
 
-// ---- Messages ----
-// Expected fields: Body, Direction ("in" | "out" or "In" | "Out"), Lead (link to Leads).
-// createdTime on record or field "Created".
-type MessageFields = {
-  Body?: string;
-  Direction?: string;
-  Lead?: string[];
-  Created?: string;
-};
+// ---------------------------------------------------------------------------
+// Activity (derived from leads + messages for dashboard)
+// ---------------------------------------------------------------------------
 
-function recordToMessage(r: AirtableRecord<MessageFields>, leadId?: string): Message {
-  const f = r.fields ?? {};
-  const dir = (f.Direction ?? "out").toString().toLowerCase();
-  const direction = dir === "in" ? "in" : "out";
-  const linkLead = Array.isArray(f.Lead) ? f.Lead[0] : undefined;
-  return {
-    id: r.id,
-    direction: direction as "in" | "out",
-    body: (f.Body ?? "").toString().trim(),
-    createdAt: (f.Created ?? r.createdTime) ?? new Date().toISOString(),
-    leadId: linkLead ?? leadId,
-  };
-}
-
-export async function getMessages(leadId?: string): Promise<Message[]> {
-  if (!hasAirtable) return [];
-  const table = env.server.AIRTABLE_TABLE_MESSAGES;
-  let records: AirtableRecord<MessageFields>[];
-  if (leadId) {
-    // Filter by linked Lead. Airtable: link field "Lead" — single link comparison.
-    const escaped = leadId.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-    const formula = `{Lead} = "${escaped}"`;
-    records = await listAllRecords<MessageFields>(table, formula);
-  } else {
-    records = await listAllRecords<MessageFields>(table);
-  }
-  const byCreated = (a: Message, b: Message) =>
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  return records.map((r) => recordToMessage(r, leadId)).sort(byCreated);
-}
-
-/** Create a message (e.g. inbound SMS). */
-export async function createMessage(data: {
-  leadId: string;
-  body: string;
-  direction: "in" | "out";
-  senderType?: "ai" | "agent" | "lead";
-}): Promise<Message> {
-  if (!hasAirtable) {
-    console.warn("[airtable] createMessage: Airtable not configured");
-    return {
-      id: `msg-${Date.now()}`,
-      direction: data.direction,
-      body: data.body,
-      createdAt: new Date().toISOString(),
-      leadId: data.leadId,
-      senderType: data.senderType,
-    };
-  }
-  const table = env.server.AIRTABLE_TABLE_MESSAGES;
-  const url = tableUrl(table);
-  const now = new Date().toISOString();
-  const res = await fetch(url, {
-    method: "POST",
-    headers: getHeaders(),
-    body: JSON.stringify({
-      fields: {
-        Body: data.body,
-        Direction: data.direction === "in" ? "In" : "Out",
-        Lead: [data.leadId],
-        Created: now,
-      },
-    }),
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    if (res.status === 401) throw new AirtableAuthError(`Airtable create message: 401 ${err}`);
-    throw new Error(`Airtable create message: ${res.status} ${err}`);
-  }
-  const created = (await res.json()) as AirtableRecord<MessageFields>;
-  const msg = recordToMessage(created, data.leadId);
-  if (data.senderType) (msg as Message).senderType = data.senderType;
-  return msg;
-}
-
-// ---- Activity (derived from leads + messages) ----
-
-/** Build ActivityItem[] from leads and messages for dashboard. No ActivityLog table required. */
-export async function getRecentActivities(limit = 20, assignedToAgentId?: string): Promise<ActivityItem[]> {
+export async function getRecentActivities(
+  limit = 20,
+  assignedToAgentId?: string
+): Promise<ActivityItem[]> {
   if (!hasAirtable) return [];
   const [leads, messages, agents] = await Promise.all([
     getLeads(assignedToAgentId),
@@ -699,7 +1569,7 @@ export async function getRecentActivities(limit = 20, assignedToAgentId?: string
     getAgents(),
   ]);
   const leadById = new Map(leads.map((l) => [l.id, l.name]));
-  const agentById = new Map(agents.map((a) => [a.id, a.name]));
+  const agentById = new Map(agents.map((a) => [a.id, a.fullName]));
 
   const activities: ActivityItem[] = [];
 
