@@ -50,6 +50,8 @@ export interface AirtableBrokerage {
   planTier: "starter" | "growth";
   status: "active" | "inactive" | "past_due" | "canceled";
   routingMode: "round_robin" | "manual" | "priority";
+  /** True when round-robin or priority mode (backend routing may assign leads). */
+  routingEnabled: boolean;
   excludeInactiveAgents: boolean;
   escalationEnabled: boolean;
   escalationMinutes: number;
@@ -64,6 +66,12 @@ export interface AirtableBrokerage {
   mrr: number;
   createdAt: string;
   updatedAt: string;
+  /** Round-robin pointer (index into weighted agent list). */
+  rrPointer?: number;
+  /** Version for optimistic concurrency when incrementing pointer. */
+  rrVersion?: number;
+  /** Default agent record ID when no active agents (optional). */
+  defaultAgentId?: string | null;
 }
 
 export interface AirtableAgent {
@@ -283,6 +291,9 @@ type BrokerageFields = {
   MRR?: number;
   CreatedAt?: string;
   UpdatedAt?: string;
+  RrPointer?: number;
+  RrVersion?: number;
+  DefaultAgent?: string[];
 };
 
 function recordToBrokerage(r: AirtableRecord<BrokerageFields>): AirtableBrokerage {
@@ -292,6 +303,8 @@ function recordToBrokerage(r: AirtableRecord<BrokerageFields>): AirtableBrokerag
   const status = (f.Status ?? "active").toString().toLowerCase() as AirtableBrokerage["status"];
   const routingMode = (f.RoutingMode ?? "round_robin").toString().toLowerCase() as AirtableBrokerage["routingMode"];
   const onboardingStatus = (f.OnboardingStatus ?? "not_started").toString().toLowerCase() as AirtableBrokerage["onboardingStatus"];
+  const routingEnabled = routingMode === "round_robin" || routingMode === "priority";
+  const defaultAgentId = Array.isArray(f.DefaultAgent) ? f.DefaultAgent[0] ?? null : null;
   return {
     id: r.id,
     name: (f.Name ?? "").toString().trim(),
@@ -302,6 +315,7 @@ function recordToBrokerage(r: AirtableRecord<BrokerageFields>): AirtableBrokerag
     planTier,
     status: ["active", "inactive", "past_due", "canceled"].includes(status) ? status : "active",
     routingMode: ["round_robin", "manual", "priority"].includes(routingMode) ? routingMode : "round_robin",
+    routingEnabled,
     excludeInactiveAgents: f.ExcludeInactiveAgents === true,
     escalationEnabled: f.EscalationEnabled === true,
     escalationMinutes: typeof f.EscalationMinutes === "number" ? f.EscalationMinutes : 0,
@@ -316,6 +330,9 @@ function recordToBrokerage(r: AirtableRecord<BrokerageFields>): AirtableBrokerag
     mrr: typeof f.MRR === "number" ? f.MRR : 0,
     createdAt: (f.CreatedAt ?? r.createdTime ?? "").toString(),
     updatedAt: (f.UpdatedAt ?? r.createdTime ?? "").toString(),
+    rrPointer: typeof f.RrPointer === "number" ? f.RrPointer : 0,
+    rrVersion: typeof f.RrVersion === "number" ? f.RrVersion : 0,
+    defaultAgentId: defaultAgentId ?? undefined,
   };
 }
 
@@ -417,6 +434,9 @@ export async function updateBrokerage(
   if (data.stripeSubscriptionId != null) fields.StripeSubscriptionId = data.stripeSubscriptionId;
   if (data.mrr != null) fields.MRR = data.mrr;
   if (data.updatedAt != null) fields.UpdatedAt = data.updatedAt;
+  if (data.rrPointer !== undefined) fields.RrPointer = data.rrPointer;
+  if (data.rrVersion !== undefined) fields.RrVersion = data.rrVersion;
+  if (data.defaultAgentId !== undefined) fields.DefaultAgent = data.defaultAgentId ? [data.defaultAgentId] : [];
   if (Object.keys(fields).length === 0) {
     const b = await getBrokerageById(id);
     if (!b) throw new Error("Brokerage not found");
@@ -435,6 +455,33 @@ export async function updateBrokerage(
   }
   const updated = (await res.json()) as AirtableRecord<BrokerageFields>;
   return recordToBrokerage(updated);
+}
+
+/** Alias for getBrokerageById for backend routing (returns brokerage with rrPointer, rrVersion, defaultAgentId, routingEnabled). */
+export async function getBrokerage(brokerageId: string): Promise<AirtableBrokerage | null> {
+  return getBrokerageById(brokerageId);
+}
+
+/** Increment round-robin pointer with optimistic concurrency. Throws if current pointer/version do not match. */
+export async function incrementBrokeragePointer(
+  brokerageId: string,
+  currentPointer: number,
+  currentVersion: number
+): Promise<void> {
+  if (!hasAirtable) throw new Error("Airtable not configured");
+  const b = await getBrokerageById(brokerageId);
+  if (!b) throw new Error("Brokerage not found");
+  const ptr = b.rrPointer ?? 0;
+  const ver = b.rrVersion ?? 0;
+  if (ptr !== currentPointer || ver !== currentVersion) {
+    throw new Error(
+      `Brokerage pointer/version mismatch: expected ${currentPointer}/${currentVersion}, got ${ptr}/${ver}`
+    );
+  }
+  await updateBrokerage(brokerageId, {
+    rrPointer: currentPointer + 1,
+    rrVersion: currentVersion + 1,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -487,6 +534,20 @@ export async function getAgents(brokerageId?: string): Promise<AgentCompat[]> {
   }
   const records = await listAllRecords<AgentFields>(TABLES.Agents, formula);
   return records.map(recordToAgent).map(toAgentCompat);
+}
+
+/** Active agents for a brokerage, with rrWeight (1–10) for weighted round-robin. */
+export async function getActiveAgentsForBrokerage(
+  brokerageId: string
+): Promise<{ id: string; name: string; phone: string; rrWeight: number }[]> {
+  const agents = await getAgents(brokerageId);
+  const active = agents.filter((a) => a.active);
+  return active.map((a) => ({
+    id: a.id,
+    name: a.name,
+    phone: a.phone ?? "",
+    rrWeight: Math.max(1, Math.min(10, a.weight ?? 5)),
+  }));
 }
 
 export async function getAgentById(id: string): Promise<AirtableAgent | null> {
@@ -953,10 +1014,12 @@ export async function createLead(data: CreateLeadInput): Promise<LeadCompat> {
 
 export async function updateLead(
   id: string,
-  data: Partial<Pick<AirtableLead, "assignedAgentId" | "lastLeadMessageAt">> & {
+  data: Partial<Pick<AirtableLead, "assignedAgentId" | "lastLeadMessageAt" | "assignedAt">> & {
     status?: string;
     assignedTo?: string;
     lastMessageAt?: string;
+    notes?: string;
+    intent?: string;
   }
 ): Promise<LeadCompat> {
   if (!hasAirtable) {
@@ -980,6 +1043,9 @@ export async function updateLead(
   if (data.assignedAgentId !== undefined) {
     fields["Assigned Agent"] = data.assignedAgentId ? [data.assignedAgentId] : [];
   }
+  if (data.assignedAt != null) fields["Assigned At"] = data.assignedAt;
+  if (data.notes != null) fields["Notes"] = data.notes;
+  if (data.intent != null) fields["Intent"] = data.intent;
   if (Object.keys(fields).length === 0) {
     const lead = await getLeadById(id);
     if (!lead) throw new Error("Lead not found");
@@ -999,6 +1065,19 @@ export async function updateLead(
   const updated = (await res.json()) as AirtableRecord<LeadFields>;
   const lead = recordToLead(updated);
   return toLeadCompat(lead);
+}
+
+/** Update lead assignment/qualification (used by backend round-robin routing). */
+export async function updateLeadQualification(
+  leadId: string,
+  data: { assignedAgent: string; status: string; lastRoutedAt: string }
+): Promise<LeadCompat> {
+  const statusNorm = data.status.toLowerCase() === "assigned" ? "assigned" : data.status;
+  return updateLead(leadId, {
+    assignedAgentId: data.assignedAgent,
+    status: statusNorm,
+    assignedAt: data.lastRoutedAt,
+  });
 }
 
 export async function deleteLead(id: string): Promise<void> {

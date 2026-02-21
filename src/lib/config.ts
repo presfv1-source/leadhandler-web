@@ -12,6 +12,8 @@ export const hasTwilio =
   has(env.server.TWILIO_AUTH_TOKEN) &&
   has(env.server.TWILIO_FROM_NUMBER);
 export const hasMake = has(env.server.MAKE_WEBHOOK_URL);
+export const hasLlm =
+  has(env.server.OPENAI_API_KEY) || has(env.server.ANTHROPIC_API_KEY);
 
 export const demoDefault = env.server.DEMO_MODE_DEFAULT;
 
@@ -20,11 +22,13 @@ export function getEnvSummary(): {
   hasStripe: boolean;
   hasTwilio: boolean;
   hasMake: boolean;
+  hasLlm: boolean;
 } {
   return {
     hasAirtable,
     hasStripe,
     hasTwilio,
     hasMake,
+    hasLlm,
   };
 }

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { hasAirtable } from "@/lib/config";
 import { createLead } from "@/lib/airtable";
 import { triggerWebhook } from "@/lib/make";
+import { assignRoundRobin } from "@/lib/routing-backend";
 
 const schema = {
   name: (v: unknown) => typeof v === "string" && v.trim().length > 0,
@@ -50,7 +52,24 @@ export async function POST(request: NextRequest) {
       brokerageId: brokerageId ?? lead.brokerageId,
     });
 
-    return NextResponse.json({ success: true, data: { created: true, leadId: lead.id } }, { status: 200 });
+    let assignedAgentId: string | undefined;
+    if (lead.brokerageId) {
+      try {
+        const result = await assignRoundRobin(lead.id, lead.brokerageId);
+        if (result.assignedAgentId) {
+          assignedAgentId = result.assignedAgentId;
+          revalidateTag("leads", "max");
+          revalidateTag("agents", "max");
+        }
+      } catch (e) {
+        console.warn("[webhooks/lead] Assignment failed (lead still created):", e);
+      }
+    }
+
+    return NextResponse.json(
+      { success: true, data: { created: true, leadId: lead.id, assignedAgentId } },
+      { status: 200 }
+    );
   } catch (err) {
     console.error("[webhooks/lead]", err);
     return NextResponse.json(

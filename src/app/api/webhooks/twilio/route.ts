@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hasAirtable, hasMake } from "@/lib/config";
+import { hasAirtable, hasMake, hasLlm } from "@/lib/config";
 import { getLeadByPhone, createMessage, updateLead } from "@/lib/airtable";
 import { triggerWebhook } from "@/lib/make";
+import { handleInboundLeadSms } from "@/lib/qualification";
 
 /** TwiML: empty response so we do not send a duplicate SMS. */
 const TWIML_EMPTY = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>";
@@ -12,6 +13,7 @@ export async function POST(request: NextRequest) {
     const from = (formData.get("From") ?? "").toString().trim();
     const to = (formData.get("To") ?? "").toString().trim();
     const body = (formData.get("Body") ?? "").toString().trim();
+    const messageSid = (formData.get("MessageSid") ?? "").toString().trim();
 
     if (!from || !body) {
       console.warn("[Twilio Webhook] Missing From or Body");
@@ -23,6 +25,14 @@ export async function POST(request: NextRequest) {
 
     if (!hasAirtable) {
       console.warn("[Twilio Webhook] Airtable not configured; skipping persist");
+      return new NextResponse(TWIML_EMPTY, {
+        status: 200,
+        headers: { "Content-Type": "text/xml; charset=utf-8" },
+      });
+    }
+
+    if (hasLlm) {
+      await handleInboundLeadSms({ from, to, body, twilioMessageSid: messageSid });
       return new NextResponse(TWIML_EMPTY, {
         status: 200,
         headers: { "Content-Type": "text/xml; charset=utf-8" },
@@ -44,6 +54,7 @@ export async function POST(request: NextRequest) {
       body,
       direction: "in",
       senderType: "lead",
+      twilioMessageSid: messageSid || undefined,
     });
     await updateLead(lead.id, { lastMessageAt: now });
 

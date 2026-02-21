@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSessionToken } from "@/lib/auth";
+import { getBrokerageByEmail, hasAirtable } from "@/lib/airtable";
 import { clerkClient } from "@clerk/nextjs/server";
 import { currentUser } from "@clerk/nextjs/server";
 
@@ -48,7 +49,55 @@ export async function GET() {
     console.error("[onboarding] Clerk metadata check:", e);
   }
 
-  // 3) Neither cookie nor metadata — onboarding not done
+  // 3) Cookie and Clerk missing — check Airtable as fallback (brokerage by owner email, onboarding complete)
+  if (hasAirtable) {
+    try {
+      const user = await currentUser();
+      const email = (
+        user?.primaryEmailAddress?.emailAddress ??
+        user?.emailAddresses?.[0]?.emailAddress
+      )
+        ?.trim();
+      if (email) {
+        const brokerage = await getBrokerageByEmail(email);
+        if (
+          brokerage &&
+          (brokerage.onboardingComplete === true ||
+            brokerage.onboardingStatus === "complete")
+        ) {
+          const res = NextResponse.json({ success: true, data: { done: true } });
+          res.cookies.set(ONBOARDING_COOKIE, "true", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 60 * 60 * 24 * 365,
+            path: "/",
+          });
+          // Backfill Clerk so future checks use fast path
+          try {
+            const client = await clerkClient();
+            const clerkUser = await client.users.getUser(session.userId);
+            const existing = (clerkUser.publicMetadata ?? {}) as Record<string, unknown>;
+            await client.users.updateUser(session.userId, {
+              publicMetadata: {
+                ...existing,
+                brokerageName: brokerage.name,
+                brokeragePhone: brokerage.ownerPhone,
+                timezone: brokerage.timeZone || "America/Chicago",
+              },
+            });
+          } catch (e) {
+            console.error("[onboarding] Clerk backfill from Airtable:", e);
+          }
+          return res;
+        }
+      }
+    } catch (e) {
+      console.error("[onboarding] Airtable fallback:", e);
+    }
+  }
+
+  // 4) Neither cookie nor metadata nor Airtable — onboarding not done
   return NextResponse.json({ success: true, data: { done: false } });
 }
 

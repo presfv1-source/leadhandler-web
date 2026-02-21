@@ -20,6 +20,14 @@ const serverSchema = z.object({
   TWILIO_AUTH_TOKEN: z.string().default(""),
   TWILIO_FROM_NUMBER: z.string().default(""),
   MAKE_WEBHOOK_URL: z.string().default(""),
+  /** OpenAI API key for AI qualification. Takes priority over Anthropic. */
+  OPENAI_API_KEY: z.string().default(""),
+  /** Anthropic API key for AI qualification. Used if OPENAI_API_KEY is empty. */
+  ANTHROPIC_API_KEY: z.string().default(""),
+  /** LLM model override. Defaults to gpt-4o-mini (OpenAI) or claude-sonnet-4-20250514 (Anthropic). */
+  LLM_MODEL: z.string().default(""),
+  /** Optional secret for POST /api/llm/reply. If set, require X-API-Key or Authorization: Bearer. */
+  LLM_API_KEY: z.string().default(""),
   DEMO_MODE_DEFAULT: z
     .enum(["true", "false"])
     .default("false")
@@ -82,6 +90,10 @@ function parseEnv() {
     TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
     TWILIO_FROM_NUMBER: process.env.TWILIO_FROM_NUMBER,
     MAKE_WEBHOOK_URL: process.env.MAKE_WEBHOOK_URL,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    LLM_MODEL: process.env.LLM_MODEL,
+    LLM_API_KEY: process.env.LLM_API_KEY ?? "",
     DEMO_MODE_DEFAULT: process.env.DEMO_MODE_DEFAULT ?? "false",
     SESSION_SECRET: process.env.SESSION_SECRET,
     DEV_ADMIN_EMAIL: process.env.DEV_ADMIN_EMAIL,
