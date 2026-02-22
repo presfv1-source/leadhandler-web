@@ -5,19 +5,23 @@ import type { LeadStatus } from "@/lib/types";
 const statusLabels: Record<LeadStatus, string> = {
   new: "New",
   contacted: "Contacted",
+  qualifying: "Qualifying",
   qualified: "Qualified",
   appointment: "Appointment",
   closed: "Closed",
   lost: "Lost",
+  do_not_contact: "Do Not Contact",
 };
 
 const statusStyles: Record<LeadStatus, string> = {
   new: "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-400",
   contacted: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+  qualifying: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
   qualified: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
   appointment: "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400",
   closed: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400",
   lost: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+  do_not_contact: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
 };
 
 const DEFAULT_STYLE = "bg-muted text-muted-foreground";

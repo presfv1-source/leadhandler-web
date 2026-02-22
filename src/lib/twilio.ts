@@ -54,12 +54,24 @@ export async function sendSms({ to, body, from }: SendSmsInput): Promise<SendSms
 
 /**
  * Backward-compatible wrapper used by existing /api/messages/send route.
- * Delegates to sendSms().
+ * Delegates to sendSms(). On failure returns { queued: false } with structured logging (no throw).
  */
 export async function sendMessage(
   to: string,
   body: string,
-  _leadId?: string,
+  leadId?: string,
 ): Promise<{ queued: boolean; sid?: string }> {
-  return sendSms({ to, body });
+  if (!hasTwilio) {
+    return { queued: true, sid: undefined };
+  }
+  try {
+    return await sendSms({ to, body });
+  } catch (err) {
+    console.error("[twilio] sendMessage failed", {
+      fn: "sendMessage",
+      leadId,
+      error: err instanceof Error ? err.message : err,
+    });
+    return { queued: false };
+  }
 }

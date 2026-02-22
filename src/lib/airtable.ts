@@ -115,7 +115,8 @@ export interface AirtableLead {
     | "assigned"
     | "nurturing"
     | "closed"
-    | "complete";
+    | "complete"
+    | "do_not_contact";
   assignedAgentId: string | null;
   assignedLineId: string | null;
   assignedAt: string | null;
@@ -179,21 +180,24 @@ export interface AirtablePhoneLine {
 // Legacy status for API compat (Lead in types.ts)
 const AIRTABLE_TO_LEGACY_STATUS: Record<string, string> = {
   new: "new",
-  qualifying: "contacted",
+  qualifying: "qualifying",
   qualified: "qualified",
   unqualified: "lost",
   assigned: "appointment",
   nurturing: "contacted",
   closed: "closed",
   complete: "closed",
+  do_not_contact: "do_not_contact",
 };
 const LEGACY_TO_AIRTABLE_STATUS: Record<string, string> = {
   new: "new",
   contacted: "qualifying",
+  qualifying: "qualifying",
   qualified: "qualified",
   appointment: "assigned",
   lost: "unqualified",
   closed: "closed",
+  do_not_contact: "do_not_contact",
 };
 
 // ---------------------------------------------------------------------------
@@ -743,6 +747,7 @@ const LEAD_STATUSES = [
   "nurturing",
   "closed",
   "complete",
+  "do_not_contact",
 ] as const;
 const INTENT_LABELS = ["high", "medium", "low"] as const;
 const SUGGESTED_ACTIONS = ["call_now", "follow_up_1hr", "nurture"] as const;
@@ -808,7 +813,7 @@ export type LeadCompat = AirtableLead & {
   name: string;
   phone: string;
   email: string;
-  status: "new" | "contacted" | "qualified" | "appointment" | "closed" | "lost";
+  status: "new" | "contacted" | "qualifying" | "qualified" | "appointment" | "closed" | "lost" | "do_not_contact";
   assignedTo?: string;
   assignedToName?: string;
   lastMessageAt?: string | null;

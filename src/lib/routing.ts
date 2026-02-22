@@ -5,16 +5,37 @@ export type RoutingMode = "round-robin" | "weighted" | "performance";
 /**
  * Assign a lead to an agent based on brokerage routing mode.
  * Skips inactive agents. Returns null if no eligible agents.
+ * Idempotent: if lead is already assigned to an agent in the list, returns that agent.
  */
 export function assignLeadToAgent(
   lead: Lead,
   agents: Agent[],
-  _brokerageId: string,
-  mode: RoutingMode
+  brokerageId: string,
+  mode: RoutingMode,
+  defaultAgentId?: string | null
 ): Agent | null {
+  if (lead.assignedTo) {
+    const existing = agents.find((a) => a.id === lead.assignedTo);
+    if (existing) {
+      console.info("[routing] Lead already assigned, skipping", {
+        fn: "assignLeadToAgent",
+        leadId: lead.id,
+        agentId: lead.assignedTo,
+      });
+      return existing;
+    }
+  }
+
   const active = agents.filter((a) => a.active ?? a.isActive !== false);
   if (active.length === 0) {
-    console.warn("[routing] No active agents for brokerage");
+    console.warn("[routing] No active agents for brokerage", {
+      fn: "assignLeadToAgent",
+      brokerageId,
+    });
+    if (defaultAgentId) {
+      const fallback = agents.find((a) => a.id === defaultAgentId);
+      if (fallback) return fallback;
+    }
     return null;
   }
 

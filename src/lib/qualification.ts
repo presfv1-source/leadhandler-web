@@ -12,6 +12,47 @@ import { assignRoundRobin } from "./routing-backend";
 import type { Lead, Message } from "./types";
 
 // ---------------------------------------------------------------------------
+// Deterministic qualification guard (no LLM)
+// ---------------------------------------------------------------------------
+
+export interface QualificationResult {
+  isQualified: boolean;
+  status: "qualifying" | "qualified";
+  summary: string | null;
+}
+
+/**
+ * Deterministic qualification check.
+ * A lead is "qualified" only if intent, area, and timeline are all non-empty.
+ * Use after LLM extraction as a guard; not a prompt trick.
+ */
+export function checkQualification(lead: {
+  intent?: string | null;
+  area?: string | null;
+  timeline?: string | null;
+  budget?: string | null;
+  name?: string;
+}): QualificationResult {
+  const hasIntent = Boolean(lead.intent?.trim());
+  const hasArea = Boolean(lead.area?.trim());
+  const hasTimeline = Boolean(lead.timeline?.trim());
+
+  if (!hasIntent || !hasArea || !hasTimeline) {
+    return { isQualified: false, status: "qualifying", summary: null };
+  }
+
+  const parts = [
+    lead.intent?.trim(),
+    `in ${lead.area?.trim()}`,
+    `timeline: ${lead.timeline?.trim()}`,
+  ];
+  if (lead.budget?.trim()) parts.push(`budget: ${lead.budget.trim()}`);
+  const summary = `${lead.name ?? "Lead"} — ${parts.join(", ")}.`;
+
+  return { isQualified: true, status: "qualified", summary };
+}
+
+// ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
 
@@ -19,7 +60,7 @@ import type { Lead, Message } from "./types";
 const MESSAGE_HISTORY_LIMIT = 20;
 
 /** Statuses that should NOT trigger the AI pipeline (store message only, then return) */
-const SKIP_STATUSES = new Set(["closed", "lost", "assigned", "complete"]);
+const SKIP_STATUSES = new Set(["closed", "lost", "assigned", "complete", "do_not_contact"]);
 
 /** Opt-out keywords (case-insensitive) */
 const OPT_OUT_KEYWORDS = ["stop", "unsubscribe", "cancel", "end", "quit", "opt out", "optout"];
@@ -100,7 +141,7 @@ export async function handleInboundLeadSms(params: HandleInboundParams): Promise
       console.error(`${tag} Failed to send opt-out reply:`, e);
     }
     await updateLead(lead.id, {
-      status: "lost",
+      status: "do_not_contact",
       lastMessageAt: now,
       notes: `Opted out at ${now}`,
       intent: "opt_out",

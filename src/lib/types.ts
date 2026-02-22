@@ -3,10 +3,12 @@ export type Role = "owner" | "broker" | "agent";
 export type LeadStatus =
   | "new"
   | "contacted"
+  | "qualifying"
   | "qualified"
   | "appointment"
   | "closed"
-  | "lost";
+  | "lost"
+  | "do_not_contact";
 
 export type LeadSource = "zillow" | "realtor" | "direct" | "other";
 
@@ -66,6 +68,15 @@ export interface Lead {
   brokerageId?: string;
   qualificationScore?: number;
   aiSummary?: string | null;
+  intent?: string | null;
+  area?: string | null;
+  timeline?: string | null;
+  budget?: string | null;
+  qualifiedAt?: string | null;
+  leadScore?: number | null;
+  leadTemperature?: "Hot" | "Warm" | "Cold" | null;
+  aiConfidence?: number | null;
+  enrichmentStatus?: string | null;
   lastMessageAt?: string | null;
   tags?: string[];
   notes?: string;
@@ -89,6 +100,8 @@ export interface Message {
   agentId?: string | null;
   /** Inbound messages only; when false, show unread indicator. */
   read?: boolean;
+  /** Twilio MessageSid for idempotency / dedup. */
+  messageSid?: string | null;
 }
 
 export interface Insight {

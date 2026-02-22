@@ -141,7 +141,7 @@ export function RoutingPageContent({
           </div>
           <p className="text-sm text-[#a0a0a0] font-sans mt-1 flex items-center gap-1.5">
             <Info className="h-4 w-4 text-[#a0a0a0] shrink-0" aria-hidden />
-            Routing logic is managed via Make.com automation.
+            Routing logic is managed by your automation rules.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">

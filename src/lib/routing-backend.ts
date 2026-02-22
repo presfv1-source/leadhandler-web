@@ -3,8 +3,8 @@ import {
   getActiveAgentsForRouting,
   updateLeadAssignment,
 } from "./airtable-ext";
-import { incrementBrokeragePointer } from "./airtable";
-import { sendMessage } from "./twilio";
+import { getLeadById, incrementBrokeragePointer } from "./airtable";
+import { notifyAgent } from "./agentNotify";
 
 /**
  * Build a weighted list of agent IDs: each agent appears `weight` times so distribution matches weights.
@@ -69,7 +69,24 @@ export async function assignRoundRobin(
   const agent = agents.find((a) => a.id === assignedAgentId);
   if (agent?.phone && agent.receiveSmsAlerts) {
     try {
-      await sendMessage(agent.phone, "You have been assigned a new lead. Please check your dashboard.");
+      const leadRecord = await getLeadById(leadId);
+      const leadForNotify = leadRecord
+        ? {
+            id: leadRecord.id,
+            name: leadRecord.fullName,
+            intent: leadRecord.intentLabel ?? (leadRecord as { intent?: string }).intent ?? null,
+            area: (leadRecord as { area?: string }).area ?? null,
+            timeline: leadRecord.timeline ?? null,
+            budget:
+              leadRecord.budgetMin != null
+                ? String(leadRecord.budgetMin)
+                : leadRecord.budgetMax != null
+                  ? String(leadRecord.budgetMax)
+                  : null,
+            aiSummary: (leadRecord as { summary?: string }).summary ?? leadRecord.notes ?? null,
+          }
+        : { id: leadId, name: null, intent: null, area: null, timeline: null, budget: null, aiSummary: null };
+      await notifyAgent(agent, leadForNotify);
     } catch (e) {
       console.warn("[routing-backend] Agent SMS notification failed:", e);
     }

@@ -383,7 +383,7 @@ export default function InboxPage() {
             <div className="p-4 border-t border-[#e2e2e2]">
               {demoEnabled && (
                 <p className="text-xs text-amber-600 mb-2 font-sans" title="Demo: messages stored locally; connect Twilio for real SMS">
-                  Demo: messages stored locally. Connect Twilio to send real SMS.
+                  Demo: messages stored locally. Connect integrations in Settings for real SMS.
                 </p>
               )}
               <form onSubmit={handleSend} className="flex gap-2">
